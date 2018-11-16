@@ -55,7 +55,7 @@ class ConverterMasked(ConverterBase):
         self.predictor ( np.zeros ( (self.predictor_input_size,self.predictor_input_size,4), dtype=np.float32 ) )
         
     #override
-    def convert_face (self, img_bgr, img_face_landmarks, debug):        
+    def convert_face (self, img_bgr, img_face_landmarks, debug, alpha, transfercolor):        
         if debug:        
             debugs = [img_bgr.copy()]
 
@@ -187,6 +187,27 @@ class ConverterMasked(ConverterBase):
                 new_out = cv2.warpAffine( new_out_face_bgr, face_mat, img_size, img_bgr.copy(), cv2.WARP_INVERSE_MAP | cv2.INTER_LANCZOS4, cv2.BORDER_TRANSPARENT )
                 out_img =  np.clip( img_bgr*(1-img_mask_blurry_aaa) + (new_out*img_mask_blurry_aaa) , 0, 1.0 )
  
+            if transfercolor:                                              #making transfer color from original DST image to fake
+                from skimage import io, color
+                lab_clr = color.rgb2lab(img_bgr)                            #original DST, converting RGB to LAB color space
+                lab_bw = color.rgb2lab(out_img)                             #fake, converting RGB to LAB color space
+                tmp_channel, a_channel, b_channel = cv2.split(lab_clr)      #taking color channel A and B from original dst image
+                l_channel, tmp2_channel, tmp3_channel = cv2.split(lab_bw)   #taking lightness channel L from merged fake
+                img_LAB = cv2.merge((l_channel,a_channel, b_channel))       #merging light and color
+                out_img = color.lab2rgb(img_LAB)                            #converting LAB to RGB 
+                
+            if alpha:
+                new_image = out_img.copy()
+                new_image = (new_image*255).astype(np.uint8)                            #convert image to int
+                b_channel, g_channel, r_channel = cv2.split(new_image)                  #splitting RGB
+                alpha_channel = img_mask_blurry_aaa.copy()                              #making copy of alpha channel
+                alpha_channel = (alpha_channel*255).astype(np.uint8)
+                alpha_channel, tmp2, tmp3 = cv2.split(alpha_channel)                    #splitting alpha to three channels, they all same in original alpha channel, we need just one
+                img_BGRA = cv2.merge((b_channel,g_channel, r_channel, alpha_channel))   #mergin RGB with alpha
+                    
+                out_img = img_BGRA
+                out_img = out_img.astype(np.float32) / 255.0
+
         if debug:
             debugs += [out_img.copy()]
             
