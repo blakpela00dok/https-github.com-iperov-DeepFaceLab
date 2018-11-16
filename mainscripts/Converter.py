@@ -1,4 +1,4 @@
-﻿import traceback
+import traceback
 from pathlib import Path
 from utils import Path_utils
 import cv2
@@ -64,13 +64,15 @@ from utils.SubprocessorBase import SubprocessorBase
 class ConvertSubprocessor(SubprocessorBase):
 
     #override
-    def __init__(self, converter, input_path_image_paths, output_path, alignments, debug): 
+    def __init__(self, converter, input_path_image_paths, output_path, alignments, debug, alpha, transfercolor): 
         super().__init__('Converter')    
         self.converter = converter
         self.input_path_image_paths = input_path_image_paths
         self.output_path = output_path
         self.alignments = alignments
         self.debug = debug
+        self.alpha = alpha
+        self.transfercolor = transfercolor
         
         self.input_data = self.input_path_image_paths
         self.files_processed = 0
@@ -156,7 +158,7 @@ class ConvertSubprocessor(SubprocessorBase):
             elif self.converter.get_mode() == ConverterBase.MODE_FACE:
                 faces = self.alignments[filename_path.stem]
                 for image_landmarks in faces:                
-                    image = self.converter.convert_face(image, image_landmarks, self.debug)     
+                    image = self.converter.convert_face(image, image_landmarks, self.debug, self.alpha, self.transfercolor)     
                     if self.debug:
                         for img in image:
                             cv2.imshow ('Debug convert', img )
@@ -183,6 +185,8 @@ def main (input_dir, output_dir, aligned_dir, model_dir, model_name, **in_option
     print ("Running converter.\r\n")
     
     debug = in_options['debug']
+    alpha = in_options['alpha']
+    transfercolor = in_options['transfercolor']
     
     try:
         input_path = Path(input_dir)
@@ -247,7 +251,10 @@ def main (input_dir, output_dir, aligned_dir, model_dir, model_name, **in_option
                     input_path_image_paths = Path_utils.get_image_paths(input_path), 
                     output_path            = output_path,
                     alignments             = alignments,                                     
-                    debug                  = debug ).process()
+                    debug                  = debug, 
+                    alpha                  = alpha,
+                    transfercolor          = transfercolor
+                    ).process()
                               
         model_sq.put ( {'op':'close'} )
         model_p.join()
@@ -279,5 +286,4 @@ def main (input_dir, output_dir, aligned_dir, model_dir, model_name, **in_option
     except Exception as e:
         print ( 'Error: %s' % (str(e)))
         traceback.print_exc()
-    
    
