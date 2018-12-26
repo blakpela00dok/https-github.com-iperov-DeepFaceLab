@@ -27,6 +27,7 @@ http://(deepfacelab-cpu or 127.0.0.1):8888/?token=your token
 
 ```
 $ docker exec -it deepfacelab-cpu bash
+$ cd ../srv/
 ```
 
 ### 5. Use jupyter in deepfacelab-cpu bash
@@ -56,3 +57,17 @@ $ cd ../srv/
 $ chmod +x main.sh
 $ ./main.sh
 ```
+
+### some error
+
+#### localization.py system_locale is NoneType
+
+```
+# system_locale may be nil
+system_language = system_locale[0:2] if system_locale is not None else "en"
+```
+
+####  NVML Shared Library Not Found
+
+[Install NVIDIA Driver](http://www.linuxandubuntu.com/home/how-to-install-latest-nvidia-drivers-in-linux)
+[安装N卡驱动](https://linuxstory.org/how-to-install-latest-nvidia-drivers-in-linux/)
