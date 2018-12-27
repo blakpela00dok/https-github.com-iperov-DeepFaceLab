@@ -1,3 +1,6 @@
+# For Mac Users
+if you just have a MacBook.deepfacelab gpu mode does not works. however,it can also works with cpu mode.
+
 ### 1. Install Docker
 
 [Docker Desktop for Mac] (https://hub.docker.com/editions/community/docker-ce-desktop-mac)
@@ -54,20 +57,19 @@ $ docker exec -it deepfacelab-cpu bash
 
 ```
 $ cd ../srv/
-$ chmod +x main.sh
-$ ./main.sh
+$ chmod +x cpu.sh
+$ ./cpu.sh
 ```
 
-### some error
-
-#### localization.py system_locale is NoneType
+####  some error
 
 ```
+1. localization.py system_locale is NoneType
 # system_locale may be nil
 system_language = system_locale[0:2] if system_locale is not None else "en"
-```
 
-####  NVML Shared Library Not Found
+
+```
 
 [Install NVIDIA Driver](http://www.linuxandubuntu.com/home/how-to-install-latest-nvidia-drivers-in-linux)
 [安装N卡驱动](https://linuxstory.org/how-to-install-latest-nvidia-drivers-in-linux/)
