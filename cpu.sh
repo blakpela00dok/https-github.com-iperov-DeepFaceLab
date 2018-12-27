@@ -47,11 +47,11 @@ do
                         ;;
                 "train" )
                         echo -n "Model? [ H64 (2GB+) | H128 (3GB+) | DF (5GB+) | LIAEF128 (5GB+) | LIAEF128YAW (5GB+) | MIAEF128 (5GB+) | AVATAR (4GB+) ] "; read model
-                        $PYTHON $INTERNAL_DIR/main.py train --training-data-src-dir $WORKSPACE/data_src/aligned --training-data-dst-dir $WORKSPACE/data_dst/aligned --model-dir $WORKSPACE/model --model $model --debug --cpu-only
+                        $PYTHON $INTERNAL_DIR/main.py train --training-data-src-dir $WORKSPACE/data_src/aligned --training-data-dst-dir $WORKSPACE/data_dst/aligned --model-dir $WORKSPACE/model --model $model --cpu-only
                         ;;
                 "convert" )
                         echo -n "Model? [ H64 (2GB+) | H128 (3GB+) | DF (5GB+) | LIAEF128 (5GB+) | LIAEF128YAW (5GB+) | MIAEF128 (5GB+) | AVATAR(4GB+) ] "; read model
-                        $PYTHON $INTERNAL_DIR/main.py convert --input-dir $WORKSPACE/data_dst --output-dir $WORKSPACE/data_dst/merged --aligned-dir $WORKSPACE/data_dst/aligned --model-dir $WORKSPACE/model --model $model --ask-for-params --debug --cpu-only
+                        $PYTHON $INTERNAL_DIR/main.py convert --input-dir $WORKSPACE/data_dst --output-dir $WORKSPACE/data_dst/merged --aligned-dir $WORKSPACE/data_dst/aligned --model-dir $WORKSPACE/model --model $model --ask-for-params --cpu-only
                         ;;
                 "converted to mp4" )
                         echo -n "File name of destination video: "; read filename
