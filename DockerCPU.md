@@ -16,7 +16,7 @@ $ docker build -t deepfacelab-cpu -f Dockerfile.cpu .
 ```
 $ docker run -p 8888:8888  --hostname deepfacelab-cpu --name deepfacelab-cpu  -v **your source path**:/srv  deepfacelab-cpu
 # for example
-$ docker run -p 8888:8888  --hostname deepfacelab-cpu --name deepfacelab-cpu  -v /Users/plucky/own/DeepFaceLab:/srv  deepfacelab-cpu
+$ docker run -p 8888:8888  --hostname deepfacelab-cpu --name deepfacelab-cpu  -v $PWD:/srv  deepfacelab-cpu
 ```
 
 then you will see the log:
