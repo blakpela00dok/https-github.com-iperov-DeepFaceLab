@@ -47,7 +47,9 @@ do
                         ;;
                 "train" )
                         echo -n "Model? [ H64 (2GB+) | H128 (3GB+) | DF (5GB+) | LIAEF128 (5GB+) | LIAEF128YAW (5GB+) | MIAEF128 (5GB+) | AVATAR (4GB+) ] "; read model
-                        $PYTHON $INTERNAL_DIR/main.py train --training-data-src-dir $WORKSPACE/data_src/aligned --training-data-dst-dir $WORKSPACE/data_dst/aligned --model-dir $WORKSPACE/model --model $model --cpu-only
+                        echo -n "Show Preview? [Y/n] "; read preview
+                        if [ "$preview" == "Y" ] || [ "$preview" == "y" ]; then preview="--preview"; else preview=""; fi
+                        $PYTHON $INTERNAL_DIR/main.py train --training-data-src-dir $WORKSPACE/data_src/aligned --training-data-dst-dir $WORKSPACE/data_dst/aligned --model-dir $WORKSPACE/model --model $model --cpu-only $preview
                         ;;
                 "convert" )
                         echo -n "Model? [ H64 (2GB+) | H128 (3GB+) | DF (5GB+) | LIAEF128 (5GB+) | LIAEF128YAW (5GB+) | MIAEF128 (5GB+) | AVATAR(4GB+) ] "; read model
