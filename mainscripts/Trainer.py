@@ -102,6 +102,7 @@ def trainerThread (input_queue, output_queue, training_data_src_dir, training_da
                             model.pass_one_epoch()
                         send_preview()
                     elif op == 'close':
+                        print ('Closing and Saving.')
                         model_save()
                         i = -1
                         break
@@ -278,12 +279,12 @@ def previewThread (input_queue, output_queue):
     cv2.destroyAllWindows()
 
 def main (training_data_src_dir, training_data_dst_dir, model_path, model_name,preview, **in_options):
-    print ("Running trainer.\r\n")
-
+    print ("Running trainer(preview=%s).\r\n" % (preview))
     output_queue = queue.Queue()
     input_queue = queue.Queue()
     import threading
     thread = threading.Thread(target=trainerThread, args=(output_queue, input_queue, training_data_src_dir, training_data_dst_dir, model_path, model_name), kwargs=in_options )
     thread.start()
+
     if preview:
         previewThread (input_queue, output_queue)
