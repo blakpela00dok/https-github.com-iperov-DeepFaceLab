@@ -13,7 +13,7 @@ $ cd DeepFaceLab
 
 ### 3. Install Docker
 
-[Docker Desktop for Mac] (https://hub.docker.com/editions/community/docker-ce-desktop-mac)
+[Docker Desktop for Mac](https://hub.docker.com/editions/community/docker-ce-desktop-mac)
 
 ### 4. Build Docker Image For DeepFaceLab
 
