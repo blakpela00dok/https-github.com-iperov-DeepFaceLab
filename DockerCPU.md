@@ -91,7 +91,7 @@ $ ./cpu.sh
 
 In our Case,**Cage**'s Face is **SRC Face**,and **Trump**'s Face is **DST Face**.and finally we get the **Result** below.
 
-![Result](doc/merged-face.jpeg)
+![Result](doc/merged-face.jpg)
 
 So,before you run `./cpu.sh`.You should be aware of this.
 
