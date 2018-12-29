@@ -88,11 +88,11 @@ MIAEF128 Cage fail case:
 
 ![](https://github.com/iperov/DeepFaceLab/blob/master/doc/MIAEF128_Cage_fail.jpg)
 
-- **AVATAR (4GB+)** - non GAN, 256x256 face controlling model. 
+- **AVATAR (4GB+)** - non GAN, 256x256 face controlling model.
 
 ![](https://github.com/iperov/DeepFaceLab/blob/master/doc/AVATAR_Navalniy_0.jpg)
 
-Video: 
+Video:
 
 [![](https://img.youtube.com/vi/3M0E4QnWMqA/0.jpg)](https://www.youtube.com/watch?v=3M0E4QnWMqA)
 
@@ -124,7 +124,7 @@ Conclusion: **better not to mix and use only same shape faces with same light**
 
 `hist-blur` sort by blur in groups of similar content
 
-`brightness` 
+`brightness`
 
 `hue`
 
@@ -166,11 +166,14 @@ Only H64 model reasonable to train on home CPU.
 
 ### Prebuilt windows app:
 
-Windows 7,8,8.1,10 zero dependency (just install/update your GeForce Drivers) prebuilt DeepFaceLab (include GPU and CPU versions) can be downloaded from 
+Windows 7,8,8.1,10 zero dependency (just install/update your GeForce Drivers) prebuilt DeepFaceLab (include GPU and CPU versions) can be downloaded from
 1) torrent https://rutracker.org/forum/viewtopic.php?p=75318742 (magnet link inside).
 2) https://mega.nz/#F!b9MzCK4B!zEAG9txu7uaRUjXz9PtBqg
 
 Video tutorial: https://www.youtube.com/watch?v=K98nTNjXkq8
+
+### For Mac Users
+Check out [DockerCPU.md](DockerCPU.md) for more detailed instructions.
 
 ### **Windows 10 memory problem:
 
