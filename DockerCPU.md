@@ -84,3 +84,49 @@ $ ./cpu.sh
 ```
 
 ### Details with `DeepFaceLab`
+
+#### 1. Concepts
+
+![SRC](doc/DF_Cage_0.jpg)
+
+In our Case,**Cage**'s Face is **SRC Face**,and **Trump**'s Face is **DST Face**.and finally we get the **Result** below.
+
+![Result](doc/merged-face.jpeg)
+
+So,before you run `./cpu.sh`.You should be aware of this.
+
+#### 2. Use MTCNN(mt) to extract faces
+Do not use DLIB extractor in CPU mode
+
+#### 3. Best practice for SORT
+1) delete first unsorted aligned groups of images what you can to delete.
+
+2) use `hist`
+
+#### 4. Use `H64 model` to train and convert
+Only H64 model reasonable to train on home CPU.You can choice other  model like **H128 (3GB+)** | **DF (5GB+)** and so on ,it depends entirely on your CPU performance.
+
+#### 5. execute the script below one by one
+
+```
+root@deepfacelab-cpu:/notebooks# ./cpu.sh
+1) clear workspace		      7) data_dst sort by hist
+2) extract PNG from video data_src    8) train
+3) data_src extract faces	      9) convert
+4) data_src sort		     10) converted to mp4
+5) extract PNG from video data_dst   11) quit
+6) data_dst extract faces
+Please enter your choice:       
+```
+
+#### 6. Put all videos in `workspace` directory
+```
+.
+├── data_dst
+├── data_src
+├── dst.mp4
+├── model
+└── src.mp4
+
+3 directories, 2 files
+```
