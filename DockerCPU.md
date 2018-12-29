@@ -24,8 +24,6 @@ $ docker build -t deepfacelab-cpu -f Dockerfile.cpu .
 ### 5. Mount DeepFaceLab volume and Run it
 
 ```
-$ docker run -p 8888:8888  --hostname deepfacelab-cpu --name deepfacelab-cpu  -v **your source path**:/notebooks  deepfacelab-cpu
-# for example
 $ docker run -p 8888:8888  --hostname deepfacelab-cpu --name deepfacelab-cpu  -v $PWD:/notebooks  deepfacelab-cpu
 ```
 
