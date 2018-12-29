@@ -59,7 +59,7 @@ do
                         echo -n "File name of destination video: "; read filename
                         echo -n "FPS: "; read fps
                         if [ -z "$fps" ]; then fps="25"; fi
-                        ffmpeg -y -i $WORKSPACE/$filename -r $fps -i "$WORKSPACE/data_dst/merged/%04d.png" -map 0:a? -map 1:v -r $fps -c:v libx264 -b:v 8M -pix_fmt yuv420p -c:a aac -b:a 192k -ar 48000 "$WORKSPACE/result.mp4" -loglevel error
+                        ffmpeg -y -i $WORKSPACE/$filename -r $fps -i "$WORKSPACE/data_dst/merged/%04d.png" -map 0:a? -map 1:v -r $fps -c:v libx264 -b:v 8M -pix_fmt yuv420p -c:a aac -strict -2 -b:a 192k -ar 48000 "$WORKSPACE/result.mp4" -loglevel error
                         ;;
                 "quit" )
                         break
