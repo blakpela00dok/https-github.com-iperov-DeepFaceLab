@@ -1,6 +1,7 @@
 import sys
 from utils import random_utils
 import numpy as np
+import tensorflow as tf
 import cv2
 import localization
 from scipy.spatial import Delaunay
