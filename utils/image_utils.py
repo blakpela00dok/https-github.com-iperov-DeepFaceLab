@@ -287,12 +287,9 @@ class TFLabConverter():
         
         self.lab_output_tensor = tf_rgb_to_lab()(self.bgr_input_tensor)        
         self.bgr_output_tensor = tf_lab_to_rgb()(self.lab_input_tensor)
-        
-        
-    def bgr2lab(self, bgr):    
+
+    def bgr2lab(self, bgr):
         return self.tf_sess.run(self.lab_output_tensor, feed_dict={self.bgr_input_tensor: bgr})
-        
-    def lab2bgr(self, lab):    
-        return self.tf_sess.run(self.bgr_output_tensor, feed_dict={self.lab_input_tensor: lab})    
-        
-    
+
+    def lab2bgr(self, lab):
+        return self.tf_sess.run(self.bgr_output_tensor, feed_dict={self.lab_input_tensor: lab})
