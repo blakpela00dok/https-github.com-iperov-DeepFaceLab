@@ -298,6 +298,7 @@ class ModelBase(object):
         return image_utils.equalize_and_stack_square (images)
         
     def generate_next_sample(self):
+        [next(generator) for generator in self.generator_list]
         return [next(generator) for generator in self.generator_list]
 
     def train_one_epoch(self):    
@@ -320,6 +321,7 @@ class ModelBase(object):
             self.supress_std_once = False
                   
         if self.write_preview_history:
+
             if self.epoch % 10 == 0:
                 img = (self.get_static_preview() * 255).astype(np.uint8)
                 cv2.imwrite ( str (self.preview_history_path / ('%.6d.jpg' %( self.epoch) )), img )     
@@ -388,3 +390,21 @@ class ModelBase(object):
                         
                 if self.batch_size == 0:
                     self.batch_size = d[ keys[-1] ]
+    
+    def to_multi_gpu_model_if_possible(self, models_list):
+        if len(nnlib.active_DeviceConfig.gpu_idxs) > 1:
+            # make batch_size to divide on GPU count without remainder
+            self.batch_size = int(self.batch_size / len(nnlib.active_DeviceConfig.gpu_idxs))
+            if self.batch_size == 0:
+                self.batch_size = 1
+            self.batch_size *= len(nnlib.active_DeviceConfig.gpu_idxs)
+
+            result = []
+            for model in models_list:
+                for i in range(len(model.output_names)):
+                    model.output_names = 'output_%d' % (i)
+                result += [nnlib.keras.utils.multi_gpu_model(model, nnlib.active_DeviceConfig.gpu_idxs)]
+
+            return result
+        else:
+            return models_list
