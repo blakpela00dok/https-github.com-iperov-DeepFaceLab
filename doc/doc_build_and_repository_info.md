@@ -1,13 +1,13 @@
 ## Build and Repository Info
 
-DeepFaceLab officially supports Windows-only. Linux and OS X are untested.
+DeepFaceLab officially supports Windows-only. If you want to support Mac/Linux/Docker - create a fork, it will be referenced here.
 
 
 #### **Installing dlib on Windows**
 
 The version of `dlib` in pip is compiled without CUDA support. Therefore you have to compile it manually in order to use the `dlib` face extractor.
 
-To build this on Windows run following command:: `python setup.py install -G "Visual Studio 14 2015" --yes DLIB_USE_CUDA`
+Command line example for Windows: `python setup.py install -G "Visual Studio 14 2015" --yes DLIB_USE_CUDA`
 
 #### **CPU mode**
 

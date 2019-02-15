@@ -1,18 +1,18 @@
 ### **Features**:
 
-- Regularly updated Windows binary containing pre-compiled dependencies, including CUDA libraries.
+- Windows binary containing pre-compiled dependencies, including CUDA libraries.
 
-- New models expanding upon the original df model.
+- New models expanding upon the original faceswap model.
 
 - Model architecture designed with experimentation in mind.
 
 - Face metadata embedded into extracted JPG files.
 
-- CPU-only mode [`--cpu-mode`]
+- CPU-only mode [`--cpu-mode`]. 8th gen Intel core CPU able to train H64 model in 2 days.
 
 - Preview window
 
-- Extractor and Converter can be run in parallel.
+- Extractor and Converter run in parallel.
 
 - Debug mode option for all stages: [`--debug`]
 

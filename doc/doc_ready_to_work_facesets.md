@@ -1,6 +1,6 @@
 ### **Example Face Sets**:
 
-Faces sets for the following have been pre-extracted for experimentation,
+Faces sets for the following have been pre-extracted,
 
 - Nicolas Cage
 - Steve Jobs
