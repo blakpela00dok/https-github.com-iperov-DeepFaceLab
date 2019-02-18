@@ -87,6 +87,7 @@ if __name__ == "__main__":
             model_path=arguments.model_dir, 
             model_name=arguments.model_name,
             debug              = arguments.debug,
+            disable_preview = arguments.disable_preview,
             #**options
             force_gpu_idx = arguments.force_gpu_idx,
             cpu_only      = arguments.cpu_only
@@ -98,6 +99,7 @@ if __name__ == "__main__":
     train_parser.add_argument('--model-dir', required=True, action=fixPathAction, dest="model_dir", help="Model dir.")
     train_parser.add_argument('--model', required=True, dest="model_name", choices=Path_utils.get_all_dir_names_startswith ( Path(__file__).parent / 'models' , 'Model_'), help="Type of model")
     train_parser.add_argument('--debug', action="store_true", dest="debug", default=False, help="Debug samples.")  
+    train_parser.add_argument('--disable-preview', action="store_true", dest="disable_preview", default=False, help="Disable the preview")  
     train_parser.add_argument('--cpu-only', action="store_true", dest="cpu_only", default=False, help="Train on CPU.")
     train_parser.add_argument('--force-gpu-idx', type=int, dest="force_gpu_idx", default=-1, help="Force to choose this GPU idx.")
 
