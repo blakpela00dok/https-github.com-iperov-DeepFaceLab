@@ -47,7 +47,7 @@ def trainerThread (input_queue, output_queue, training_data_src_dir, training_da
             def send_preview():
                 if not debug:                        
                     previews = model.get_previews()                
-                    output_queue.put ( {'op':'show', 'previews': previews, 'epoch':model.get_epoch(), 'loss_history': model.get_loss_history().copy() } )
+                    output_queue.put ( {'op':'show', 'previews': previews, 'epoch':model.get_epoch(), 'loss_history': model.get_loss_history().copy(), 'model': model } )
                 else:
                     previews = [( 'debug, press update for new', model.debug_one_epoch())]
                     output_queue.put ( {'op':'show', 'previews': previews} )
@@ -119,7 +119,7 @@ def trainerThread (input_queue, output_queue, training_data_src_dir, training_da
 
 def previewThread (input_queue, output_queue):
     
-    
+    model = None
     previews = None
     loss_history = None
     selected_preview = 0
@@ -135,6 +135,7 @@ def previewThread (input_queue, output_queue):
             if op == 'show':
                 is_waiting_preview = False
                 loss_history = input['loss_history'] if 'loss_history' in input.keys() else None
+                model = input['model'] if 'model' in input.keys() else None
                 previews = input['previews'] if 'previews' in input.keys() else None
                 epoch = input['epoch'] if 'epoch' in input.keys() else 0
                 if previews is not None:
@@ -164,40 +165,93 @@ def previewThread (input_queue, output_queue):
                 
         if update_preview:
             update_preview = False
-
+            
+            # get preview image
             selected_preview_name = previews[selected_preview][0]
             selected_preview_rgb = previews[selected_preview][1]
             (h,w,c) = selected_preview_rgb.shape
             
-            # HEAD
+            # get loss history image
+            lh_img = None
+            lh_width = 0
+            lh_height = 0
+            lh_c = 0
+            
+            if loss_history is not None:                
+               if show_last_history_epochs_count == 0:
+                   loss_history_to_show = loss_history
+               else:
+                   loss_history_to_show = loss_history[-show_last_history_epochs_count:]
+                   
+               lh_img = models.ModelBase.get_loss_history_preview(loss_history_to_show, epoch, w, c)
+               (lh_height, lh_width, lh_c) = lh_img.shape
+            
+            # build head and info blocks
             head_lines = [
                 '[s]:save [enter]:exit',
-                '[p]:update [space]:next preview [l]:change history range',
+                '[p]:update [space]:next preview',
+                '[l]:change history range',
                 'Preview: "%s" [%d/%d]' % (selected_preview_name,selected_preview+1, len(previews) )
-                ] 
+            ]
+            
+            info_lines = [];
+            
+            if model is not None:
+                for key in model.options.keys():
+                    info_lines.append("%s: %s" % (key, model.options[key]) )
+                
+                if model.device_config.multi_gpu:
+                    info_lines.append("multi_gpu: True")
+                
+                info_lines.append("Running on:")
+                if model.device_config.cpu_only:
+                    info_lines.append("[CPU]")
+                else:
+                    for idx in model.device_config.gpu_idxs:
+                        info_lines.append("%d: %s" % (idx, model.nnlib.device.getDeviceName(idx)) )
+            
+            # calculate dimensions of head overlay
             head_line_height = 15
-            head_height = len(head_lines) * head_line_height
-            head = np.ones ( (head_height,w,c) ) * 0.1
-              
+            head_height = h + lh_height
+            head_height_min = len(head_lines) * head_line_height + len(info_lines) * head_line_height + head_line_height;
+            if head_height < head_height_min:
+                head_height = head_height_min
+            head_width = 384
+            
+            # create overlay for head and info
+            head = np.ones ( (head_height,head_width,c) ) * 0.1
+            
+            offset_info = 0
+            
+            # write texts to head overlay
             for i in range(0, len(head_lines)):
                 t = i*head_line_height
                 b = (i+1)*head_line_height
-                head[t:b, 0:w] += image_utils.get_text_image (  (w,head_line_height,c) , head_lines[i], color=[0.8]*c )
-                
-            final = head
-   
-            if loss_history is not None:                
-                if show_last_history_epochs_count == 0:
-                    loss_history_to_show = loss_history
-                else:
-                    loss_history_to_show = loss_history[-show_last_history_epochs_count:]
-                    
-                lh_img = models.ModelBase.get_loss_history_preview(loss_history_to_show, epoch, w, c)
-                final = np.concatenate ( [final, lh_img], axis=0 )
-
-            final = np.concatenate ( [final, selected_preview_rgb], axis=0 )
-            final = np.clip(final, 0, 1)
+                head[t:b, 0:head_width] += image_utils.get_text_image (  (head_width,head_line_height,c) , head_lines[i], color=[0.8]*c )
+                offset_info += head_line_height
             
+            # empty line
+            offset_info += head_line_height
+            
+            for i in range(0, len(info_lines)):
+                t = i*head_line_height + offset_info
+                b = (i+1)*head_line_height + offset_info
+                head[t:b, 0:head_width] += image_utils.get_text_image (  (head_width,head_line_height,c) , info_lines[i], color=[0.8]*c )
+            
+            # create main image / background
+            final = np.ones((max(head_height, h + lh_height), w + head_width, c)) * 0.1
+            
+            # insert head overlay
+            final[0:head_height, 0:head_width] = head
+            
+            # insert loss history overlay
+            if lh_img is not None:
+                final[0:lh_height, head_width:head_width + w] = lh_img
+            
+            # insert preview overlay
+            final[lh_height:lh_height + h, head_width:head_width + w] = selected_preview_rgb
+            
+            # render main image including overlays
             cv2.imshow ( 'Training preview', (final*255).astype(np.uint8) )
             is_showing = True
         

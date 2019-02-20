@@ -118,6 +118,7 @@ class ModelBase(object):
         
         nnlib.import_all ( nnlib.DeviceConfig(allow_growth=False, force_gpu_idx=self.force_gpu_idx, **in_options) )
         self.device_config = nnlib.active_DeviceConfig
+        self.nnlib = nnlib;
 
         self.onInitialize(**in_options)
         
