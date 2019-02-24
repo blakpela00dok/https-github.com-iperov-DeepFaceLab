@@ -13,6 +13,8 @@ import numpy as np
 import cv2
 from samples import SampleGeneratorBase
 from nnlib import nnlib
+from datetime import datetime
+
 '''
 You can implement your own model. Check examples.
 '''
@@ -343,6 +345,9 @@ class ModelBase(object):
             loss_string = "Training [#{0:06d}][{1:04d}ms]".format ( self.epoch, int(epoch_time*1000) )
         for (loss_name, loss_value) in losses:
             loss_string += " %s:%.3f" % (loss_name, loss_value)
+
+        date_string = datetime.now().strftime("  [ T: %d/%b/%y, %H:%M:%S ]")
+        loss_string += date_string
 
         return loss_string
         
