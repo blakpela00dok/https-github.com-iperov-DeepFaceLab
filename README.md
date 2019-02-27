@@ -12,7 +12,7 @@ Goal: RTX 2080 TI
 
 [Donate via Paypal](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=KK5ZCH4JXWMQS&source=url)
 
-[Donate via Alipay](https://i.loli.net/2019/01/13/5c3ae3829809f.jpg)
+[Donate via Alipay](doc/Alipay_DFL.jpg)
 
 bitcoin:31mPd6DxPCzbpCMZk4k1koWAbErSyqkAXr
 
