@@ -223,7 +223,7 @@ class ModelBase(object):
         
     #overridable
     def get_converter(self):
-        raise NotImplementeError
+        raise NotImplementedError
         #return existing or your own converter which derived from base
      
     def get_target_epoch(self):
