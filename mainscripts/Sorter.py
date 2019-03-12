@@ -1,4 +1,4 @@
-﻿import os
+import os
 import sys
 import operator
 import numpy as np
@@ -21,8 +21,17 @@ def estimate_sharpness(image):
     
     if image.ndim == 3:
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-   
-    return cv2.Laplacian(image, cv2.CV_64F).var()
+
+    sharpness = 0
+    for y in range(height):
+        for x in range(width-1):        
+            sharpness += abs( int(image[y, x]) - int(image[y, x+1]) )            
+    
+    for x in range(width):    
+        for y in range(height-1):
+            sharpness += abs( int(image[y, x]) - int(image[y+1, x]) )
+    
+    return sharpness
     
 
 class BlurEstimatorSubprocessor(Subprocessor):
@@ -45,6 +54,9 @@ class BlurEstimatorSubprocessor(Subprocessor):
                 
             if dflimg is not None:
                 image = cv2_imread( str(filepath) )
+                image = ( image * \
+                          LandmarksProcessor.get_image_hull_mask (image.shape, dflimg.get_landmarks()) \
+                         ).astype(np.uint8)
                 return [ str(filepath), estimate_sharpness( image ) ]
             else:
                 self.log_err ("%s is not a dfl image file" % (filepath.name) ) 
