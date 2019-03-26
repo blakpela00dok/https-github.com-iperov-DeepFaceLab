@@ -303,21 +303,24 @@ class InteractColab(InteractBase):
         return True
 
     def on_destroy_all_windows(self):
-        clear_output()
+        pass
+        #clear_output()
 
     def on_create_window (self, wnd_name):
-        clear_output()
+        pass
+        #clear_output()
 
     def on_show_image (self, wnd_name, img):
-        # cv2 stores colors as BGR; convert to RGB
-        if img.ndim == 3:
-            if img.shape[2] == 4:
-                img = cv2.cvtColor(img, cv2.COLOR_BGRA2RGBA)
-            else:
-                img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        img = PIL.Image.fromarray(img)
-        plt.imshow(img)
-        plt.show()
+        pass
+        # # cv2 stores colors as BGR; convert to RGB
+        # if img.ndim == 3:
+        #     if img.shape[2] == 4:
+        #         img = cv2.cvtColor(img, cv2.COLOR_BGRA2RGBA)
+        #     else:
+        #         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        # img = PIL.Image.fromarray(img)
+        # plt.imshow(img)
+        # plt.show()
 
     def on_capture_mouse (self, wnd_name):
         pass
