@@ -5,7 +5,7 @@ import numpy as np
 
 from .CAInitializer import CAGenerateWeights
 import multiprocessing
-from dfljoblib import Subprocessor
+from joblib import Subprocessor
 
 from utils import std_utils
 from .device import device
