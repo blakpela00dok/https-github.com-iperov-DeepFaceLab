@@ -1,6 +1,6 @@
 numpy==1.16.1
 h5py==2.9.0
-scikit-image
+scikit-image==0.14.2
 Keras==2.2.4
 opencv-python==4.0.0.21
 tensorflow-gpu==1.13.1
