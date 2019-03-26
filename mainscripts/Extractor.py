@@ -16,7 +16,7 @@ import facelib
 from facelib import FaceType
 from facelib import LandmarksProcessor
 from nnlib import nnlib
-from joblib import Subprocessor
+from dfljoblib import Subprocessor
 from interact import interact as io
 
 class ExtractSubprocessor(Subprocessor):

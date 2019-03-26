@@ -10,7 +10,7 @@ from utils.DFLPNG import DFLPNG
 from utils.DFLJPG import DFLJPG
 from utils.cv2_utils import *
 from facelib import LandmarksProcessor
-from joblib import Subprocessor
+from dfljoblib import Subprocessor
 import multiprocessing
 from interact import interact as io
 from imagelib import estimate_sharpness

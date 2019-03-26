@@ -12,7 +12,7 @@ import numpy as np
 import time
 import multiprocessing
 from converters import Converter
-from joblib import Subprocessor, SubprocessFunctionCaller
+from dfljoblib import Subprocessor, SubprocessFunctionCaller
 from interact import interact as io
 
 class ConvertSubprocessor(Subprocessor):
