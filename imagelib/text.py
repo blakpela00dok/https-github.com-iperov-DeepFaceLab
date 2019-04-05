@@ -19,7 +19,7 @@ def get_text_image( shape, text, color=(1,1,1), border=0.2, font=None):
     try:        
         pil_font = _get_pil_font( localization.get_default_ttf_font_name() , h-2)
 
-        canvas = Image.new('RGB', (w,h) , (0,0,0) )
+        canvas = Image.new('RGB', (h,w) , (0,0,0) )
         draw = ImageDraw.Draw(canvas)
         offset = ( 0, 0)
         draw.text(offset, text, font=pil_font, fill=tuple((np.array(color)*255).astype(np.int)) )
