@@ -37,13 +37,13 @@ class Model(ModelBase):
             
             self.set_training_data_generators ([    
                     SampleGeneratorFace(self.training_data_src_path, debug=self.is_debug(), batch_size=self.batch_size, 
-                            sample_process_options=SampleProcessor.Options(random_flip=True, motion_blur = [25, 1], normalize_tanh = True ), 
-                            output_sample_types=[ [f.TRANSFORMED | f_type | f.MODE_BGR_SHUFFLE | f.OPT_APPLY_MOTION_BLUR, self.resolution],
-                                                  [f.TRANSFORMED | f_type | f.MODE_M | f.FACE_MASK_FULL, self.resolution]
+                            sample_process_options=SampleProcessor.Options(random_flip=True, motion_blur = [25, 1] ), 
+                            output_sample_types=[ [f.WARPED_TRANSFORMED | f_type | f.MODE_BGR_SHUFFLE | f.OPT_APPLY_MOTION_BLUR, self.resolution],
+                                                  [f.WARPED_TRANSFORMED | f_type | f.MODE_M | f.FACE_MASK_FULL, self.resolution]
                                                 ]),
                                                 
                     SampleGeneratorFace(self.training_data_dst_path, debug=self.is_debug(), batch_size=self.batch_size, 
-                            sample_process_options=SampleProcessor.Options(random_flip=True, normalize_tanh = True ), 
+                            sample_process_options=SampleProcessor.Options(random_flip=True ), 
                             output_sample_types=[ [f.TRANSFORMED | f_type | f.MODE_BGR_SHUFFLE, self.resolution]
                                                 ])
                                                ])
@@ -65,11 +65,9 @@ class Model(ModelBase):
         test_A   = sample[0][0][0:4] #first 4 samples
         test_B   = sample[1][0][0:4] #first 4 samples
         
-        mAA = self.fan_seg.extract_from_bgr([test_A])
-        mBB = self.fan_seg.extract_from_bgr([test_B])
-        
-        test_A, test_B, = [ np.clip( (x + 1.0)/2.0, 0.0, 1.0)  for x in [test_A, test_B] ]
-        
+        mAA = self.fan_seg.extract(test_A)
+        mBB = self.fan_seg.extract(test_B)
+
         mAA = np.repeat ( mAA, (3,), -1)
         mBB = np.repeat ( mBB, (3,), -1)
         
@@ -89,6 +87,6 @@ class Model(ModelBase):
                 test_B[i,:,:,0:3]*mBB[i],
                 ), axis=1) )
                 
-        return [ ('FANSegmentator', np.concatenate ( st, axis=0 ) ),
-                 ('never seen', np.concatenate ( st2, axis=0 ) ),
+        return [ ('training data', np.concatenate ( st, axis=0 ) ),
+                 ('evaluating data', np.concatenate ( st2, axis=0 ) ),
                  ]

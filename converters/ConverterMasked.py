@@ -171,13 +171,13 @@ class ConverterMasked(Converter):
 
             if self.mask_mode == 3 or self.mask_mode == 5 or self.mask_mode == 6: 
                 prd_face_bgr_256 = cv2.resize (prd_face_bgr, (256,256) )
-                prd_face_bgr_256_mask = self.fan_seg.extract_from_bgr( prd_face_bgr_256[np.newaxis,...] ) [0]
+                prd_face_bgr_256_mask = self.fan_seg.extract( prd_face_bgr_256 )
                 FAN_prd_face_mask_a_0 = cv2.resize (prd_face_bgr_256_mask, (output_size,output_size), cv2.INTER_CUBIC)
 
             if self.mask_mode == 4 or self.mask_mode == 5 or self.mask_mode == 6: 
                 face_256_mat     = LandmarksProcessor.get_transform_mat (img_face_landmarks, 256, face_type=FaceType.FULL)
                 dst_face_256_bgr = cv2.warpAffine(img_bgr, face_256_mat, (256, 256), flags=cv2.INTER_LANCZOS4 )
-                dst_face_256_mask = self.fan_seg.extract_from_bgr( dst_face_256_bgr[np.newaxis,...] ) [0]
+                dst_face_256_mask = self.fan_seg.extract( dst_face_256_bgr )
                 FAN_dst_face_mask_a_0 = cv2.resize (dst_face_256_mask, (output_size,output_size), cv2.INTER_CUBIC)
 
             if self.mask_mode == 3:   #FAN-prd
