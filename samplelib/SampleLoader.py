@@ -77,7 +77,8 @@ class SampleLoader:
                                                    landmarks=dflimg.get_landmarks(),
                                                    ie_polys=dflimg.get_ie_polys(),
                                                    pitch=pitch,
-                                                   yaw=yaw) )
+                                                   yaw=yaw,
+                                                   fanseg_mask_exist=dflimg.get_fanseg_mask() is not None, ) )
             except:
                 print ("Unable to load %s , error: %s" % (str(s_filename_path), traceback.format_exc() ) )
 

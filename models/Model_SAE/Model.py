@@ -385,20 +385,20 @@ class SAEModel(ModelBase):
 
     #override
     def onGetPreview(self, sample):
-        test_A   = sample[0][1][0:4] #first 4 samples
-        test_A_m = sample[0][2][0:4] #first 4 samples
-        test_B   = sample[1][1][0:4]
-        test_B_m = sample[1][2][0:4]
+        test_S   = sample[0][1][0:4] #first 4 samples
+        test_S_m = sample[0][2][0:4] #first 4 samples
+        test_D   = sample[1][1][0:4]
+        test_D_m = sample[1][2][0:4]
 
         if self.options['learn_mask']:
-            S, D, SS, DD, DDM, SD, SDM = [ np.clip(x, 0.0, 1.0) for x in ([test_A,test_B] + self.AE_view ([test_A, test_B]) ) ]
+            S, D, SS, DD, DDM, SD, SDM = [ np.clip(x, 0.0, 1.0) for x in ([test_S,test_D] + self.AE_view ([test_S, test_D]) ) ]
             DDM, SDM, = [ np.repeat (x, (3,), -1) for x in [DDM, SDM] ]
         else:
-            S, D, SS, DD, SD, = [ np.clip(x, 0.0, 1.0) for x in ([test_A,test_B] + self.AE_view ([test_A, test_B]) ) ]
+            S, D, SS, DD, SD, = [ np.clip(x, 0.0, 1.0) for x in ([test_S,test_D] + self.AE_view ([test_S, test_D]) ) ]
 
         result = []
         st = []
-        for i in range(0, len(test_A)):
+        for i in range(0, len(test_S)):
             ar = S[i], SS[i], D[i], DD[i], SD[i]
             st.append ( np.concatenate ( ar, axis=1) )
         
@@ -406,8 +406,15 @@ class SAEModel(ModelBase):
         
         if self.options['learn_mask']:
             st_m = []
-            for i in range(0, len(test_A)):
-                ar = S[i], SS[i], D[i], DD[i]*DDM[i], SD[i]*(DDM[i]*SDM[i])
+            for i in range(0, len(test_S)):
+                ar = S[i]*test_S_m[i], SS[i], D[i]*test_D_m[i], DD[i]*DDM[i], SD[i]*(DDM[i]*SDM[i])
+                st_m.append ( np.concatenate ( ar, axis=1) )
+                
+            result += [ ('SAE masked', np.concatenate (st_m, axis=0 )), ]
+        else:
+            st_m = []
+            for i in range(0, len(test_S)):
+                ar = S[i]*test_S_m[i], SS[i], D[i]*test_D_m[i], DD[i], SD[i]
                 st_m.append ( np.concatenate ( ar, axis=1) )
                 
             result += [ ('SAE masked', np.concatenate (st_m, axis=0 )), ]
