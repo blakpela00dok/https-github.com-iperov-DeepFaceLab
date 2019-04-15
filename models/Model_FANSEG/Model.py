@@ -56,9 +56,9 @@ class Model(ModelBase):
     def onTrainOneIter(self, generators_samples, generators_list):
         target_src, target_src_mask = generators_samples[0]
 
-        loss = self.fan_seg.train_on_batch( [target_src], [target_src_mask] )
+        loss,acc = self.fan_seg.train_on_batch( [target_src], [target_src_mask] )
 
-        return ( ('loss', loss), )
+        return ( ('loss', loss), ('acc',acc))
         
     #override
     def onGetPreview(self, sample):

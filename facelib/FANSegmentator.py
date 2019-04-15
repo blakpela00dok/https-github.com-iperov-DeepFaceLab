@@ -49,8 +49,9 @@ class FANSegmentator(object):
                     io.log_err("Unable to load VGG11 pretrained weights from vgg11_enc_weights.npy")
 
         if training:
-            self.model.compile(loss='mse', optimizer=Adam(tf_cpu_mode=2))
-
+            #self.model.compile(loss='mse', optimizer=Adam(tf_cpu_mode=2))
+            self.model.compile(loss='binary_crossentropy', optimizer=Adam(tf_cpu_mode=2), metrics=['accuracy'])
+            
     def __enter__(self):
         return self
 
