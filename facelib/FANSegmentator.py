@@ -69,6 +69,7 @@ class FANSegmentator(object):
             input_image = input_image[np.newaxis,...]
 
         result = np.clip ( self.model.predict( [input_image] ), 0, 1.0 )
+        result[result < 0.1] = 0 #get rid of noise
 
         if input_shape_len == 3:
             result = result[0]
