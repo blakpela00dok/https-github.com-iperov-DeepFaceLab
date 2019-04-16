@@ -673,7 +673,9 @@ class DeletedFilesSearcherSubprocessor(Subprocessor):
     def get_result(self):
         return self.result
 
-def extract_fanseg(input_dir, device_args={} ):#ignore_extracted
+
+#currently unused
+def extract_fanseg(input_dir, device_args={} ):
     multi_gpu = device_args.get('multi_gpu', False)
     cpu_only = device_args.get('cpu_only', False)
     

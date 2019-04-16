@@ -411,14 +411,7 @@ class SAEModel(ModelBase):
                 st_m.append ( np.concatenate ( ar, axis=1) )
                 
             result += [ ('SAE masked', np.concatenate (st_m, axis=0 )), ]
-        else:
-            st_m = []
-            for i in range(0, len(test_S)):
-                ar = S[i]*test_S_m[i], SS[i], D[i]*test_D_m[i], DD[i], SD[i]
-                st_m.append ( np.concatenate ( ar, axis=1) )
-                
-            result += [ ('SAE masked', np.concatenate (st_m, axis=0 )), ]
-            
+
         return result
 
     def predictor_func (self, face):

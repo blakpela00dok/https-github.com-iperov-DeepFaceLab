@@ -49,6 +49,7 @@ if __name__ == "__main__":
     p.add_argument('--cpu-only', action="store_true", dest="cpu_only", default=False, help="Extract on CPU. Forces to use MT extractor.")
     p.set_defaults (func=process_extract)
 
+    """
     def process_extract_fanseg(arguments):
         os_utils.set_process_lowest_prio()
         from mainscripts import Extractor
@@ -63,6 +64,7 @@ if __name__ == "__main__":
     p.add_argument('--multi-gpu', action="store_true", dest="multi_gpu", default=False, help="Enables multi GPU.")
     p.add_argument('--cpu-only', action="store_true", dest="cpu_only", default=False, help="Extract on CPU.")
     p.set_defaults (func=process_extract_fanseg)
+    """
     
     def process_sort(arguments):
         os_utils.set_process_lowest_prio()
@@ -87,15 +89,15 @@ if __name__ == "__main__":
         if arguments.recover_original_aligned_filename:
             Util.recover_original_aligned_filename (input_path=arguments.input_dir)
             
-        if arguments.remove_fanseg:
-            Util.remove_fanseg_folder (input_path=arguments.input_dir)
+        #if arguments.remove_fanseg:
+        #    Util.remove_fanseg_folder (input_path=arguments.input_dir)
             
     p = subparsers.add_parser( "util", help="Utilities.")
     p.add_argument('--input-dir', required=True, action=fixPathAction, dest="input_dir", help="Input directory. A directory containing the files you wish to process.")
     p.add_argument('--convert-png-to-jpg', action="store_true", dest="convert_png_to_jpg", default=False, help="Convert DeepFaceLAB PNG files to JPEG.")
     p.add_argument('--add-landmarks-debug-images', action="store_true", dest="add_landmarks_debug_images", default=False, help="Add landmarks debug image for aligned faces.")
     p.add_argument('--recover-original-aligned-filename', action="store_true", dest="recover_original_aligned_filename", default=False, help="Recover original aligned filename.")
-    p.add_argument('--remove-fanseg', action="store_true", dest="remove_fanseg", default=False, help="Remove fanseg mask from aligned faces.")
+    #p.add_argument('--remove-fanseg', action="store_true", dest="remove_fanseg", default=False, help="Remove fanseg mask from aligned faces.")
     
     p.set_defaults (func=process_util)
 
