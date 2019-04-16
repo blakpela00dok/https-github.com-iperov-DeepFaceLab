@@ -20,6 +20,9 @@ class DLIBExtractor(object):
     def __exit__(self, exc_type=None, exc_value=None, traceback=None):
         del self.dlib_cnn_face_detector
         return False #pass exception between __enter__ and __exit__ to outter level
+    
+    def extract(self, input_image, is_bgr=True):
+        return self.extract_from_bgr(input_image)
 
     def extract_from_bgr (self, input_image):
         input_image = input_image[:,:,::-1].copy()
