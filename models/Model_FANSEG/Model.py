@@ -16,14 +16,23 @@ class Model(ModelBase):
                             ask_sort_by_yaw=False,
                             ask_random_flip=False,
                             ask_src_scale_mod=False)
-        
+    
+    #override
+    def onInitializeOptions(self, is_first_run, ask_override):            
+        default_face_type = 'f'
+        if is_first_run:
+            self.options['face_type'] = io.input_str ("Half or Full face? (h/f, ?:help skip:f) : ", default_face_type, ['h','f'], help_message="Half face has better resolution, but covers less area of cheeks.").lower()
+        else:
+            self.options['face_type'] = self.options.get('face_type', default_face_type)
+     
     #override
     def onInitialize(self):
         exec(nnlib.import_all(), locals(), globals())
         self.set_vram_batch_requirements( {1.5:4} )
 
         self.resolution = 256
-        self.face_type = FaceType.FULL
+        self.face_type = FaceType.FULL if self.options['face_type'] == 'f' else FaceType.HALF
+
         
         self.fan_seg = FANSegmentator(self.resolution, 
                                       FaceType.toString(self.face_type), 
@@ -33,18 +42,18 @@ class Model(ModelBase):
 
         if self.is_training_mode:
             f = SampleProcessor.TypeFlags
-            f_type = f.FACE_TYPE_FULL
+            face_type = f.FACE_TYPE_FULL if self.options['face_type'] == 'f' else f.FACE_TYPE_HALF
             
             self.set_training_data_generators ([    
                     SampleGeneratorFace(self.training_data_src_path, debug=self.is_debug(), batch_size=self.batch_size, 
                             sample_process_options=SampleProcessor.Options(random_flip=True, motion_blur = [25, 1] ), 
-                            output_sample_types=[ [f.WARPED_TRANSFORMED | f_type | f.MODE_BGR_SHUFFLE | f.OPT_APPLY_MOTION_BLUR, self.resolution],
-                                                  [f.WARPED_TRANSFORMED | f_type | f.MODE_M | f.FACE_MASK_FULL, self.resolution]
+                            output_sample_types=[ [f.WARPED_TRANSFORMED | face_type | f.MODE_BGR_SHUFFLE | f.OPT_APPLY_MOTION_BLUR, self.resolution],
+                                                  [f.WARPED_TRANSFORMED | face_type | f.MODE_M | f.FACE_MASK_FULL, self.resolution]
                                                 ]),
                                                 
                     SampleGeneratorFace(self.training_data_dst_path, debug=self.is_debug(), batch_size=self.batch_size, 
                             sample_process_options=SampleProcessor.Options(random_flip=True ), 
-                            output_sample_types=[ [f.TRANSFORMED | f_type | f.MODE_BGR_SHUFFLE, self.resolution]
+                            output_sample_types=[ [f.TRANSFORMED | face_type | f.MODE_BGR_SHUFFLE, self.resolution]
                                                 ])
                                                ])
                 
