@@ -15,7 +15,7 @@ output_sample_types = [
                       ]
 '''
 class SampleGeneratorFace(SampleGeneratorBase):
-    def __init__ (self, samples_path, debug, batch_size, sort_by_yaw=False, sort_by_yaw_target_samples_path=None, with_close_to_self=False, sample_process_options=SampleProcessor.Options(), output_sample_types=[], add_sample_idx=False, add_pitch=False, add_yaw=False, generators_count=2, generators_random_seed=None, **kwargs):
+    def __init__ (self, samples_path, debug, batch_size, sort_by_yaw=False, sort_by_yaw_target_samples_path=None, sample_process_options=SampleProcessor.Options(), output_sample_types=[], add_sample_idx=False, add_pitch=False, add_yaw=False, generators_count=2, generators_random_seed=None, **kwargs):
         super().__init__(samples_path, debug, batch_size)
         self.sample_process_options = sample_process_options
         self.output_sample_types = output_sample_types
@@ -27,8 +27,6 @@ class SampleGeneratorFace(SampleGeneratorBase):
             self.sample_type = SampleType.FACE_YAW_SORTED_AS_TARGET
         elif sort_by_yaw:
             self.sample_type = SampleType.FACE_YAW_SORTED
-        elif with_close_to_self:
-            self.sample_type = SampleType.FACE_WITH_CLOSE_TO_SELF
         else:
             self.sample_type = SampleType.FACE
 

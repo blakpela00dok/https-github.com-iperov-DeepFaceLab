@@ -30,7 +30,8 @@ class ConverterMasked(Converter):
                         base_blur_mask_modifier = 0,
                         default_erode_mask_modifier = 0,
                         default_blur_mask_modifier = 0,
-                        clip_hborder_mask_per = 0):
+                        clip_hborder_mask_per = 0,
+                        force_mask_mode=-1):
 
         super().__init__(predictor_func, Converter.TYPE_FACE)
 
@@ -76,10 +77,13 @@ class ConverterMasked(Converter):
             if self.mode == 'hist-match' or self.mode == 'hist-match-bw' or self.mode == 'seamless-hist-match':
                 self.hist_match_threshold = np.clip ( io.input_int("Hist match threshold [0..255] (skip:255) :  ", 255), 0, 255)
 
-        if face_type == FaceType.FULL:
-            self.mask_mode = np.clip ( io.input_int ("Mask mode: (1) learned, (2) dst, (3) FAN-prd, (4) FAN-dst , (5) FAN-prd*FAN-dst (6) learned*FAN-prd*FAN-dst (?) help. Default - %d : " % (1) , 1, help_message="If you learned mask, then option 1 should be choosed. 'dst' mask is raw shaky mask from dst aligned images. 'FAN-prd' - using super smooth mask by pretrained FAN-model from predicted face. 'FAN-dst' - using super smooth mask by pretrained FAN-model from dst face. 'FAN-prd*FAN-dst' or 'learned*FAN-prd*FAN-dst' - using multiplied masks."), 1, 6 )
+        if force_mask_mode != -1:
+            self.mask_mode = force_mask_mode
         else:
-            self.mask_mode = np.clip ( io.input_int ("Mask mode: (1) learned, (2) dst . Default - %d : " % (1) , 1), 1, 2 )
+            if face_type == FaceType.FULL:
+                self.mask_mode = np.clip ( io.input_int ("Mask mode: (1) learned, (2) dst, (3) FAN-prd, (4) FAN-dst , (5) FAN-prd*FAN-dst (6) learned*FAN-prd*FAN-dst (?) help. Default - %d : " % (1) , 1, help_message="If you learned mask, then option 1 should be choosed. 'dst' mask is raw shaky mask from dst aligned images. 'FAN-prd' - using super smooth mask by pretrained FAN-model from predicted face. 'FAN-dst' - using super smooth mask by pretrained FAN-model from dst face. 'FAN-prd*FAN-dst' or 'learned*FAN-prd*FAN-dst' - using multiplied masks."), 1, 6 )
+            else:
+                self.mask_mode = np.clip ( io.input_int ("Mask mode: (1) learned, (2) dst . Default - %d : " % (1) , 1), 1, 2 )
 
         if self.mask_mode >= 3 and self.mask_mode <= 6:
             self.fan_seg = None
@@ -118,10 +122,10 @@ class ConverterMasked(Converter):
     #overridable
     def on_cli_initialize(self):
         if (self.mask_mode >= 3 and self.mask_mode <= 6) and self.fan_seg == None:
-            self.fan_seg = FANSegmentator(256, FaceType.toString(FaceType.FULL) )
+            self.fan_seg = FANSegmentator(256, FaceType.toString( self.face_type ) )
 
     #override
-    def cli_convert_face (self, img_bgr, img_face_landmarks, debug):
+    def cli_convert_face (self, img_bgr, img_face_landmarks, debug, **kwargs):
         if debug:
             debugs = [img_bgr.copy()]
 

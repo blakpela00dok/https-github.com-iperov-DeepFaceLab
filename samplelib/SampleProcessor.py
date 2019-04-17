@@ -209,7 +209,7 @@ class SampleProcessor(object):
                 img_mask = img[...,3:4]
 
                 if f & SPTF.MODE_BGR != 0:
-                    img = img
+                    img = img_bgr
                 elif f & SPTF.MODE_BGR_SHUFFLE != 0:
                     img_bgr = np.take (img_bgr, np.random.permutation(img_bgr.shape[-1]), axis=-1)
                     img = np.concatenate ( (img_bgr,img_mask) , -1 )
