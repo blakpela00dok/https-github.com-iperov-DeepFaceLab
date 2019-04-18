@@ -42,38 +42,58 @@ class AVATARModel(ModelBase):
         
         ngf = 64
         ndf = 64
-        lambda_A = 10
-        lambda_B = 10
+        lambda_A = 100
+        lambda_B = 100
 
         use_batch_norm = True #created_batch_size > 1
-        self.GA = modelify(AVATARModel.ResNet (bgr_shape[2], use_batch_norm, n_blocks=6, ngf=ngf, use_dropout=True))( Input(bgrm_shape) )
-        self.GB = modelify(AVATARModel.ResNet (bgr_shape[2], use_batch_norm, n_blocks=6, ngf=ngf, use_dropout=True))( Input(bgrm_shape) )
+        
+        self.enc = modelify(AVATARModel.DFEncFlow ())( Input(bgrm_shape) )
+        
+        dec_Inputs = [ Input(K.int_shape(x)[1:]) for x in self.enc.outputs ]
+
+        self.decA = modelify(AVATARModel.DFDecFlow (bgr_shape[2])) (dec_Inputs)
+        self.decB = modelify(AVATARModel.DFDecFlow (bgr_shape[2])) (dec_Inputs)
+        
+        #self.GA = modelify(AVATARModel.ResNet (bgr_shape[2], use_batch_norm, n_blocks=6, ngf=ngf, use_dropout=True))( Input(bgrm_shape) )
+        #self.GB = modelify(AVATARModel.ResNet (bgr_shape[2], use_batch_norm, n_blocks=6, ngf=ngf, use_dropout=True))( Input(bgrm_shape) )
 
         #self.GA = modelify(UNet (bgr_shape[2], use_batch_norm, num_downs=get_power_of_two(resolution)-1, ngf=ngf, use_dropout=True))(Input(bgr_shape))
         #self.GB = modelify(UNet (bgr_shape[2], use_batch_norm, num_downs=get_power_of_two(resolution)-1, ngf=ngf, use_dropout=True))(Input(bgr_shape))
         
+        def GA(x):
+            return self.decA(self.enc(x))
+        self.GA = GA
+        
+        def GB(x):
+            return self.decB(self.enc(x))
+        self.GB = GB
 
-        self.DA = modelify(AVATARModel.PatchDiscriminator(ndf=ndf) ) ( Input(bgrm_shape) )
-        self.DB = modelify(AVATARModel.PatchDiscriminator(ndf=ndf) ) ( Input(bgrm_shape) )
+        #self.DA = modelify(AVATARModel.PatchDiscriminator(ndf=ndf) ) ( Input(bgrm_shape) )
+        #self.DB = modelify(AVATARModel.PatchDiscriminator(ndf=ndf) ) ( Input(bgrm_shape) )
+        self.DA = modelify(AVATARModel.NLayerDiscriminator(ndf=ndf) ) ( Input(bgrm_shape) )
+        self.DB = modelify(AVATARModel.NLayerDiscriminator(ndf=ndf) ) ( Input(bgrm_shape) )
 
         if not self.is_first_run():
             weights_to_load = [
-                (self.GA, 'GA.h5'),
+                # (self.GA, 'GA.h5'),                
+                # (self.GB, 'GB.h5'),
+                (self.enc, 'enc.h5'),
+                (self.decA, 'decA.h5'),
+                (self.decB, 'decB.h5'),
                 (self.DA, 'DA.h5'),
-                (self.GB, 'GB.h5'),
                 (self.DB, 'DB.h5'),
             ]
             self.load_weights_safe(weights_to_load)
             
         real_A0 = Input(bgr_shape)
         real_A0m = Input(mask_shape)
+        real_A0m_sigm = (real_A0m + 1) / 2
         real_B0 = Input(bgr_shape)
         real_B0m = Input(mask_shape)
-        
-        real_A0_A0m = K.concatenate([real_A0, real_A0m])
+        real_B0m_sigm = (real_B0m + 1) / 2
+
         real_A0_B0m = K.concatenate([real_A0, real_B0m])
         
-        real_B0_B0m = K.concatenate([real_B0, real_B0m])
         real_B0_A0m = K.concatenate([real_B0, real_A0m])
         
         DA_ones =  K.ones_like ( K.shape(self.DA.outputs[0]) )
@@ -85,23 +105,23 @@ class AVATARModel(ModelBase):
             return K.mean(K.binary_crossentropy(labels,logits))
 
         def CycleLOSS(t1,t2):
-            return K.mean(K.abs(t1 - t2))
+            return dssim(kernel_size=int(resolution/11.6),max_value=2.0)(t1+1,t2+1 )            
+            #return K.mean(K.abs(t1 - t2))
             
-        fake_B0 = self.GA(real_A0_B0m)
+        fake_B0 = self.GA(real_A0_B0m)        
+        fake_A0 = self.GB(real_B0_A0m)  
         
-        fake_A0 = self.GB(real_B0_A0m)    
-        
-        real_A0_d = self.DA(real_A0_A0m)
+        real_A0_d = self.DA( K.concatenate([  real_A0 * real_A0m_sigm  , real_A0m]) )
         real_A0_d_ones = K.ones_like(real_A0_d)
         
         fake_A0_d = self.DA( K.concatenate([fake_A0, real_A0m]) )
         fake_A0_d_ones = K.ones_like(fake_A0_d)
         fake_A0_d_zeros = K.zeros_like(fake_A0_d)
   
-        real_B0_d = self.DB(real_B0_B0m)
+        real_B0_d = self.DB( K.concatenate([real_B0 * real_B0m_sigm, real_B0m]) )
         real_B0_d_ones = K.ones_like(real_B0_d)
      
-        fake_B0_d = self.DB( K.concatenate([fake_B0, real_B0m]) )
+        fake_B0_d = self.DB( K.concatenate([fake_B0 , real_B0m]) )
         fake_B0_d_ones = K.ones_like(fake_B0_d)
         fake_B0_d_zeros = K.zeros_like(fake_B0_d)
 
@@ -110,17 +130,17 @@ class AVATARModel(ModelBase):
 
                     
         loss_GA = DLoss(fake_B0_d_ones, fake_B0_d ) + \
-                  lambda_A * (CycleLOSS(rec_B0, real_B0) )
+                  lambda_A * (CycleLOSS(rec_B0*real_B0m_sigm, real_B0*real_B0m_sigm) )
                          
-        weights_GA = self.GA.trainable_weights
+        weights_GA = self.enc.trainable_weights + self.decA.trainable_weights
         
         loss_GB = DLoss(fake_A0_d_ones, fake_A0_d ) + \
-                  lambda_B * (CycleLOSS(rec_A0, real_A0) )
+                  lambda_B * (CycleLOSS(rec_A0*real_A0m_sigm, real_A0*real_A0m_sigm) )
                               
-        weights_GB = self.GB.trainable_weights
-        
+        weights_GB = self.enc.trainable_weights + self.decB.trainable_weights
+
         def opt():
-            return Adam(lr=2e-4, beta_1=0.5, beta_2=0.999, tf_cpu_mode=2)#, clipnorm=1)
+            return Adam(lr=2e-5, beta_1=0.5, beta_2=0.999, tf_cpu_mode=2)#, clipnorm=1)
         
         self.GA_train = K.function ([real_A0, real_A0m, real_B0, real_B0m],[loss_GA],
                                     opt().get_updates(loss_GA, weights_GA) )
@@ -128,10 +148,11 @@ class AVATARModel(ModelBase):
         self.GB_train = K.function ([real_A0, real_A0m, real_B0, real_B0m],[loss_GB],
                                     opt().get_updates(loss_GB, weights_GB) )
                                     
+                                                      
         ###########        
         
         loss_D_A = ( DLoss(real_A0_d_ones, real_A0_d ) + \
-                     DLoss(fake_A0_d_zeros, fake_A0_d ) ) * 0.5
+                          DLoss(fake_A0_d_zeros, fake_A0_d ) ) * 0.5
                       
         self.DA_train = K.function ([real_A0, real_A0m, real_B0, real_B0m],[loss_D_A],
                                     opt().get_updates(loss_D_A, self.DA.trainable_weights) )
@@ -139,7 +160,7 @@ class AVATARModel(ModelBase):
         ############
         
         loss_D_B = ( DLoss(real_B0_d_ones, real_B0_d ) + \
-                     DLoss(fake_B0_d_zeros, fake_B0_d ) ) * 0.5
+                         DLoss(fake_B0_d_zeros, fake_B0_d ) ) * 0.5
 
         self.DB_train = K.function ([real_A0, real_A0m, real_B0, real_B0m],[loss_D_B],
                                     opt().get_updates(loss_D_B, self.DB.trainable_weights) )
@@ -173,8 +194,12 @@ class AVATARModel(ModelBase):
             
     #override
     def onSave(self):
-        self.save_weights_safe( [[self.GA,   'GA.h5'],
-                                 [self.GB,   'GB.h5'],
+        self.save_weights_safe( [
+                                #  [self.GA,   'GA.h5'],
+                                #  [self.GB,   'GB.h5'],
+                                 [self.enc,   'enc.h5'],
+                                 [self.decA,   'decA.h5'],
+                                 [self.decB,   'decB.h5'],
                                  [self.DA,   'DA.h5'],
                                  [self.DB,   'DB.h5'] ])
         
@@ -263,12 +288,12 @@ class AVATARModel(ModelBase):
                     x = XNormalization(x)
                     x = ReLU()(x)
 
-                    if use_dropout:
-                        x = Dropout(0.5)(x)
+                    #if use_dropout:
+                    #    x = Dropout(0.5)(x)
 
                     x = XConv2D(dim, 3, strides=1)(x)
                     x = XNormalization(x)
-                    x = ReLU()(x)
+                    
                     return Add()([x,input])
                 return func
 
@@ -276,8 +301,8 @@ class AVATARModel(ModelBase):
 
             x = XConv2D(ngf, 7, strides=1, use_bias=True)(x)
 
-            x = ReLU()(XNormalization(XConv2D(ngf*2, 4, strides=2)(x)))
-            x = ReLU()(XNormalization(XConv2D(ngf*4, 4, strides=2)(x)))
+            x = ReLU()(XNormalization(XConv2D(ngf*2, 3, strides=2)(x)))
+            x = ReLU()(XNormalization(XConv2D(ngf*4, 3, strides=2)(x)))
 
             for i in range(n_blocks):
                 x = ResnetBlock(ngf*4, use_dropout=use_dropout)(x)
@@ -370,39 +395,180 @@ class AVATARModel(ModelBase):
         return func
         
     @staticmethod
-    def PatchDiscriminator(ndf=64, n_layers=3):
+    def PatchDiscriminator(ndf=64):
         exec (nnlib.import_all(), locals(), globals())
 
-        use_bias = True
+        #use_bias = True
+        #def XNormalization(x):
+        #    return InstanceNormalization (axis=-1)(x)
+        use_bias = False
         def XNormalization(x):
-            return InstanceNormalization (axis=-1)(x)
+            return BatchNormalization (axis=-1)(x)
                 
         XConv2D = partial(Conv2D, use_bias=use_bias)
  
         def func(input):
+            b,h,w,c = K.int_shape(input)
+
             x = input
 
             x = ZeroPadding2D((1,1))(x)
-            x = XConv2D( ndf, 4, strides=2, padding='valid')(x)
+            x = XConv2D( ndf, 4, strides=2, padding='valid', use_bias=True)(x)
             x = LeakyReLU(0.2)(x)
-
+            
             x = ZeroPadding2D((1,1))(x)
             x = XConv2D( ndf*2, 4, strides=2, padding='valid')(x)
             x = XNormalization(x)
             x = LeakyReLU(0.2)(x)
             
-            x = ZeroPadding2D((1,1))(x)
+            x = ZeroPadding2D((1,1))(x)           
             x = XConv2D( ndf*4, 4, strides=2, padding='valid')(x)
             x = XNormalization(x)
             x = LeakyReLU(0.2)(x)
             
             x = ZeroPadding2D((1,1))(x)
-            x = XConv2D( ndf*8, 4, strides=1, padding='valid')(x)
+            x = XConv2D( ndf*8, 4, strides=2, padding='valid')(x)
             x = XNormalization(x)
             x = LeakyReLU(0.2)(x)
 
             x = ZeroPadding2D((1,1))(x)
-            return XConv2D( 1, 4, strides=1, padding='valid', activation='sigmoid')(x)#
+            x = XConv2D( ndf*8, 4, strides=2, padding='valid')(x)
+            x = XNormalization(x)
+            x = LeakyReLU(0.2)(x)
+
+            x = ZeroPadding2D((1,1))(x)
+            return XConv2D( 1, 4, strides=1, padding='valid', use_bias=True, activation='sigmoid')(x)#
+        return func
+        
+    @staticmethod
+    def NLayerDiscriminator(ndf=64, n_layers=3):
+        exec (nnlib.import_all(), locals(), globals())
+
+        #use_bias = True
+        #def XNormalization(x):
+        #    return InstanceNormalization (axis=-1)(x)
+        use_bias = False
+        def XNormalization(x):
+            return BatchNormalization (axis=-1)(x)
+                
+        XConv2D = partial(Conv2D, use_bias=use_bias)
+ 
+        def func(input):
+            b,h,w,c = K.int_shape(input)
+
+            x = input
+            
+            f = ndf
+
+            x = ZeroPadding2D((1,1))(x)
+            x = XConv2D( f, 4, strides=2, padding='valid', use_bias=True)(x)
+            f = min( ndf*8, f*2 )
+            x = LeakyReLU(0.2)(x)
+            
+            for i in range(n_layers):
+                x = ZeroPadding2D((1,1))(x)
+                x = XConv2D( f, 4, strides=2, padding='valid')(x)               
+                f = min( ndf*8, f*2 )
+                x = XNormalization(x)
+                x = Dropout(0.5)(x)
+                x = LeakyReLU(0.2)(x)
+            
+            x = ZeroPadding2D((1,1))(x)
+            x = XConv2D( f, 4, strides=1, padding='valid')(x)
+            x = XNormalization(x)
+            x = LeakyReLU(0.2)(x)
+
+            x = ZeroPadding2D((1,1))(x)
+            return XConv2D( 1, 4, strides=1, padding='valid', use_bias=True, activation='sigmoid')(x)#
+        return func
+        
+    @staticmethod
+    def DFEncFlow(padding='zero', **kwargs):
+        exec (nnlib.import_all(), locals(), globals())
+        
+        use_bias = False
+        def XNormalization(x):
+            return BatchNormalization (axis=-1)(x)
+        XConv2D = partial(Conv2D, padding=padding, use_bias=use_bias)
+        
+        def Act(lrelu_alpha=0.1):
+            return LeakyReLU(alpha=lrelu_alpha)
+
+        def downscale (dim, **kwargs):
+            def func(x):
+                return Act() ( XNormalization(XConv2D(dim, kernel_size=5, strides=2)(x)) )
+            return func
+            
+        def upscale (dim, **kwargs):
+            def func(x):
+                return SubpixelUpscaler()(Act()( XNormalization(XConv2D(dim * 4, kernel_size=3, strides=1)(x))))
+            return func
+        
+        upscale = partial(upscale)
+        downscale = partial(downscale)
+        
+        
+        def func(input):
+            b,h,w,c = K.int_shape(input)
+            lowest_dense_res = w // 16
+            
+            x = input
+
+            dims = 64
+            x = downscale(dims)(x)
+            x = downscale(dims*2)(x)
+            x = downscale(dims*4)(x)
+            x = downscale(dims*8)(x)
+
+            x = Dense(256)(Flatten()(x))
+            x = Dense(lowest_dense_res * lowest_dense_res * 256)(x)
+            x = Reshape((lowest_dense_res, lowest_dense_res, 256))(x)
+            x = upscale(256)(x)
+
+            return x
+        return func    
+        
+    @staticmethod
+    def DFDecFlow(output_nc, padding='zero', **kwargs):
+        exec (nnlib.import_all(), locals(), globals())
+        
+        use_bias = False
+        def XNormalization(x):
+            return BatchNormalization (axis=-1)(x)
+        XConv2D = partial(Conv2D, padding=padding, use_bias=use_bias)
+        
+        def Act(lrelu_alpha=0.1):
+            return LeakyReLU(alpha=lrelu_alpha)
+
+        def downscale (dim, **kwargs):
+            def func(x):
+                return Act() ( XNormalization(XConv2D(dim, kernel_size=5, strides=2)(x)) )
+            return func
+            
+        def upscale (dim, **kwargs):
+            def func(x):
+                return SubpixelUpscaler()(Act()( XNormalization(XConv2D(dim * 4, kernel_size=3, strides=1)(x))))
+            return func
+
+        def to_bgr (output_nc, **kwargs):
+            def func(x):
+                return XConv2D(output_nc, kernel_size=5, use_bias=True, activation='tanh')(x)
+            return func
+            
+        upscale = partial(upscale)
+        downscale = partial(downscale)
+        to_bgr = partial(to_bgr)
+        
+        dims = 64
+
+        def func(input):
+            x = input[0]
+
+            x1 = upscale(dims*8)( x )
+            x2 = upscale(dims*4)( x1 )
+            x3 = upscale(dims*2)( x2 )
+
+            return to_bgr(output_nc) ( x3 )
         return func
         
 Model = AVATARModel

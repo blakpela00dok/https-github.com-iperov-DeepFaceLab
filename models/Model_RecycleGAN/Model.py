@@ -48,8 +48,8 @@ class RecycleGANModel(ModelBase):
         self.PA = modelify(RecycleGANModel.UNetTemporalPredictor(bgr_shape[2], use_batch_norm, ngf=npf))([Input(bgr_shape), Input(bgr_shape)])
         self.PB = modelify(RecycleGANModel.UNetTemporalPredictor(bgr_shape[2], use_batch_norm, ngf=npf))([Input(bgr_shape), Input(bgr_shape)])
 
-        self.DA = modelify(RecycleGANModel.PatchDiscriminator(ndf=ndf) ) (Input(bgr_shape))
-        self.DB = modelify(RecycleGANModel.PatchDiscriminator(ndf=ndf) ) (Input(bgr_shape))
+        self.DA = modelify(RecycleGANModel.NLayerDiscriminator(ndf=ndf) ) (Input(bgr_shape))
+        self.DB = modelify(RecycleGANModel.NLayerDiscriminator(ndf=ndf) ) (Input(bgr_shape))
 
         if not self.is_first_run():
             weights_to_load = [
@@ -294,8 +294,8 @@ class RecycleGANModel(ModelBase):
 
             x = XConv2D(ngf, 7, strides=1, use_bias=True)(x)
 
-            x = ReLU()(XNormalization(XConv2D(ngf*2, 4, strides=2)(x)))
-            x = ReLU()(XNormalization(XConv2D(ngf*4, 4, strides=2)(x)))
+            x = ReLU()(XNormalization(XConv2D(ngf*2, 3, strides=2)(x)))
+            x = ReLU()(XNormalization(XConv2D(ngf*4, 3, strides=2)(x)))
 
             for i in range(n_blocks):
                 x = ResnetBlock(ngf*4, use_dropout=use_dropout)(x)
@@ -388,39 +388,91 @@ class RecycleGANModel(ModelBase):
         return func
         
     @staticmethod
-    def PatchDiscriminator(ndf=64, n_layers=3):
+    def PatchDiscriminator(ndf=64):
         exec (nnlib.import_all(), locals(), globals())
 
-        use_bias = True
+        #use_bias = True
+        #def XNormalization(x):
+        #    return InstanceNormalization (axis=-1)(x)
+        use_bias = False
         def XNormalization(x):
-            return InstanceNormalization (axis=-1)(x)
+            return BatchNormalization (axis=-1)(x)
                 
         XConv2D = partial(Conv2D, use_bias=use_bias)
  
         def func(input):
+            b,h,w,c = K.int_shape(input)
+
             x = input
 
             x = ZeroPadding2D((1,1))(x)
-            x = XConv2D( ndf, 4, strides=2, padding='valid')(x)
+            x = XConv2D( ndf, 4, strides=2, padding='valid', use_bias=True)(x)
             x = LeakyReLU(0.2)(x)
-
+            
             x = ZeroPadding2D((1,1))(x)
             x = XConv2D( ndf*2, 4, strides=2, padding='valid')(x)
             x = XNormalization(x)
             x = LeakyReLU(0.2)(x)
             
-            x = ZeroPadding2D((1,1))(x)
+            x = ZeroPadding2D((1,1))(x)           
             x = XConv2D( ndf*4, 4, strides=2, padding='valid')(x)
             x = XNormalization(x)
             x = LeakyReLU(0.2)(x)
             
             x = ZeroPadding2D((1,1))(x)
-            x = XConv2D( ndf*8, 4, strides=1, padding='valid')(x)
+            x = XConv2D( ndf*8, 4, strides=2, padding='valid')(x)
             x = XNormalization(x)
             x = LeakyReLU(0.2)(x)
 
             x = ZeroPadding2D((1,1))(x)
-            return XConv2D( 1, 4, strides=1, padding='valid', activation='sigmoid')(x)#
+            x = XConv2D( ndf*8, 4, strides=2, padding='valid')(x)
+            x = XNormalization(x)
+            x = LeakyReLU(0.2)(x)
+
+            x = ZeroPadding2D((1,1))(x)
+            return XConv2D( 1, 4, strides=1, padding='valid', use_bias=True, activation='sigmoid')(x)#
+        return func
+        
+    @staticmethod
+    def NLayerDiscriminator(ndf=64, n_layers=3):
+        exec (nnlib.import_all(), locals(), globals())
+
+        #use_bias = True
+        #def XNormalization(x):
+        #    return InstanceNormalization (axis=-1)(x)
+        use_bias = False
+        def XNormalization(x):
+            return BatchNormalization (axis=-1)(x)
+                
+        XConv2D = partial(Conv2D, use_bias=use_bias)
+ 
+        def func(input):
+            b,h,w,c = K.int_shape(input)
+
+            x = input
+            
+            f = ndf
+
+            x = ZeroPadding2D((1,1))(x)
+            x = XConv2D( f, 4, strides=2, padding='valid', use_bias=True)(x)
+            f = min( ndf*8, f*2 )
+            x = LeakyReLU(0.2)(x)
+            
+            for i in range(n_layers):
+                x = ZeroPadding2D((1,1))(x)
+                x = XConv2D( f, 4, strides=2, padding='valid')(x)               
+                f = min( ndf*8, f*2 )
+                x = XNormalization(x)
+                x = Dropout(0.5)(x)
+                x = LeakyReLU(0.2)(x)
+            
+            x = ZeroPadding2D((1,1))(x)
+            x = XConv2D( f, 4, strides=1, padding='valid')(x)
+            x = XNormalization(x)
+            x = LeakyReLU(0.2)(x)
+
+            x = ZeroPadding2D((1,1))(x)
+            return XConv2D( 1, 4, strides=1, padding='valid', use_bias=True, activation='sigmoid')(x)#
         return func
         
 Model = RecycleGANModel
