@@ -48,8 +48,8 @@ class RecycleGANModel(ModelBase):
         self.PA = modelify(RecycleGANModel.UNetTemporalPredictor(bgr_shape[2], use_batch_norm, ngf=npf))([Input(bgr_shape), Input(bgr_shape)])
         self.PB = modelify(RecycleGANModel.UNetTemporalPredictor(bgr_shape[2], use_batch_norm, ngf=npf))([Input(bgr_shape), Input(bgr_shape)])
 
-        self.DA = modelify(RecycleGANModel.NLayerDiscriminator(ndf=ndf) ) (Input(bgr_shape))
-        self.DB = modelify(RecycleGANModel.NLayerDiscriminator(ndf=ndf) ) (Input(bgr_shape))
+        self.DA = modelify(RecycleGANModel.PatchDiscriminator(ndf=ndf) ) (Input(bgr_shape))
+        self.DB = modelify(RecycleGANModel.PatchDiscriminator(ndf=ndf) ) (Input(bgr_shape))
 
         if not self.is_first_run():
             weights_to_load = [
@@ -292,7 +292,7 @@ class RecycleGANModel(ModelBase):
 
             x = input
 
-            x = XConv2D(ngf, 7, strides=1, use_bias=True)(x)
+            x = ReLU()(XNormalization(XConv2D(ngf, 7, strides=1)(x)))
 
             x = ReLU()(XNormalization(XConv2D(ngf*2, 3, strides=2)(x)))
             x = ReLU()(XNormalization(XConv2D(ngf*4, 3, strides=2)(x)))
@@ -463,7 +463,6 @@ class RecycleGANModel(ModelBase):
                 x = XConv2D( f, 4, strides=2, padding='valid')(x)               
                 f = min( ndf*8, f*2 )
                 x = XNormalization(x)
-                x = Dropout(0.5)(x)
                 x = LeakyReLU(0.2)(x)
             
             x = ZeroPadding2D((1,1))(x)
