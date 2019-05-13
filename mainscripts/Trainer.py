@@ -12,7 +12,7 @@ import cv2
 import models
 from interact import interact as io
 
-def trainerThread (s2c, c2s, args, device_args):
+def trainerThread (s2c, c2s, e, args, device_args):
     while True:
         try:
             start_time = time.time()
@@ -63,6 +63,7 @@ def trainerThread (s2c, c2s, args, device_args):
                 if not debug:
                     previews = model.get_previews()
                     c2s.put ( {'op':'show', 'previews': previews, 'iter':model.get_iter(), 'loss_history': model.get_loss_history().copy() } )
+                    e.set() #Set the GUI Thread as Ready
                 else:
                     previews = [( 'debug, press update for new', model.debug_one_iter())]
                     c2s.put ( {'op':'show', 'previews': previews} )
@@ -189,8 +190,11 @@ def main(args, device_args):
     s2c = queue.Queue()
     c2s = queue.Queue()
 
-    thread = threading.Thread(target=trainerThread, args=(s2c, c2s, args, device_args) )
+    e = threading.Event()
+    thread = threading.Thread(target=trainerThread, args=(s2c, c2s, e, args, device_args) )
     thread.start()
+
+    e.wait() #Wait for inital load to occur.
 
     if no_preview:
         while True:
@@ -291,10 +295,6 @@ def main(args, device_args):
 
             key_events = io.get_key_events(wnd_name)
             key, chr_key, ctrl_pressed, alt_pressed, shift_pressed = key_events[-1] if len(key_events) > 0 else (0,0,False,False,False)
-            
-            #Scheduling bug possibly? Only needed on linux.....
-            if not is_showing:
-                time.sleep(0.1)
 
             if key == ord('\n') or key == ord('\r'):
                 s2c.put ( {'op': 'close'} )
