@@ -63,10 +63,10 @@ def trainerThread (s2c, c2s, e, args, device_args):
                 if not debug:
                     previews = model.get_previews()
                     c2s.put ( {'op':'show', 'previews': previews, 'iter':model.get_iter(), 'loss_history': model.get_loss_history().copy() } )
-                    e.set() #Set the GUI Thread as Ready
                 else:
                     previews = [( 'debug, press update for new', model.debug_one_iter())]
                     c2s.put ( {'op':'show', 'previews': previews} )
+                e.set() #Set the GUI Thread as Ready
 
 
             if model.is_first_run():
