@@ -216,6 +216,7 @@ def main(args, device_args):
         is_waiting_preview = False
         show_last_history_iters_count = 0
         iter = 0
+        autopreview = False
         while True:
             if not c2s.empty():
                 input = c2s.get()
@@ -233,7 +234,13 @@ def main(args, device_args):
                             max_h = max (max_h, h)
                             max_w = max (max_w, w)
 
-                        max_size = 800
+                        #Gan-er comment:
+                        #this is the preview window max possible width.
+                        #I will automate in in the future but for now you can make this as large as you want
+                        #provided that you change the number of previews in the model.py as well. (See comments there)
+                        max_size = 1600 
+                        
+                        
                         if max_h > max_size:
                             max_w = int( max_w / (max_h / max_size) )
                             max_h = max_size
@@ -246,6 +253,14 @@ def main(args, device_args):
                                 previews.remove(preview)
                                 previews.append ( (preview_name, cv2.resize(preview_rgb, (max_w, max_h))) )
                         selected_preview = selected_preview % len(previews)
+                        #Gan-er comment:
+                        #Auto preview implementation for the update preview obsessed users. 
+                        #G---START
+                        if autopreview == True:
+                            is_waiting_preview = True
+                            s2c.put ( {'op': 'preview'} )
+                        #G---END
+                        
                         update_preview = True
                 elif op == 'close':
                     break
@@ -260,9 +275,9 @@ def main(args, device_args):
                 # HEAD
                 head_lines = [
                     '[s]:save [enter]:exit',
-                    '[p]:update [space]:next preview [l]:change history range',
-                    'Preview: "%s" [%d/%d]' % (selected_preview_name,selected_preview+1, len(previews) )
-                    ]
+                    '[p]:update [\]:autoupdate [}]:zoom out [{]:zoom in', #Gan-er: Update the key info presented to the user
+                    'Preview: "%s" ' % (selected_preview_name )
+                    ] 
                 head_line_height = 15
                 head_height = len(head_lines) * head_line_height
                 head = np.ones ( (head_height,w,c) ) * 0.1
@@ -292,30 +307,101 @@ def main(args, device_args):
             key_events = io.get_key_events(wnd_name)
             key, chr_key, ctrl_pressed, alt_pressed, shift_pressed = key_events[-1] if len(key_events) > 0 else (0,0,False,False,False)
             
+            #Gan-er comment:
+            #Change the zooming-in to taste. 
+            #Add remove change the values as you see fit. 
+            #The numbers in the show_last_history_iters_count simply tell you how many updates you want to see.
+            #So for example, 50 means the last 50 updates. All the previous ones will be pruned. 
+            #If you want to change the 50 to e.g. 75 go ahead and change the two '50' numbers below to '75', and so on.
+            #I will update this to be more sophisticated once I have the time. 
+            #The truth is that for a correct zooming implementation (where not just the last X updates are visible)
+            #but also the scale of the y-axis in the preview window changes the entire thing has to be refactored/converted
+            #using an MVC architecture. As it is now things that have to do with the presentation are intermingled with
+            #things that have to do with the modeling without any controllers so the whole thing is messy to deal with.
+            #Note that you need to be able to zoom-in/out in order to evaluate the model's effectiveness especially if you are
+            #doing more advanced stuff like warm restarts and what not (which you should be doing). For more details on wth 
+            #I am talking about you should check the wiki. [which at this moment does not exist] 
+            
+            #G---START
             if key == ord('\n') or key == ord('\r'):
-                s2c.put ( {'op': 'close'} )
-            elif key == ord('s'):
                 s2c.put ( {'op': 'save'} )
-            elif key == ord('p'):
+                s2c.put ( {'op': 'close'} )
+            elif key == ord('s') or key ==ord('S'):
+                s2c.put ( {'op': 'save'} )
+            elif key == ord('p') or key == ord('P'):
                 if not is_waiting_preview:
                     is_waiting_preview = True
                     s2c.put ( {'op': 'preview'} )
-            elif key == ord('l'):
+
+            elif key == ord('\\'):
+                if autopreview:
+                    autopreview = False
+                else:
+                    autopreview = True
+                    is_waiting_preview = True
+                    s2c.put ( {'op': 'preview'} )
+            elif key == ord(']'):
                 if show_last_history_iters_count == 0:
+                    show_last_history_iters_count = 50
+                elif show_last_history_iters_count == 50:
+                    show_last_history_iters_count = 150
+                elif show_last_history_iters_count == 150: 
+                    show_last_history_iters_count = 350
+                elif show_last_history_iters_count == 350:
+                    show_last_history_iters_count = 500    
+                elif show_last_history_iters_count == 500:
+                    show_last_history_iters_count = 620
+                elif show_last_history_iters_count == 620:
+                    show_last_history_iters_count = 1240
+                elif show_last_history_iters_count == 1240:
+                    show_last_history_iters_count = 2550
+                elif show_last_history_iters_count == 2550:
+                    show_last_history_iters_count = 3500
+                elif show_last_history_iters_count == 3500:
                     show_last_history_iters_count = 5000
                 elif show_last_history_iters_count == 5000:
+                    show_last_history_iters_count = 10000			                    
+                elif show_last_history_iters_count == 10000:
+                    show_last_history_iters_count = 15000	
+                elif show_last_history_iters_count == 15000:
+                    show_last_history_iters_count = 25000
+                elif show_last_history_iters_count == 25000:
+                    show_last_history_iters_count = 40000
+                elif show_last_history_iters_count == 40000:
+                    show_last_history_iters_count = 0			                    
+                update_preview = True
+            elif key == ord('['):
+                if show_last_history_iters_count == 0:
+                    show_last_history_iters_count = 40000
+                elif show_last_history_iters_count == 40000:
+                    show_last_history_iters_count = 25000
+                elif show_last_history_iters_count == 25000:
+                    show_last_history_iters_count = 15000
+                elif show_last_history_iters_count == 15000:
                     show_last_history_iters_count = 10000
                 elif show_last_history_iters_count == 10000:
-                    show_last_history_iters_count = 50000
-                elif show_last_history_iters_count == 50000:
-                    show_last_history_iters_count = 100000
-                elif show_last_history_iters_count == 100000:
-                    show_last_history_iters_count = 0
+                    show_last_history_iters_count = 5000
+                elif show_last_history_iters_count == 5000:
+                    show_last_history_iters_count = 3500
+                elif show_last_history_iters_count == 3500:
+                    show_last_history_iters_count = 2550
+                elif show_last_history_iters_count == 2550:
+                    show_last_history_iters_count = 1240
+                elif show_last_history_iters_count == 1240:
+                    show_last_history_iters_count = 620    
+                elif show_last_history_iters_count == 620:
+                    show_last_history_iters_count = 500
+                elif show_last_history_iters_count == 500:
+                    show_last_history_iters_count = 350
+                elif show_last_history_iters_count == 350:
+                    show_last_history_iters_count = 150
+                elif show_last_history_iters_count == 150:
+                    show_last_history_iters_count = 50
+                elif show_last_history_iters_count == 50:
+                    show_last_history_iters_count = 0	
+                                    
                 update_preview = True
-            elif key == ord(' '):
-                selected_preview = (selected_preview + 1) % len(previews)
-                update_preview = True
-
+            #G---END
             try:
                 io.process_messages(0.1)
             except KeyboardInterrupt:

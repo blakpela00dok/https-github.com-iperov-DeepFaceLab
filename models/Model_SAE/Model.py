@@ -271,8 +271,37 @@ class SAEModel(ModelBase):
         psd_target_dst_anti_masked_ar = [ pred_src_dst_sigm_ar[i]*target_dstm_anti_sigm_ar[i]  for i in range(len(pred_src_dst_sigm_ar))]
 
         if self.is_training_mode:
-            self.src_dst_opt      = Adam(lr=5e-5, beta_1=0.5, beta_2=0.999, tf_cpu_mode=self.options['optimizer_mode']-1)
-            self.src_dst_mask_opt = Adam(lr=5e-5, beta_1=0.5, beta_2=0.999, tf_cpu_mode=self.options['optimizer_mode']-1)
+            #Gan-er comment:
+            #Adam related stuff. i.e. the optimizer ..the core/heart and brains of your model... is here.
+            #These values are simply TOO important to be set here, fixed and inaccessible. Ideally should be changeable from GUI.
+            #If I refactor I will implement that. 
+            #For now... you can change the following 3 values depending on what you want to do.
+            #I can not explain in depth what they do here in the comments, but I can give you an idea.
+            
+            #This one is the learning rate, i.e. once you determine the direction that you need to move in descent... how far you are going to go that way.
+            #For an explanation you will have to see the wiki (when filled) or just google info about the learning rate.
+            #Intuitively you want this to be as LARGE as possible especially when you start, and have it getting smaller as you progress in your training
+            #There are countless techniques and methods and strategies about altering this value as you train. If I have the time I will implement manual and automatic alterations of this value from the GUI.
+            #A good starting value is something between 3.5e-4 and 9e-5.
+            myLR = 2.49e-4
+            
+            #Adam the optimizer, already alters the steps as the training goes on. i.e. it has learning adjustment built-in in it. 
+            #The problem is that YOU [having an actual brain and all] are much much MUCH MUUUUUUCH better at judging which values should be used.
+            #Anyway... Adam adjust the learning rate by using the the following two variables. 
+            #The first is pretty much affecting the how far in the past into the training history Adam should be looking for considering the those values.
+            #For example 0 means do not look into the past values at all. Look at just the previous one. 
+            #The second one is similar but for the average value of the history. 
+            #When you start you want the first one to be 0.95 or 0.9... and the second one to be 0.999. In fact these are the default values and you should not be playing with them.
+            #With these values you sort of using Adam '100%' as a matter of speaking.
+            #If you were to change these values to 0, then you would not consider any history at all. The optimizer would simply consider the previous step. 
+            #That is equivalent to using SGD, stochastic gradient descent. 
+            #Values that are in between determine the 'nature' of the optimizer. Higher values make it more 'Adam' lower values make it more SGD.
+            #For more on that either google, or check the wiki.
+            myb1 = 0.95
+            myb2 = 0.999
+            self.src_dst_opt      = Adam(lr=myLR, beta_1=myb1, beta_2=myb2, tf_cpu_mode=self.options['optimizer_mode']-1)
+            self.src_dst_mask_opt = Adam(lr=myLR, beta_1=myb1, beta_2=myb2, tf_cpu_mode=self.options['optimizer_mode']-1)
+
 
             if 'liae' in self.options['archi']:
                 src_dst_loss_train_weights = self.encoder.trainable_weights + self.inter_B.trainable_weights + self.inter_AB.trainable_weights + self.decoder.trainable_weights
@@ -432,6 +461,9 @@ class SAEModel(ModelBase):
 
 
     #override
+    #Gan-er comment: This function has no business being here. Should be moved to a 'view' class. 
+    #The values that needed from the Model class, should be passed through the use of a 'controler' class.
+    #i.e. The thing needs to be refactored in an MVC architecture.
     def onGetPreview(self, sample):
         test_S   = sample[0][1][0:4] #first 4 samples
         test_S_m = sample[0][1+self.ms_count][0:4] #first 4 samples
@@ -447,7 +479,8 @@ class SAEModel(ModelBase):
         result = []
         st = []
         for i in range(0, len(test_S)):
-            ar = S[i], SS[i], D[i], DD[i], SD[i]
+            ar = S[i], SS[i], D[i], DD[i], SD[i] #Gan-er comment: this is where you can add/remove samples to extent the width of your window. Just add more of them to the variable ar, (and make sure that you adjust the for loop appropriately)             
+            
             st.append ( np.concatenate ( ar, axis=1) )
 
         result += [ ('SAE', np.concatenate (st, axis=0 )), ]
@@ -457,8 +490,9 @@ class SAEModel(ModelBase):
             for i in range(0, len(test_S)):
                 ar = S[i]*test_S_m[i], SS[i], D[i]*test_D_m[i], DD[i]*DDM[i], SD[i]*(DDM[i]*SDM[i])
                 st_m.append ( np.concatenate ( ar, axis=1) )
-
-            result += [ ('SAE masked', np.concatenate (st_m, axis=0 )), ]
+            
+            #Gan-er comment: I changed this in order to pass some extra useful information to the GUI
+            result += [ ('SAE ('+self.options['archi']+ ': '+str(self.options['ae_dims'])+','+str(self.options['ed_ch_dims'])+')  minibatch size: '+str(self.options['batch_size'])+' (add stuff here)', np.concatenate (st, axis=0 )), ]
 
         return result
 

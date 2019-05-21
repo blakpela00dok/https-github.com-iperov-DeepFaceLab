@@ -485,10 +485,17 @@ class ModelBase(object):
                     self.batch_size = d[ keys[-1] ]
 
     @staticmethod
+    #Gan-er comment: This function has no business being here. Should be moved to a 'view' class. 
+    #The values that needed from the ModelBase class, should be passed through the use of a 'controler' class.
+    #i.e. The thing needs to be refactored in an MVC architecture.
     def get_loss_history_preview(loss_history, iter, w, c):
         loss_history = np.array (loss_history.copy())
 
+        #Gan-er comment:
+        #this is the height of the loss history window. You can change it to whatever you want as 
+        #long as it fits in your screen. 
         lh_height = 100
+        
         lh_img = np.ones ( (lh_height,w,c) ) * 0.1
         loss_count = len(loss_history[0])
         lh_len = len(loss_history)
@@ -513,13 +520,40 @@ class ModelBase(object):
                         ]
                         for col in range(w)
                     ]
-
-        plist_abs_max = np.mean(loss_history[ len(loss_history) // 5 : ]) * 2
+        
+        #Gan-er comment:
+        #The following lines affect the resolution/scale of the history window. Ideally they should NOT be in 
+        #this class, but on a utility view-class in a proper MVC architecture manner. 
+        #Refactoring can take care of this... In any case, I am commenting the lines so that you will know
+        #in the meantime what the settings do, so that you can adjust them to taste.
+        #The line below affects the maximum values that can appear in the y-axis of the loss history graph.
+        #Now the way that this is defined is by using the mean, i.e. the average of all the values and then scaling that average 
+        #by some amount.
+        #So as an example... if the average is 4 and I scale it by 2, then the maximum value that will be plotted within the 
+        #visible window, will be an 8. 
+        #Now the mean value, is obviously variable. And what values will be considered in its calculation is something that you can set it up. 
+        #You do so by defining how far back in history you would like to take the values into account. 
+        #The following line does that:
+        #The value should be within 0 and 1. 0 means take the entire history into account (ignore nothing). 1 means consider just the previous value. 
+        #0.25 means IGNORE the first 25% of the loss history.
+        #Why you need that is obvious. When you first start training, your losses will be really high. If you are doing restarts you may want to completely or partially ignore the previous losses. 
+        #So you may not want to consider those extreme values. Remember this affect the max value on the y-axis...i.e. it is a zoom issue.
+        percentage_of_history_to_ignore = 0.25 
+        scale_the_mean_by_this_much = 2 
+        #After refactoring, this can become a GUI option, e.g. mousewheel for the percentage of history and shift+mousewheel for the scale or something like that.
+        #For now just adjust the above two values to taste.
+        plist_abs_max = np.mean(loss_history[ int(len(loss_history)*percentage_of_history_to_ignore) : ]) * scale_the_mean_by_this_much
 
         for col in range(0, w):
             for p in range(0,loss_count):
                 point_color = [1.0]*c
-                point_color[0:3] = colorsys.hsv_to_rgb ( p * (1.0/loss_count), 1.0, 1.0 )
+                
+                #Gan-er comment:
+                #I changed the colors to something easier on the eyes visually at least for me. 
+                #If red/green is too festive/christmacy for you and you prefer iperov's yellow/blue instead 
+                #then delete the next line and uncomment the one after that. If I refactor I will make this a GUI option. 
+                point_color[0:3] = colorsys.hsv_to_rgb ( (p+1) * (1.0/3), 1.0, 1.0 )
+                #point_color[0:3] = colorsys.hsv_to_rgb ( p * (1.0/loss_count), 1.0, 1.0 )
 
                 ph_max = int ( (plist_max[col][p] / plist_abs_max) * (lh_height-1) )
                 ph_max = np.clip( ph_max, 0, lh_height-1 )
@@ -530,7 +564,8 @@ class ModelBase(object):
                 for ph in range(ph_min, ph_max+1):
                     lh_img[ (lh_height-ph-1), col ] = point_color
 
-        lh_lines = 5
+        
+        lh_lines = 5 #Gan-er comment: This setting is affecting the Y axis of the loss history graph. It determines how many 'segments' you want it to have.
         lh_line_height = (lh_height-1)/lh_lines
         for i in range(0,lh_lines+1):
             lh_img[ int(i*lh_line_height), : ] = (0.8,)*c
@@ -538,7 +573,7 @@ class ModelBase(object):
         last_line_t = int((lh_lines-1)*lh_line_height)
         last_line_b = int(lh_lines*lh_line_height)
 
-        lh_text = 'Iter: %d' % (iter) if iter != 0 else ''
+        lh_text = 'Iteration: %d' % (iter) if iter != 0 else ''
 
         lh_img[last_line_t:last_line_b, 0:w] += imagelib.get_text_image (  (last_line_b-last_line_t,w,c), lh_text, color=[0.8]*c )
         return lh_img
