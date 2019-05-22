@@ -1,8 +1,32 @@
-# Installation for Ubuntu 16.04
+# Universal Installation Method
+
+### Install Anaconda3
+Download the installer [https://www.anaconda.com/distribution/#linux](https://www.anaconda.com/distribution/#linux). 
+
+Initialize conda for your shell.
+```bash
+export PATH=~/anaconda3/bin:$PATH
+conda init bash
+# Restart your shell
+```
+
+### Install DeepFaceLab
+
+```bash
+conda create -y -n deepfacelab python=3.6.6 cudatoolkit=9.0 cudnn=7.3.1
+conda activate deepfacelab
+git clone https://github.com/lbfs/DeepFaceLab_Linux.git
+cd DeepFaceLab_Linux
+python -m pip install -r requirements-cuda.txt
+```
+
+# Native Installation Instructions
+
+## Installation for Ubuntu 16.04
 
 An installation script has been created to automatically install all of the required dependencies for Ubuntu 16.04. Clone the repository and run ``ubuntu16.04-cuda9-installer.sh`` from the root directory of DeepFaceLab_Linux. 
 
-# Installation for Ubuntu 18.04
+## Installation for Ubuntu 18.04
 
 #### Add NVIDIA package repositories
 ```bash
@@ -17,23 +41,6 @@ sudo apt-get update
 sudo apt-get install --no-install-recommends nvidia-driver-418
 ```
 **Reboot your system.**
-
-## Easy Method
-
-### Install Anaconda3
-Download the installer [https://www.anaconda.com/distribution/#linux](https://www.anaconda.com/distribution/#linux). Install Anaconda3 and choose the defaults. You will also need to add conda to your path so you can complete the final steps.
-
-### Install DeepFaceLab
-
-```bash
-conda create -y -n deepfacelab python=3.6.6 cudatoolkit=9.0 cudnn=7.3.1
-conda activate deepfacelab
-git clone https://github.com/lbfs/DeepFaceLab_Linux.git
-cd DeepFaceLab_Linux
-python -m pip install -r requirements-cuda.txt
-```
-
-## Harder Alternate Method
 
 For this method, we will create an Ubuntu 16.04 container on your system. In order to do this, we will need to install and configure LXD. 
 ```bash
