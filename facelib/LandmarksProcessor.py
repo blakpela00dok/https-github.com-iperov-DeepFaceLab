@@ -157,7 +157,7 @@ def transform_points(points, mat, invert=False):
 def get_image_hull_mask (image_shape, image_landmarks, ie_polys=None):
     if len(image_landmarks) != 68:
         raise Exception('get_image_hull_mask works only with 68 landmarks')
-    int_lmrks = np.array(image_landmarks, dtype=np.int)
+    int_lmrks = np.array(image_landmarks.copy(), dtype=np.int)
 
     hull_mask = np.zeros(image_shape[0:2]+(1,),dtype=np.float32)
 
@@ -198,33 +198,33 @@ def get_image_hull_mask (image_shape, image_landmarks, ie_polys=None):
 
     # #nose
     # cv2.fillConvexPoly( hull_mask, cv2.convexHull(int_lmrks[27:36]), (1,) )
-    ml_pnt = (landmarks[36] + landmarks[0]) // 2
-    mr_pnt = (landmarks[16] + landmarks[45]) // 2
+    ml_pnt = (int_lmrks[36] + int_lmrks[0]) // 2
+    mr_pnt = (int_lmrks[16] + int_lmrks[45]) // 2
 
     # mid points between the mid points and eye
-    ql_pnt = (landmarks[36] + ml_pnt) // 2
-    qr_pnt = (landmarks[45] + mr_pnt) // 2
+    ql_pnt = (int_lmrks[36] + ml_pnt) // 2
+    qr_pnt = (int_lmrks[45] + mr_pnt) // 2
 
     # Top of the eye arrays
-    bot_l = np.array((ql_pnt, landmarks[36], landmarks[37], landmarks[38], landmarks[39]))
-    bot_r = np.array((landmarks[42], landmarks[43], landmarks[44], landmarks[45], qr_pnt))
+    bot_l = np.array((ql_pnt, int_lmrks[36], int_lmrks[37], int_lmrks[38], int_lmrks[39]))
+    bot_r = np.array((int_lmrks[42], int_lmrks[43], int_lmrks[44], int_lmrks[45], qr_pnt))
 
     # Eyebrow arrays
-    top_l = landmarks[17:22]
-    top_r = landmarks[22:27]
+    top_l = int_lmrks[17:22]
+    top_r = int_lmrks[22:27]
 
     # Adjust eyebrow arrays
-    landmarks[17:22] = top_l + ((top_l - bot_l) // 2)
-    landmarks[22:27] = top_r + ((top_r - bot_r) // 2)
+    int_lmrks[17:22] = top_l + ((top_l - bot_l) // 2)
+    int_lmrks[22:27] = top_r + ((top_r - bot_r) // 2)
 
-    r_jaw = (landmarks[0:9], landmarks[17:18])
-    l_jaw = (landmarks[8:17], landmarks[26:27])
-    r_cheek = (landmarks[17:20], landmarks[8:9])
-    l_cheek = (landmarks[24:27], landmarks[8:9])
-    nose_ridge = (landmarks[19:25], landmarks[8:9],)
-    r_eye = (landmarks[17:22], landmarks[27:28], landmarks[31:36], landmarks[8:9])
-    l_eye = (landmarks[22:27], landmarks[27:28], landmarks[31:36], landmarks[8:9])
-    nose = (landmarks[27:31], landmarks[31:36])
+    r_jaw = (int_lmrks[0:9], int_lmrks[17:18])
+    l_jaw = (int_lmrks[8:17], int_lmrks[26:27])
+    r_cheek = (int_lmrks[17:20], int_lmrks[8:9])
+    l_cheek = (int_lmrks[24:27], int_lmrks[8:9])
+    nose_ridge = (int_lmrks[19:25], int_lmrks[8:9],)
+    r_eye = (int_lmrks[17:22], int_lmrks[27:28], int_lmrks[31:36], int_lmrks[8:9])
+    l_eye = (int_lmrks[22:27], int_lmrks[27:28], int_lmrks[31:36], int_lmrks[8:9])
+    nose = (int_lmrks[27:31], int_lmrks[31:36])
     parts = [r_jaw, l_jaw, r_cheek, l_cheek, nose_ridge, r_eye, l_eye, nose]
 
     for item in parts:
