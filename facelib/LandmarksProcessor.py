@@ -161,43 +161,75 @@ def get_image_hull_mask (image_shape, image_landmarks, ie_polys=None):
 
     hull_mask = np.zeros(image_shape[0:2]+(1,),dtype=np.float32)
 
-    cv2.fillConvexPoly( hull_mask, cv2.convexHull(
-            np.concatenate ( (int_lmrks[0:9],
-                              int_lmrks[17:18]))) , (1,)  )
+    # cv2.fillConvexPoly( hull_mask, cv2.convexHull(
+    #         np.concatenate ( (int_lmrks[0:9],
+    #                           int_lmrks[17:18]))) , (1,)  )
 
-    cv2.fillConvexPoly( hull_mask, cv2.convexHull(
-            np.concatenate ( (int_lmrks[8:17],
-                              int_lmrks[26:27]))) , (1,)  )
+    # cv2.fillConvexPoly( hull_mask, cv2.convexHull(
+    #         np.concatenate ( (int_lmrks[8:17],
+    #                           int_lmrks[26:27]))) , (1,)  )
 
-    cv2.fillConvexPoly( hull_mask, cv2.convexHull(
-            np.concatenate ( (int_lmrks[17:20],
-                              int_lmrks[8:9]))) , (1,)  )
+    # cv2.fillConvexPoly( hull_mask, cv2.convexHull(
+    #         np.concatenate ( (int_lmrks[17:20],
+    #                           int_lmrks[8:9]))) , (1,)  )
 
-    cv2.fillConvexPoly( hull_mask, cv2.convexHull(
-            np.concatenate ( (int_lmrks[24:27],
-                              int_lmrks[8:9]))) , (1,)  )
+    # cv2.fillConvexPoly( hull_mask, cv2.convexHull(
+    #         np.concatenate ( (int_lmrks[24:27],
+    #                           int_lmrks[8:9]))) , (1,)  )
 
-    cv2.fillConvexPoly( hull_mask, cv2.convexHull(
-            np.concatenate ( (int_lmrks[19:25],
-                              int_lmrks[8:9],
-                              ))) , (1,)  )
+    # cv2.fillConvexPoly( hull_mask, cv2.convexHull(
+    #         np.concatenate ( (int_lmrks[19:25],
+    #                           int_lmrks[8:9],
+    #                           ))) , (1,)  )
 
-    cv2.fillConvexPoly( hull_mask, cv2.convexHull(
-            np.concatenate ( (int_lmrks[17:22],
-                              int_lmrks[27:28],
-                              int_lmrks[31:36],
-                              int_lmrks[8:9]
-                              ))) , (1,)  )
+    # cv2.fillConvexPoly( hull_mask, cv2.convexHull(
+    #         np.concatenate ( (int_lmrks[17:22],
+    #                           int_lmrks[27:28],
+    #                           int_lmrks[31:36],
+    #                           int_lmrks[8:9]
+    #                           ))) , (1,)  )
 
-    cv2.fillConvexPoly( hull_mask, cv2.convexHull(
-            np.concatenate ( (int_lmrks[22:27],
-                              int_lmrks[27:28],
-                              int_lmrks[31:36],
-                              int_lmrks[8:9]
-                              ))) , (1,)  )
+    # cv2.fillConvexPoly( hull_mask, cv2.convexHull(
+    #         np.concatenate ( (int_lmrks[22:27],
+    #                           int_lmrks[27:28],
+    #                           int_lmrks[31:36],
+    #                           int_lmrks[8:9]
+    #                           ))) , (1,)  )
 
-    #nose
-    cv2.fillConvexPoly( hull_mask, cv2.convexHull(int_lmrks[27:36]), (1,) )
+    # #nose
+    # cv2.fillConvexPoly( hull_mask, cv2.convexHull(int_lmrks[27:36]), (1,) )
+    ml_pnt = (landmarks[36] + landmarks[0]) // 2
+    mr_pnt = (landmarks[16] + landmarks[45]) // 2
+
+    # mid points between the mid points and eye
+    ql_pnt = (landmarks[36] + ml_pnt) // 2
+    qr_pnt = (landmarks[45] + mr_pnt) // 2
+
+    # Top of the eye arrays
+    bot_l = np.array((ql_pnt, landmarks[36], landmarks[37], landmarks[38], landmarks[39]))
+    bot_r = np.array((landmarks[42], landmarks[43], landmarks[44], landmarks[45], qr_pnt))
+
+    # Eyebrow arrays
+    top_l = landmarks[17:22]
+    top_r = landmarks[22:27]
+
+    # Adjust eyebrow arrays
+    landmarks[17:22] = top_l + ((top_l - bot_l) // 2)
+    landmarks[22:27] = top_r + ((top_r - bot_r) // 2)
+
+    r_jaw = (landmarks[0:9], landmarks[17:18])
+    l_jaw = (landmarks[8:17], landmarks[26:27])
+    r_cheek = (landmarks[17:20], landmarks[8:9])
+    l_cheek = (landmarks[24:27], landmarks[8:9])
+    nose_ridge = (landmarks[19:25], landmarks[8:9],)
+    r_eye = (landmarks[17:22], landmarks[27:28], landmarks[31:36], landmarks[8:9])
+    l_eye = (landmarks[22:27], landmarks[27:28], landmarks[31:36], landmarks[8:9])
+    nose = (landmarks[27:31], landmarks[31:36])
+    parts = [r_jaw, l_jaw, r_cheek, l_cheek, nose_ridge, r_eye, l_eye, nose]
+
+    for item in parts:
+        merged = np.concatenate(item)
+        cv2.fillConvexPoly(hull_mask, cv2.convexHull(merged), 255.)  # pylint: disable=no-member
 
     if ie_polys is not None:
         ie_polys.overlay_mask(hull_mask)
