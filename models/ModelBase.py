@@ -127,7 +127,7 @@ class ModelBase(object):
                 self.options['sort_by_yaw'] = self.options.get('sort_by_yaw', False)
 
         if ask_random_flip:
-            if (self.iter == 0):
+            if (self.iter == 0 or ask_override):
                 self.options['random_flip'] = io.input_bool("Flip faces randomly? (y/n ?:help skip:y) : ", True, help_message="Predicted face will look more naturally without this option, but src faceset should cover all face directions as dst faceset.")
             else:
                 self.options['random_flip'] = self.options.get('random_flip', True)
