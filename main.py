@@ -7,6 +7,8 @@ from utils import Path_utils
 from utils import os_utils
 from pathlib import Path
 
+train_args = r'python3 main.py train --training-data-src-dir /media/user/5246EBF746EBD9AD/dfl/DFL/workspace/data_src/aligned/ --training-data-dst-dir /media/user/5246EBF746EBD9AD/dfl/DFL/workspace/data_dst/aligned/ --model-dir /media/user/5246EBF746EBD9AD/generic-fs/128h-sae-liaf/ --model SAE'
+
 if sys.version_info[0] < 3 or (sys.version_info[0] == 3 and sys.version_info[1] < 6):
     raise Exception("This program requires at least Python 3.6")
 
