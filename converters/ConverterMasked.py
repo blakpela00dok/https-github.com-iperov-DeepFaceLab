@@ -12,6 +12,8 @@ from utils.pickle_utils import AntiPickler
 
 from .Converter import Converter
 
+import math
+
 
 '''
 default_mode = {1:'overlay',
@@ -251,7 +253,17 @@ class ConverterMasked(Converter):
                     if ero > 0:
                         img_face_mask_aaa = cv2.erode(img_face_mask_aaa, cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(ero,ero)), iterations = 1 )
                     elif ero < 0:
+                        inverted_old_mask = 1 - img_face_mask_aaa
+                        debugs += [inverted_old_mask.copy()]
+                        left_jaw_landmark = img_face_landmarks[0]
+                        right_jaw_landmark = img_face_landmarks[16]
+
+                        inverted_old_mask[0: int(left_jaw_landmark[1]), 0: int(right_jaw_landmark[0])] = 0
+                        inverted_old_mask[0: int(right_jaw_landmark[1]), int(left_jaw_landmark[0]): -1] = 0
                         img_face_mask_aaa = cv2.dilate(img_face_mask_aaa, cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(-ero,-ero)), iterations = 1 )
+
+                        # img_face_mask_aaa = img_face_mask_aaa - inverted_old_mask
+                        # img_face_mask_aaa = np.clip(img_face_mask_aaa, 0, 1)
 
                 img_mask_blurry_aaa = img_face_mask_aaa
 
@@ -278,6 +290,10 @@ class ConverterMasked(Converter):
                         img_mask_blurry_aaa = cv2.blur(img_mask_blurry_aaa, (blur, blur) )
 
                 img_mask_blurry_aaa = np.clip( img_mask_blurry_aaa, 0, 1.0 )
+  
+                if ero < 0:
+                    img_mask_blurry_aaa = img_mask_blurry_aaa - inverted_old_mask
+                    img_mask_blurry_aaa = np.clip(img_mask_blurry_aaa, 0, 1)
                 face_mask_blurry_aaa = cv2.warpAffine( img_mask_blurry_aaa, face_mat, (output_size, output_size) )
 
                 if debug:
