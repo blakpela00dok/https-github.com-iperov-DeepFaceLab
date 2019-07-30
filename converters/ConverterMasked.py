@@ -254,7 +254,6 @@ class ConverterMasked(Converter):
                         img_face_mask_aaa = cv2.erode(img_face_mask_aaa, cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(ero,ero)), iterations = 1 )
                     elif ero < 0:
                         inverted_old_mask = 1 - img_face_mask_aaa
-                        debugs += [inverted_old_mask.copy()]
                         left_jaw_landmark = img_face_landmarks[0]
                         right_jaw_landmark = img_face_landmarks[16]
 
