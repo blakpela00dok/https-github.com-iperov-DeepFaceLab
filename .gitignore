@@ -6,3 +6,5 @@
 !requirements*
 !Dockerfile*
 !*.sh
+train.py
+convert.py
