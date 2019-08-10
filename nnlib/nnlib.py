@@ -11,10 +11,11 @@ from utils import std_utils
 from .device import device
 from interact import interact as io
 
+
 class nnlib(object):
-    device = device #forwards nnlib.devicelib to device in order to use nnlib as standalone lib
+    device = device  # forwards nnlib.devicelib to device in order to use nnlib as standalone lib
     DeviceConfig = device.Config
-    active_DeviceConfig = DeviceConfig() #default is one best GPU
+    active_DeviceConfig = DeviceConfig()  # default is one best GPU
 
     backend = ""
 
@@ -28,7 +29,7 @@ class nnlib(object):
 
     PML = None
     PMLK = None
-    PMLTile= None
+    PMLTile = None
 
     code_import_keras = None
     code_import_keras_contrib = None
@@ -36,14 +37,13 @@ class nnlib(object):
 
     code_import_dlib = None
 
-
     ResNet = None
     UNet = None
     UNetTemporalPredictor = None
     NLayerDiscriminator = None
 
     code_import_keras_string = \
-"""
+        """
 keras = nnlib.keras
 K = keras.backend
 KL = keras.layers
@@ -96,25 +96,24 @@ CAInitializerMP = nnlib.CAInitializerMP
 #AddUniformNoise = nnlib.AddUniformNoise
 """
     code_import_keras_contrib_string = \
-"""
+        """
 keras_contrib = nnlib.keras_contrib
 GroupNormalization = keras_contrib.layers.GroupNormalization
 InstanceNormalization = keras_contrib.layers.InstanceNormalization
 """
     code_import_dlib_string = \
-"""
+        """
 dlib = nnlib.dlib
 """
 
     code_import_all_string = \
-"""
+        """
 DSSIMMSEMaskLoss = nnlib.DSSIMMSEMaskLoss
 ResNet = nnlib.ResNet
 UNet = nnlib.UNet
 UNetTemporalPredictor = nnlib.UNetTemporalPredictor
 NLayerDiscriminator = nnlib.NLayerDiscriminator
 """
-
 
     @staticmethod
     def _import_tf(device_config):
@@ -130,7 +129,7 @@ NLayerDiscriminator = nnlib.NLayerDiscriminator
             os.environ.pop('CUDA_VISIBLE_DEVICES')
 
         os.environ['TF_MIN_GPU_MULTIPROCESSOR_COUNT'] = '2'
-        os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2' #tf log errors only
+        os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # tf log errors only
         import tensorflow as tf
         nnlib.tf = tf
 
@@ -140,12 +139,12 @@ NLayerDiscriminator = nnlib.NLayerDiscriminator
             config = tf.ConfigProto()
 
             if device_config.backend != "tensorflow-generic":
-                #tensorflow-generic is system with NVIDIA card, but w/o NVSMI
-                #so dont hide devices and let tensorflow to choose best card
+                # tensorflow-generic is system with NVIDIA card, but w/o NVSMI
+                # so dont hide devices and let tensorflow to choose best card
                 visible_device_list = ''
                 for idx in device_config.gpu_idxs:
                     visible_device_list += str(idx) + ','
-                config.gpu_options.visible_device_list=visible_device_list[:-1]
+                config.gpu_options.visible_device_list = visible_device_list[:-1]
 
         config.gpu_options.force_gpu_compatible = True
         config.gpu_options.allow_growth = device_config.allow_growth
@@ -165,11 +164,12 @@ NLayerDiscriminator = nnlib.NLayerDiscriminator
             nnlib._import_tf(device_config)
         elif nnlib.backend == "plaidML":
             os.environ["KERAS_BACKEND"] = "plaidml.keras.backend"
-            os.environ["PLAIDML_DEVICE_IDS"] = ",".join ( [ nnlib.device.getDeviceID(idx) for idx in device_config.gpu_idxs] )
+            os.environ["PLAIDML_DEVICE_IDS"] = ",".join(
+                [nnlib.device.getDeviceID(idx) for idx in device_config.gpu_idxs])
 
-        #if "tensorflow" in nnlib.backend:
+        # if "tensorflow" in nnlib.backend:
         #    nnlib.keras = nnlib.tf.keras
-        #else:
+        # else:
         import keras as keras_
         nnlib.keras = keras_
 
@@ -191,7 +191,7 @@ NLayerDiscriminator = nnlib.NLayerDiscriminator
 
         nnlib.keras.backend.set_image_data_format('channels_last')
 
-        nnlib.code_import_keras = compile (nnlib.code_import_keras_string,'','exec')
+        nnlib.code_import_keras = compile(nnlib.code_import_keras_string, '', 'exec')
         nnlib.__initialize_keras_functions()
 
         return nnlib.code_import_keras
@@ -205,7 +205,8 @@ NLayerDiscriminator = nnlib.NLayerDiscriminator
 
         def modelify(model_functor):
             def func(tensor):
-                return keras.models.Model (tensor, model_functor(tensor))
+                return keras.models.Model(tensor, model_functor(tensor))
+
             return func
 
         nnlib.modelify = modelify
@@ -223,17 +224,19 @@ NLayerDiscriminator = nnlib.NLayerDiscriminator
                 return kernel
 
             gauss_kernel = make_kernel(radius)
-            gauss_kernel = gauss_kernel[:, :,np.newaxis, np.newaxis]
+            gauss_kernel = gauss_kernel[:, :, np.newaxis, np.newaxis]
 
             def func(input):
-                inputs = [ input[:,:,:,i:i+1]  for i in range( K.int_shape( input )[-1] ) ]
+                inputs = [input[:, :, :, i:i + 1] for i in range(K.int_shape(input)[-1])]
 
                 outputs = []
                 for i in range(len(inputs)):
-                    outputs += [ K.conv2d( inputs[i] , K.constant(gauss_kernel) , strides=(1,1), padding="same") ]
+                    outputs += [K.conv2d(inputs[i], K.constant(gauss_kernel), strides=(1, 1), padding="same")]
 
-                return K.concatenate (outputs, axis=-1)
+                return K.concatenate(outputs, axis=-1)
+
             return func
+
         nnlib.gaussian_blur = gaussian_blur
 
         def style_loss(gaussian_blur_radius=0.0, loss_weight=1.0, wnd_size=0, step_size=1):
@@ -246,36 +249,40 @@ NLayerDiscriminator = nnlib.NLayerDiscriminator
                 if content_nc != style_nc:
                     raise Exception("style_loss() content_nc != style_nc")
 
-                axes = [1,2]
+                axes = [1, 2]
                 c_mean, c_var = K.mean(content, axis=axes, keepdims=True), K.var(content, axis=axes, keepdims=True)
                 s_mean, s_var = K.mean(style, axis=axes, keepdims=True), K.var(style, axis=axes, keepdims=True)
                 c_std, s_std = K.sqrt(c_var + 1e-5), K.sqrt(s_var + 1e-5)
 
-                mean_loss = K.sum(K.square(c_mean-s_mean))
-                std_loss = K.sum(K.square(c_std-s_std))
+                mean_loss = K.sum(K.square(c_mean - s_mean))
+                std_loss = K.sum(K.square(c_std - s_std))
 
-                return (mean_loss + std_loss) * ( loss_weight / float(content_nc) )
+                return (mean_loss + std_loss) * (loss_weight / float(content_nc))
 
             def func(target, style):
                 if wnd_size == 0:
                     if gaussian_blur_radius > 0.0:
-                        return sd( gblur(target), gblur(style), loss_weight=loss_weight)
+                        return sd(gblur(target), gblur(style), loss_weight=loss_weight)
                     else:
-                        return sd( target, style, loss_weight=loss_weight )
+                        return sd(target, style, loss_weight=loss_weight)
                 else:
-                    #currently unused
+                    # currently unused
                     if nnlib.tf is not None:
                         sh = K.int_shape(target)[1]
-                        k = (sh-wnd_size) // step_size + 1
+                        k = (sh - wnd_size) // step_size + 1
                         if gaussian_blur_radius > 0.0:
                             target, style = gblur(target), gblur(style)
-                        target = nnlib.tf.image.extract_image_patches(target, [1,k,k,1], [1,1,1,1], [1,step_size,step_size,1], 'VALID')
-                        style  = nnlib.tf.image.extract_image_patches(style,  [1,k,k,1], [1,1,1,1], [1,step_size,step_size,1], 'VALID')
-                        return sd( target, style, loss_weight )
+                        target = nnlib.tf.image.extract_image_patches(target, [1, k, k, 1], [1, 1, 1, 1],
+                                                                      [1, step_size, step_size, 1], 'VALID')
+                        style = nnlib.tf.image.extract_image_patches(style, [1, k, k, 1], [1, 1, 1, 1],
+                                                                     [1, step_size, step_size, 1], 'VALID')
+                        return sd(target, style, loss_weight)
                     if nnlib.PML is not None:
-                        print ("Sorry, plaidML backend does not support style_loss")
+                        print("Sorry, plaidML backend does not support style_loss")
                         return 0
+
             return func
+
         nnlib.style_loss = style_loss
 
         def dssim(kernel_size=11, k1=0.01, k2=0.03, max_value=1.0):
@@ -285,19 +292,19 @@ NLayerDiscriminator = nnlib.NLayerDiscriminator
                 ch = K.shape(y_pred)[-1]
 
                 def _fspecial_gauss(size, sigma):
-                    #Function to mimic the 'fspecial' gaussian MATLAB function.
+                    # Function to mimic the 'fspecial' gaussian MATLAB function.
                     coords = np.arange(0, size, dtype=K.floatx())
-                    coords -= (size - 1 ) / 2.0
-                    g = coords**2
-                    g *= ( -0.5 / (sigma**2) )
-                    g = np.reshape (g, (1,-1)) + np.reshape(g, (-1,1) )
-                    g = K.constant ( np.reshape (g, (1,-1)) )
+                    coords -= (size - 1) / 2.0
+                    g = coords ** 2
+                    g *= (-0.5 / (sigma ** 2))
+                    g = np.reshape(g, (1, -1)) + np.reshape(g, (-1, 1))
+                    g = K.constant(np.reshape(g, (1, -1)))
                     g = K.softmax(g)
-                    g = K.reshape (g, (size, size, 1, 1))
-                    g = K.tile (g, (1,1,ch,1))
+                    g = K.reshape(g, (size, size, 1, 1))
+                    g = K.tile(g, (1, 1, ch, 1))
                     return g
 
-                kernel = _fspecial_gauss(kernel_size,1.5)
+                kernel = _fspecial_gauss(kernel_size, 1.5)
 
                 def reducer(x):
                     return K.depthwise_conv2d(x, kernel, strides=(1, 1), padding='valid')
@@ -313,11 +320,11 @@ NLayerDiscriminator = nnlib.NLayerDiscriminator
 
                 num1 = reducer(y_true * y_pred) * 2.0
                 den1 = reducer(K.square(y_true) + K.square(y_pred))
-                c2 *= 1.0 #compensation factor
+                c2 *= 1.0  # compensation factor
                 cs = (num1 - num0 + c2) / (den1 - den0 + c2)
 
-                ssim_val = K.mean(luminance * cs, axis=(-3, -2) )
-                return(1.0 - ssim_val ) / 2.0
+                ssim_val = K.mean(luminance * cs, axis=(-3, -2))
+                return (1.0 - ssim_val) / 2.0
 
             return func
 
@@ -325,7 +332,7 @@ NLayerDiscriminator = nnlib.NLayerDiscriminator
 
         if 'tensorflow' in backend:
             class PixelShuffler(keras.layers.Layer):
-                def __init__(self, size=(2, 2),  data_format='channels_last', **kwargs):
+                def __init__(self, size=(2, 2), data_format='channels_last', **kwargs):
                     super(PixelShuffler, self).__init__(**kwargs)
                     self.data_format = data_format
                     self.size = size
@@ -344,8 +351,8 @@ NLayerDiscriminator = nnlib.NLayerDiscriminator
                 def compute_output_shape(self, input_shape):
                     if len(input_shape) != 4:
                         raise ValueError('Inputs should have rank ' +
-                                        str(4) +
-                                        '; Received input shape:', str(input_shape))
+                                         str(4) +
+                                         '; Received input shape:', str(input_shape))
 
                     if self.data_format == 'channels_first':
                         height = input_shape[2] * self.size[0] if input_shape[2] is not None else None
@@ -375,7 +382,7 @@ NLayerDiscriminator = nnlib.NLayerDiscriminator
 
                 def get_config(self):
                     config = {'size': self.size,
-                            'data_format': self.data_format}
+                              'data_format': self.data_format}
                     base_config = super(PixelShuffler, self).get_config()
 
                     return dict(list(base_config.items()) + list(config.items()))
@@ -417,8 +424,8 @@ NLayerDiscriminator = nnlib.NLayerDiscriminator
                 def compute_output_shape(self, input_shape):
                     if len(input_shape) != 4:
                         raise ValueError('Inputs should have rank ' +
-                                        str(4) +
-                                        '; Received input shape:', str(input_shape))
+                                         str(4) +
+                                         '; Received input shape:', str(input_shape))
 
                     if self.data_format == 'channels_first':
                         height = input_shape[2] * self.size[0] if input_shape[2] is not None else None
@@ -448,7 +455,7 @@ NLayerDiscriminator = nnlib.NLayerDiscriminator
 
                 def get_config(self):
                     config = {'size': self.size,
-                            'data_format': self.data_format}
+                              'data_format': self.data_format}
                     base_config = super(PixelShuffler, self).get_config()
 
                     return dict(list(base_config.items()) + list(config.items()))
@@ -461,6 +468,7 @@ NLayerDiscriminator = nnlib.NLayerDiscriminator
             GAN Custom Scal Layer
             Code borrows from https://github.com/flyyufelix/cnn_finetune
             """
+
             def __init__(self, weights=None, axis=-1, gamma_init='zero', **kwargs):
                 self.axis = axis
                 self.gamma_init = keras.initializers.get(gamma_init)
@@ -485,6 +493,7 @@ NLayerDiscriminator = nnlib.NLayerDiscriminator
                 config = {"axis": self.axis}
                 base_config = super(Scale, self).get_config()
                 return dict(list(base_config.items()) + list(config.items()))
+
         nnlib.Scale = Scale
 
         class Adam(keras.optimizers.Optimizer):
@@ -540,7 +549,7 @@ NLayerDiscriminator = nnlib.NLayerDiscriminator
 
                 t = K.cast(self.iterations, K.floatx()) + 1
                 lr_t = lr * (K.sqrt(1. - K.pow(self.beta_2, t)) /
-                                   (1. - K.pow(self.beta_1, t)))
+                             (1. - K.pow(self.beta_1, t)))
 
                 e = K.tf.device("/cpu:0") if self.tf_cpu_mode > 0 else None
                 if e: e.__enter__()
@@ -590,15 +599,18 @@ NLayerDiscriminator = nnlib.NLayerDiscriminator
                           'amsgrad': self.amsgrad}
                 base_config = super(Adam, self).get_config()
                 return dict(list(base_config.items()) + list(config.items()))
+
         nnlib.Adam = Adam
 
-        def CAInitializerMP( conv_weights_list ):
-            #Convolution Aware Initialization https://arxiv.org/abs/1702.06295
-            result = CAInitializerMPSubprocessor ( [ (i, K.int_shape(conv_weights)) for i, conv_weights in enumerate(conv_weights_list) ], K.floatx(), K.image_data_format() ).run()
+        def CAInitializerMP(conv_weights_list):
+            # Convolution Aware Initialization https://arxiv.org/abs/1702.06295
+            result = CAInitializerMPSubprocessor(
+                [(i, K.int_shape(conv_weights)) for i, conv_weights in enumerate(conv_weights_list)], K.floatx(),
+                K.image_data_format()).run()
             for idx, weights in result:
-                K.set_value ( conv_weights_list[idx], weights )
-        nnlib.CAInitializerMP = CAInitializerMP
+                K.set_value(conv_weights_list[idx], weights)
 
+        nnlib.CAInitializerMP = CAInitializerMP
 
         if backend == "plaidML":
             class TileOP_ReflectionPadding2D(nnlib.PMLTile.Operation):
@@ -607,7 +619,7 @@ NLayerDiscriminator = nnlib.NLayerDiscriminator
                         if input.shape.ndims == 4:
                             H, W = input.shape.dims[1:3]
                             if (type(H) == int and h_pad >= H) or \
-                                (type(W) == int and w_pad >= W):
+                                    (type(W) == int and w_pad >= W):
                                 raise ValueError("Paddings must be less than dimensions.")
 
                             c = """ function (I[B, H, W, C] ) -> (O) {{
@@ -637,14 +649,15 @@ NLayerDiscriminator = nnlib.NLayerDiscriminator
                             c += "O = TVB; }"
 
                             inp_dims = input.shape.dims
-                            out_dims = (inp_dims[0], inp_dims[1]+h_pad*2, inp_dims[2]+w_pad*2, inp_dims[3])
+                            out_dims = (inp_dims[0], inp_dims[1] + h_pad * 2, inp_dims[2] + w_pad * 2, inp_dims[3])
                         else:
                             raise NotImplemented
                     else:
                         raise NotImplemented
 
-                    super(TileOP_ReflectionPadding2D, self).__init__(c, [('I', input) ],
-                            [('O', nnlib.PMLTile.Shape(input.shape.dtype, out_dims ) )])
+                    super(TileOP_ReflectionPadding2D, self).__init__(c, [('I', input)],
+                                                                     [('O', nnlib.PMLTile.Shape(input.shape.dtype,
+                                                                                                out_dims))])
 
         class ReflectionPadding2D(keras.layers.Layer):
             def __init__(self, padding=(1, 1), **kwargs):
@@ -657,20 +670,20 @@ NLayerDiscriminator = nnlib.NLayerDiscriminator
                 return (s[0], s[1] + 2 * self.padding[0], s[2] + 2 * self.padding[1], s[3])
 
             def call(self, x, mask=None):
-                w_pad,h_pad = self.padding
+                w_pad, h_pad = self.padding
                 if "tensorflow" in backend:
-                    return K.tf.pad(x, [[0,0], [h_pad,h_pad], [w_pad,w_pad], [0,0] ], 'REFLECT')
+                    return K.tf.pad(x, [[0, 0], [h_pad, h_pad], [w_pad, w_pad], [0, 0]], 'REFLECT')
                 elif backend == "plaidML":
                     return TileOP_ReflectionPadding2D.function(x, self.padding[0], self.padding[1])
                 else:
                     if K.image_data_format() == 'channels_last':
                         if x.shape.ndims == 4:
-                            w = K.concatenate ([ x[:,:,w_pad:0:-1,:],
-                                                x,
-                                                x[:,:,-2:-w_pad-2:-1,:] ], axis=2 )
-                            h = K.concatenate ([ w[:,h_pad:0:-1,:,:],
-                                                w,
-                                                w[:,-2:-h_pad-2:-1,:,:] ], axis=1 )
+                            w = K.concatenate([x[:, :, w_pad:0:-1, :],
+                                               x,
+                                               x[:, :, -2:-w_pad - 2:-1, :]], axis=2)
+                            h = K.concatenate([w[:, h_pad:0:-1, :, :],
+                                               w,
+                                               w[:, -2:-h_pad - 2:-1, :, :]], axis=1)
                             return h
                         else:
                             raise NotImplemented
@@ -680,43 +693,45 @@ NLayerDiscriminator = nnlib.NLayerDiscriminator
         nnlib.ReflectionPadding2D = ReflectionPadding2D
 
         class Conv2D():
-            def __init__ (self, *args, **kwargs):
+            def __init__(self, *args, **kwargs):
                 self.reflect_pad = False
-                padding = kwargs.get('padding','')
+                padding = kwargs.get('padding', '')
                 if padding == 'zero':
                     kwargs['padding'] = 'same'
                 if padding == 'reflect':
                     kernel_size = kwargs['kernel_size']
                     if (kernel_size % 2) == 1:
-                        self.pad = (kernel_size // 2,)*2
+                        self.pad = (kernel_size // 2,) * 2
                         kwargs['padding'] = 'valid'
                         self.reflect_pad = True
-                self.func = keras.layers.Conv2D (*args, **kwargs)
+                self.func = keras.layers.Conv2D(*args, **kwargs)
 
-            def __call__(self,x):
+            def __call__(self, x):
                 if self.reflect_pad:
-                    x = ReflectionPadding2D( self.pad ) (x)
+                    x = ReflectionPadding2D(self.pad)(x)
                 return self.func(x)
+
         nnlib.Conv2D = Conv2D
 
         class Conv2DTranspose():
-            def __init__ (self, *args, **kwargs):
+            def __init__(self, *args, **kwargs):
                 self.reflect_pad = False
-                padding = kwargs.get('padding','')
+                padding = kwargs.get('padding', '')
                 if padding == 'zero':
                     kwargs['padding'] = 'same'
                 if padding == 'reflect':
                     kernel_size = kwargs['kernel_size']
                     if (kernel_size % 2) == 1:
-                        self.pad = (kernel_size // 2,)*2
+                        self.pad = (kernel_size // 2,) * 2
                         kwargs['padding'] = 'valid'
                         self.reflect_pad = True
-                self.func = keras.layers.Conv2DTranspose (*args, **kwargs)
+                self.func = keras.layers.Conv2DTranspose(*args, **kwargs)
 
-            def __call__(self,x):
+            def __call__(self, x):
                 if self.reflect_pad:
-                    x = ReflectionPadding2D( self.pad ) (x)
+                    x = ReflectionPadding2D(self.pad)(x)
                 return self.func(x)
+
         nnlib.Conv2DTranspose = Conv2DTranspose
 
     @staticmethod
@@ -727,14 +742,14 @@ NLayerDiscriminator = nnlib.NLayerDiscriminator
         import keras_contrib as keras_contrib_
         nnlib.keras_contrib = keras_contrib_
         nnlib.__initialize_keras_contrib_functions()
-        nnlib.code_import_keras_contrib = compile (nnlib.code_import_keras_contrib_string,'','exec')
+        nnlib.code_import_keras_contrib = compile(nnlib.code_import_keras_contrib_string, '', 'exec')
 
     @staticmethod
     def __initialize_keras_contrib_functions():
         pass
 
     @staticmethod
-    def import_dlib( device_config = None):
+    def import_dlib(device_config=None):
         if nnlib.dlib is not None:
             return nnlib.code_import_dlib
 
@@ -743,10 +758,10 @@ NLayerDiscriminator = nnlib.NLayerDiscriminator
         if not device_config.cpu_only and "tensorflow" in device_config.backend and len(device_config.gpu_idxs) > 0:
             nnlib.dlib.cuda.set_device(device_config.gpu_idxs[0])
 
-        nnlib.code_import_dlib = compile (nnlib.code_import_dlib_string,'','exec')
+        nnlib.code_import_dlib = compile(nnlib.code_import_dlib_string, '', 'exec')
 
     @staticmethod
-    def import_all(device_config = None):
+    def import_all(device_config=None):
         if nnlib.code_import_all is None:
             if device_config is None:
                 device_config = nnlib.active_DeviceConfig
@@ -755,32 +770,33 @@ NLayerDiscriminator = nnlib.NLayerDiscriminator
 
             nnlib.import_keras(device_config)
             nnlib.import_keras_contrib(device_config)
-            nnlib.code_import_all = compile (nnlib.code_import_keras_string + '\n'
+            nnlib.code_import_all = compile(nnlib.code_import_keras_string + '\n'
                                             + nnlib.code_import_keras_contrib_string
-                                            + nnlib.code_import_all_string,'','exec')
+                                            + nnlib.code_import_all_string, '', 'exec')
             nnlib.__initialize_all_functions()
 
         return nnlib.code_import_all
 
     @staticmethod
     def __initialize_all_functions():
-        exec (nnlib.import_keras(nnlib.active_DeviceConfig), locals(), globals())
-        exec (nnlib.import_keras_contrib(nnlib.active_DeviceConfig), locals(), globals())
+        exec(nnlib.import_keras(nnlib.active_DeviceConfig), locals(), globals())
+        exec(nnlib.import_keras_contrib(nnlib.active_DeviceConfig), locals(), globals())
 
         class DSSIMMSEMaskLoss(object):
             def __init__(self, mask, is_mse=False):
                 self.mask = mask
                 self.is_mse = is_mse
-            def __call__(self,y_true, y_pred):
+
+            def __call__(self, y_true, y_pred):
                 total_loss = None
                 mask = self.mask
                 if self.is_mse:
                     blur_mask = gaussian_blur(max(1, K.int_shape(mask)[1] // 64))(mask)
-                    return K.mean ( 50*K.square( y_true*blur_mask - y_pred*blur_mask ) )
+                    return K.mean(50 * K.square(y_true * blur_mask - y_pred * blur_mask))
                 else:
-                    return 10*dssim() (y_true*mask, y_pred*mask)
-        nnlib.DSSIMMSEMaskLoss = DSSIMMSEMaskLoss
+                    return 10 * dssim()(y_true * mask, y_pred * mask)
 
+        nnlib.DSSIMMSEMaskLoss = DSSIMMSEMaskLoss
 
         '''
         def ResNet(output_nc, use_batch_norm, ngf=64, n_blocks=6, use_dropout=False):
@@ -967,6 +983,7 @@ NLayerDiscriminator = nnlib.NLayerDiscriminator
             return func
         nnlib.NLayerDiscriminator = NLayerDiscriminator
         '''
+
     @staticmethod
     def finalize_all():
         if nnlib.keras_contrib is not None:
@@ -984,24 +1001,24 @@ NLayerDiscriminator = nnlib.NLayerDiscriminator
 class CAInitializerMPSubprocessor(Subprocessor):
     class Cli(Subprocessor.Cli):
 
-        #override
+        # override
         def on_initialize(self, client_dict):
             self.floatx = client_dict['floatx']
             self.data_format = client_dict['data_format']
 
-        #override
+        # override
         def process_data(self, data):
             idx, shape = data
-            weights = CAGenerateWeights (shape, self.floatx, self.data_format)
+            weights = CAGenerateWeights(shape, self.floatx, self.data_format)
             return idx, weights
 
-        #override
-        def get_data_name (self, data):
-            #return string identificator of your data
+        # override
+        def get_data_name(self, data):
+            # return string identificator of your data
             return "undefined"
 
-    #override
-    def __init__(self, idx_shapes_list, floatx, data_format ):
+    # override
+    def __init__(self, idx_shapes_list, floatx, data_format):
 
         self.idx_shapes_list = idx_shapes_list
         self.floatx = floatx
@@ -1010,39 +1027,39 @@ class CAInitializerMPSubprocessor(Subprocessor):
         self.result = []
         super().__init__('CAInitializerMP', CAInitializerMPSubprocessor.Cli)
 
-    #override
+    # override
     def on_clients_initialized(self):
-        io.progress_bar ("Initializing CA weights", len (self.idx_shapes_list))
+        io.progress_bar("Initializing CA weights", len(self.idx_shapes_list))
 
-    #override
+    # override
     def on_clients_finalized(self):
         io.progress_bar_close()
 
-    #override
+    # override
     def process_info_generator(self):
         for i in range(multiprocessing.cpu_count()):
             yield 'CPU%d' % (i), {}, {'device_idx': i,
                                       'device_name': 'CPU%d' % (i),
-                                      'floatx' : self.floatx,
-                                      'data_format' : self.data_format
+                                      'floatx': self.floatx,
+                                      'data_format': self.data_format
                                       }
 
-    #override
+    # override
     def get_data(self, host_dict):
-        if len (self.idx_shapes_list) > 0:
+        if len(self.idx_shapes_list) > 0:
             return self.idx_shapes_list.pop(0)
 
         return None
 
-    #override
-    def on_data_return (self, host_dict, data):
+    # override
+    def on_data_return(self, host_dict, data):
         self.idx_shapes_list.insert(0, data)
 
-    #override
-    def on_result (self, host_dict, data, result):
-        self.result.append ( result )
+    # override
+    def on_result(self, host_dict, data, result):
+        self.result.append(result)
         io.progress_bar_inc(1)
 
-    #override
+    # override
     def get_result(self):
         return self.result
