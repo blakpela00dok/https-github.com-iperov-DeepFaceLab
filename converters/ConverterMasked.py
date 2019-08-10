@@ -90,23 +90,26 @@ class ConverterMasked(Converter):
         else:
             if face_type == FaceType.FULL:
                 self.mask_mode = np.clip(io.input_int(
-                    "Mask mode: (1) learned, (2) dst, (3) FAN-prd, (4) FAN-dst , (5) FAN-prd*FAN-dst (6) learned*FAN-prd*FAN-dst (?) help. Default - %d : " % (
-                        1), 1,
-                    help_message="If you learned mask, then option 1 should be choosed. 'dst' mask is raw shaky mask from dst aligned images. 'FAN-prd' - using super smooth mask by pretrained FAN-model from predicted face. 'FAN-dst' - using super smooth mask by pretrained FAN-model from dst face. 'FAN-prd*FAN-dst' or 'learned*FAN-prd*FAN-dst' - using multiplied masks."),
-                                         1, 6)
+                    "Mask mode: (1) learned, (2) dst, (3) FAN-prd, (4) FAN-dst , (5) FAN-prd*FAN-dst (6) "
+                    "learned*FAN-prd*FAN-dst (?) help. Default - %d : " % 1, 1,
+                    help_message="If you learned mask, then option 1 should be choosed. 'dst' mask is raw shaky mask "
+                                 "from dst aligned images. 'FAN-prd' - using super smooth mask by pretrained "
+                                 "FAN-model from predicted face. 'FAN-dst' - using super smooth mask by pretrained "
+                                 "FAN-model from dst face. 'FAN-prd*FAN-dst' or 'learned*FAN-prd*FAN-dst' - using "
+                                 "multiplied masks."), 1, 6)
             else:
-                self.mask_mode = np.clip(io.input_int("Mask mode: (1) learned, (2) dst . Default - %d : " % (1), 1), 1,
+                self.mask_mode = np.clip(io.input_int("Mask mode: (1) learned, (2) dst . Default - %d : " % 1, 1), 1,
                                          2)
 
-        if self.mask_mode >= 3 and self.mask_mode <= 6:
+        if 3 <= self.mask_mode <= 6:
             self.fan_seg = None
 
         if self.mode != 'raw':
             self.erode_mask_modifier = base_erode_mask_modifier + np.clip(
-                io.input_int("Choose erode mask modifier [-200..200] (skip:%d) : " % (default_erode_mask_modifier),
+                io.input_int("Choose erode mask modifier [-200..200] (skip:%d) : " % default_erode_mask_modifier,
                              default_erode_mask_modifier), -200, 200)
             self.blur_mask_modifier = base_blur_mask_modifier + np.clip(
-                io.input_int("Choose blur mask modifier [-200..200] (skip:%d) : " % (default_blur_mask_modifier),
+                io.input_int("Choose blur mask modifier [-200..200] (skip:%d) : " % default_blur_mask_modifier,
                              default_blur_mask_modifier), -200, 200)
 
         self.output_face_scale = np.clip(
@@ -142,7 +145,7 @@ class ConverterMasked(Converter):
 
     # overridable
     def on_cli_initialize(self):
-        if (self.mask_mode >= 3 and self.mask_mode <= 6) and self.fan_seg == None:
+        if (3 <= self.mask_mode <= 6) and self.fan_seg is None:
             self.fan_seg = FANSegmentator(256, FaceType.toString(self.face_type))
 
     # override
@@ -198,7 +201,7 @@ class ConverterMasked(Converter):
 
         if self.mask_mode == 2:  # dst
             prd_face_mask_a_0 = cv2.resize(dst_face_mask_a_0, (output_size, output_size), cv2.INTER_CUBIC)
-        elif self.mask_mode >= 3 and self.mask_mode <= 6:
+        elif 3 <= self.mask_mode <= 6:
 
             if self.mask_mode == 3 or self.mask_mode == 5 or self.mask_mode == 6:
                 prd_face_bgr_256 = cv2.resize(prd_face_bgr, (256, 256))
@@ -270,12 +273,12 @@ class ConverterMasked(Converter):
                 lowest_len = min(lenx, leny)
                 if debug:
                     io.log_info("lenx/leny:(%d/%d) " % (lenx, leny))
-                    io.log_info("lowest_len = %f" % (lowest_len))
+                    io.log_info("lowest_len = %f" % lowest_len)
 
                 if self.erode_mask_modifier != 0:
                     ero = int(lowest_len * (0.126 - lowest_len * 0.00004551365) * 0.01 * self.erode_mask_modifier)
                     if debug:
-                        io.log_info("erode_size = %d" % (ero))
+                        io.log_info("erode_size = %d" % ero)
                     if ero > 0:
                         img_face_mask_aaa = cv2.erode(img_face_mask_aaa,
                                                       cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (ero, ero)),
@@ -292,6 +295,7 @@ class ConverterMasked(Converter):
                     prd_border_size = int(prd_hborder_rect_mask_a.shape[1] * self.clip_hborder_mask_per)
                     prd_hborder_rect_mask_a[:, 0:prd_border_size, :] = 0
                     prd_hborder_rect_mask_a[:, -prd_border_size:, :] = 0
+                    prd_hborder_rect_mask_a[-prd_border_size:, :, :] = 0
                     prd_hborder_rect_mask_a = np.expand_dims(
                         cv2.blur(prd_hborder_rect_mask_a, (prd_border_size, prd_border_size)), -1)
 
@@ -308,7 +312,7 @@ class ConverterMasked(Converter):
                 if self.blur_mask_modifier > 0:
                     blur = int(lowest_len * 0.10 * 0.01 * self.blur_mask_modifier)
                     if debug:
-                        io.log_info("blur_size = %d" % (blur))
+                        io.log_info("blur_size = %d" % blur)
                     if blur > 0:
                         img_mask_blurry_aaa = cv2.blur(img_mask_blurry_aaa, (blur, blur))
 
@@ -452,7 +456,6 @@ class ConverterMasked(Converter):
                                                               np.zeros(img_bgr.shape, dtype=np.float32),
                                                               cv2.WARP_INVERSE_MAP | cv2.INTER_LANCZOS4,
                                                               cv2.BORDER_TRANSPARENT), 0, 1.0)]
-
 
                     elif self.color_transfer_mode == 'lct':
                         if debug:
