@@ -11,16 +11,21 @@ def reinhard_color_transfer(target, source, clip=False, preserve_paper=False, so
     This implementation is (loosely) based on to the "Color Transfer
     between Images" paper by Reinhard et al., 2001.
 
+    Title: "Super fast color transfer between images"
+    Author: Adrian Rosebrock
+    Date: June 30. 2014
+    Url: https://www.pyimagesearch.com/2014/06/30/super-fast-color-transfer-images/
+
     Parameters:
     -------
     source: NumPy array
-        OpenCV image in BGR color space (the source image)
-    target: NumPy array
-        OpenCV image in BGR color space (the target image)
+        OpenCV image (w, h, 3) in BGR color space (float32) 0-1
+    target: NumPy array (float32)
+        OpenCV image (w, h, 3) in BGR color space (float32), 0-1
     clip: Should components of L*a*b* image be scaled by np.clip before
         converting back to BGR color space?
         If False then components will be min-max scaled appropriately.
-        Clipping will keep target image brightness truer to the input.
+        Clipping will keep target image brightness truer to the input.30
         Scaling will adjust image brightness to avoid washed out portions
         in the resulting color transfer that can be caused by clipping.
     preserve_paper: Should color transfer strictly follow methodology
@@ -33,14 +38,17 @@ def reinhard_color_transfer(target, source, clip=False, preserve_paper=False, so
     Returns:
     -------
     transfer: NumPy array
-        OpenCV image (w, h, 3) NumPy array (uint8)
+        OpenCV image (w, h, 3) NumPy array (float32)
     """
+
+    np.clip(source, 0, 1, out=source)
+    np.clip(target, 0, 1, out=target)
 
     # convert the images from the RGB to L*ab* color space, being
     # sure to utilizing the floating point data type (note: OpenCV
     # expects floats to be 32-bit, so use that instead of 64-bit)
-    source = cv2.cvtColor(source, cv2.COLOR_BGR2LAB).astype(np.float32)
-    target = cv2.cvtColor(target, cv2.COLOR_BGR2LAB).astype(np.float32)
+    source = cv2.cvtColor(source.astype(np.float32), cv2.COLOR_BGR2LAB)
+    target = cv2.cvtColor(target.astype(np.float32), cv2.COLOR_BGR2LAB)
 
     # compute color statistics for the source and target images
     src_input = source if source_mask is None else source * source_mask
@@ -77,10 +85,10 @@ def reinhard_color_transfer(target, source, clip=False, preserve_paper=False, so
     b = _scale_array(b, clip=clip)
 
     # merge the channels together and convert back to the RGB color
-    # space, being sure to utilize the 8-bit unsigned integer data
-    # type
+    # space
     transfer = cv2.merge([l, a, b])
-    transfer = cv2.cvtColor(transfer.astype(np.uint8), cv2.COLOR_LAB2BGR)
+    transfer = cv2.cvtColor(transfer, cv2.COLOR_LAB2BGR)
+    np.clip(transfer, 0, 1, out=transfer)
 
     # return the color transferred image
     return transfer
@@ -92,6 +100,11 @@ def linear_color_transfer(target_img, source_img, mode='pca', eps=1e-5):
     using a linear transform.
     Images are expected to be of form (w,h,c) and float in [0,1].
     Modes are chol, pca or sym for different choices of basis.
+
+    Title: "NeuralImageSynthesis / ExampleNotebooks / ScaleControl.ipynb"
+    Author: Leon Gatys
+    Date: December 14, 2016
+    Url: https://github.com/leongatys/NeuralImageSynthesis/blob/master/ExampleNotebooks/ScaleControl.ipynb
     """
     mu_t = target_img.mean(0).mean(0)
     t = target_img - mu_t
@@ -123,6 +136,22 @@ def linear_color_transfer(target_img, source_img, mode='pca', eps=1e-5):
     matched_img[matched_img > 1] = 1
     matched_img[matched_img < 0] = 0
     return matched_img
+
+
+def lab_linear_color_transform(target_img, source_img, eps=1e-5, mode='pca'):
+    np.clip(source_img, 0, 1, out=source_img)
+    np.clip(target_img, 0, 1, out=target_img)
+
+    # convert the images from the RGB to L*ab* color space, being
+    # sure to utilizing the floating point data type (note: OpenCV
+    # expects floats to be 32-bit, so use that instead of 64-bit)
+    source_img = cv2.cvtColor(source_img.astype(np.float32), cv2.COLOR_BGR2LAB)
+    target_img = cv2.cvtColor(target_img.astype(np.float32), cv2.COLOR_BGR2LAB)
+
+    target_img = linear_color_transfer(target_img, source_img, mode=mode, eps=eps)
+    target_img = cv2.cvtColor(target_img, cv2.COLOR_LAB2BGR)
+    np.clip(target_img, 0, 1, out=target_img)
+    return target_img
 
 
 def lab_image_stats(image):

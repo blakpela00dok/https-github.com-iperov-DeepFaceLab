@@ -327,10 +327,9 @@ class ConverterMasked(Converter):
                                                               cv2.BORDER_TRANSPARENT), 0, 1.0)]
 
                         prd_face_bgr = imagelib.reinhard_color_transfer(
-                            np.clip((prd_face_bgr * 255).astype(np.uint8), 0, 255),
-                            np.clip((dst_face_bgr * 255).astype(np.uint8), 0, 255),
+                            prd_face_bgr,
+                            dst_face_bgr,
                             source_mask=prd_face_mask_a, target_mask=prd_face_mask_a)
-                        prd_face_bgr = np.clip(prd_face_bgr.astype(np.float32) / 255.0, 0.0, 1.0)
 
                         if debug:
                             debugs += [np.clip(cv2.warpAffine(prd_face_bgr, face_output_mat, img_size,
@@ -444,10 +443,9 @@ class ConverterMasked(Converter):
                                                               cv2.BORDER_TRANSPARENT), 0, 1.0)]
 
                         new_out_face_bgr = imagelib.reinhard_color_transfer(
-                            np.clip((out_face_bgr * 255).astype(np.uint8), 0, 255),
-                            np.clip((dst_face_bgr * 255).astype(np.uint8), 0, 255),
+                            out_face_bgr,
+                            dst_face_bgr,
                             source_mask=face_mask_blurry_aaa, target_mask=face_mask_blurry_aaa)
-                        new_out_face_bgr = np.clip(new_out_face_bgr.astype(np.float32) / 255.0, 0.0, 1.0)
 
                         if debug:
                             debugs += [np.clip(cv2.warpAffine(new_out_face_bgr, face_output_mat, img_size,

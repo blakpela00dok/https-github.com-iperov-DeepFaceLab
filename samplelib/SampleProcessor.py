@@ -223,11 +223,7 @@ class SampleProcessor(object):
                 if apply_ct and ct_sample is not None:
                     if ct_sample_bgr is None:
                         ct_sample_bgr = ct_sample.load_bgr()
-
-                    # ct_sample_bgr_resized = cv2.resize(ct_sample_bgr, (resolution, resolution), cv2.INTER_LINEAR)
-
-                    img_bgr = imagelib.reinhard_color_transfer(img_bgr, ct_sample_bgr[..., 0:3])
-                    img_bgr = np.clip(img_bgr, 0.0, 1.0)
+                    img_bgr = imagelib.reinhard_color_transfer(img_bgr, ct_sample_bgr, clip=True)
 
                 if normalize_std_dev:
                     img_bgr = (img_bgr - img_bgr.mean((0, 1))) / img_bgr.std((0, 1))
