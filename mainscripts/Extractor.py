@@ -243,7 +243,7 @@ class ExtractSubprocessor(Subprocessor):
                             LandmarksProcessor.draw_rect_landmarks (debug_image, rect, image_landmarks, self.image_size, self.face_type, transparent_mask=True)
 
                         if filename_path.suffix == '.jpg':
-                            print(filename_path.suffix + 'is a jpeg')
+
                             # if extracting from dflimg and jpg copy it in order not to lose quality
                             output_file = '{}_{}{}'.format(str(self.final_output_path / filename_path.stem),
                                                            str(face_idx), '.jpg')
@@ -259,7 +259,7 @@ class ExtractSubprocessor(Subprocessor):
                                               pitch_yaw_roll=data.pitch_yaw_roll
                                               )
                         else:
-                            print(filename_path.suffix + 'is a png')
+
                             output_file = '{}_{}{}'.format(str(self.final_output_path / filename_path.stem),
                                                            str(face_idx), '.png')
                             cv2_imwrite(output_file, face_image, [int(cv2.IMWRITE_PNG_COMPRESSION), 0])
