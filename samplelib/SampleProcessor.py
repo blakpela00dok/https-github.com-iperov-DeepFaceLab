@@ -223,7 +223,18 @@ class SampleProcessor(object):
                 if apply_ct and ct_sample is not None:
                     if ct_sample_bgr is None:
                         ct_sample_bgr = ct_sample.load_bgr()
-                    img_bgr = imagelib.reinhard_color_transfer(img_bgr, ct_sample_bgr, clip=True)
+                    if ct_sample_mask is None:
+                        ct_sample_mask = ct_sample.load_fanseg_mask() or \
+                                         LandmarksProcessor.get_image_hull_mask(ct_sample_bgr.shape, ct_sample.landmarks)
+
+                    img_bgr = imagelib.reinhard_color_transfer(img_bgr,
+                                                               ct_sample_bgr,
+                                                               clip=True,
+                                                               target_mask=img_mask,
+                                                               source_mask=ct_sample_mask)
+                    # img_bgr = imagelib.reinhard_color_transfer(img_bgr,
+                    #                                            ct_sample_bgr,
+                    #                                            clip=True)
 
                 if normalize_std_dev:
                     img_bgr = (img_bgr - img_bgr.mean((0, 1))) / img_bgr.std((0, 1))

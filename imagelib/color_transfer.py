@@ -2,7 +2,7 @@ import numpy as np
 import cv2
 
 
-def reinhard_color_transfer(target, source, clip=False, preserve_paper=False, source_mask=None, target_mask=None):
+def reinhard_color_transfer(target, source, clip=False, preserve_paper=False, target_mask=None, source_mask=None):
     """
     Transfers the color distribution from the source to the target
     image using the mean and standard deviations of the L*a*b*
@@ -51,8 +51,6 @@ def reinhard_color_transfer(target, source, clip=False, preserve_paper=False, so
     target = cv2.cvtColor(target.astype(np.float32), cv2.COLOR_BGR2LAB)
 
     # compute color statistics for the source and target images
-    src_input = source if source_mask is None else source * source_mask
-    tgt_input = target if target_mask is None else target * target_mask
     (lMeanSrc, lStdSrc, aMeanSrc, aStdSrc, bMeanSrc, bStdSrc) = lab_image_stats(src_input)
     (lMeanTar, lStdTar, aMeanTar, aStdTar, bMeanTar, bStdTar) = lab_image_stats(tgt_input)
 
@@ -138,32 +136,20 @@ def linear_color_transfer(target_img, source_img, mode='pca', eps=1e-5):
     return matched_img
 
 
-def linear_lab_color_transform(target_img, source_img, eps=1e-5, mode='pca'):
-    """doesn't work yet"""
-    np.clip(source_img, 0, 1, out=source_img)
-    np.clip(target_img, 0, 1, out=target_img)
-
-    # convert the images from the RGB to L*ab* color space, being
-    # sure to utilizing the floating point data type (note: OpenCV
-    # expects floats to be 32-bit, so use that instead of 64-bit)
-    source_img = cv2.cvtColor(source_img.astype(np.float32), cv2.COLOR_BGR2LAB)
-    target_img = cv2.cvtColor(target_img.astype(np.float32), cv2.COLOR_BGR2LAB)
-
-    target_img = linear_color_transfer(target_img, source_img, mode=mode, eps=eps)
-    target_img = cv2.cvtColor(np.clip(target_img, 0, 1).astype(np.float32), cv2.COLOR_LAB2BGR)
-    np.clip(target_img, 0, 1, out=target_img)
-    return target_img
-
-
-def lab_image_stats(image):
+def lab_image_stats(image, mask=None):
     # compute the mean and standard deviation of each channel
+    if mask is not None:
+        mask = np.squeeze(mask)
+        image = image[mask == 1]
+
     (l, a, b) = cv2.split(image)
-    (lMean, lStd) = (l.mean(), l.std())
-    (aMean, aStd) = (a.mean(), a.std())
-    (bMean, bStd) = (b.mean(), b.std())
+
+    l_mean, l_std = np.mean(l), np.std(l)
+    a_mean, a_std = np.mean(l), np.std(l)
+    b_mean, b_std = np.mean(l), np.std(l)
 
     # return the color statistics
-    return (lMean, lStd, aMean, aStd, bMean, bStd)
+    return l_mean, l_std, a_mean, a_std, b_mean, b_std
 
 
 def _scale_array(arr, clip=True):
