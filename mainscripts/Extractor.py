@@ -242,23 +242,35 @@ class ExtractSubprocessor(Subprocessor):
                         if self.debug_dir is not None:
                             LandmarksProcessor.draw_rect_landmarks (debug_image, rect, image_landmarks, self.image_size, self.face_type, transparent_mask=True)
 
-                        if src_dflimg is not None and filename_path.suffix == '.jpg':
-                            #if extracting from dflimg and jpg copy it in order not to lose quality
-                            output_file = str(self.final_output_path / filename_path.name)
+                        if filename_path.suffix == '.jpg':
+                            print(filename_path.suffix + 'is a jpeg')
+                            # if extracting from dflimg and jpg copy it in order not to lose quality
+                            output_file = '{}_{}{}'.format(str(self.final_output_path / filename_path.stem),
+                                                           str(face_idx), '.jpg')
                             if str(filename_path) != str(output_file):
-                                shutil.copy ( str(filename_path), str(output_file) )
+                                shutil.copy(str(filename_path), str(output_file))
+                            cv2_imwrite(output_file, face_image, [int(cv2.IMWRITE_JPEG_QUALITY), 85])
+                            DFLJPG.embed_data(output_file, face_type=FaceType.toString(self.face_type),
+                                              landmarks=face_image_landmarks.tolist(),
+                                              source_filename=filename_path.name,
+                                              source_rect=rect,
+                                              source_landmarks=image_landmarks.tolist(),
+                                              image_to_face_mat=image_to_face_mat,
+                                              pitch_yaw_roll=data.pitch_yaw_roll
+                                              )
                         else:
-                            output_file = '{}_{}{}'.format(str(self.final_output_path / filename_path.stem), str(face_idx), '.png')
-                            cv2_imwrite(output_file, face_image, [int(cv2.IMWRITE_PNG_COMPRESSION), 0] )
-
-                        DFLPNG.embed_data(output_file, face_type=FaceType.toString(self.face_type),
-                                          landmarks=face_image_landmarks.tolist(),
-                                          source_filename=filename_path.name,
-                                          source_rect=rect,
-                                          source_landmarks=image_landmarks.tolist(),
-                                          image_to_face_mat=image_to_face_mat,
-                                          pitch_yaw_roll=data.pitch_yaw_roll
-                                          )
+                            print(filename_path.suffix + 'is a png')
+                            output_file = '{}_{}{}'.format(str(self.final_output_path / filename_path.stem),
+                                                           str(face_idx), '.png')
+                            cv2_imwrite(output_file, face_image, [int(cv2.IMWRITE_PNG_COMPRESSION), 0])
+                            DFLPNG.embed_data(output_file, face_type=FaceType.toString(self.face_type),
+                                              landmarks=face_image_landmarks.tolist(),
+                                              source_filename=filename_path.name,
+                                              source_rect=rect,
+                                              source_landmarks=image_landmarks.tolist(),
+                                              image_to_face_mat=image_to_face_mat,
+                                              pitch_yaw_roll=data.pitch_yaw_roll
+                                              )
 
                         data.final_output_files.append (output_file)
                         face_idx += 1
