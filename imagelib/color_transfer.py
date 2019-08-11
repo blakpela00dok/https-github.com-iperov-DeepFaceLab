@@ -51,8 +51,8 @@ def reinhard_color_transfer(target, source, clip=False, preserve_paper=False, ta
     target = cv2.cvtColor(target.astype(np.float32), cv2.COLOR_BGR2LAB)
 
     # compute color statistics for the source and target images
-    (lMeanSrc, lStdSrc, aMeanSrc, aStdSrc, bMeanSrc, bStdSrc) = lab_image_stats(src_input)
-    (lMeanTar, lStdTar, aMeanTar, aStdTar, bMeanTar, bStdTar) = lab_image_stats(tgt_input)
+    (lMeanSrc, lStdSrc, aMeanSrc, aStdSrc, bMeanSrc, bStdSrc) = lab_image_stats(source, mask=source_mask)
+    (lMeanTar, lStdTar, aMeanTar, aStdTar, bMeanTar, bStdTar) = lab_image_stats(target, mask=target_mask)
 
     # subtract the means from the target image
     (l, a, b) = cv2.split(target)
