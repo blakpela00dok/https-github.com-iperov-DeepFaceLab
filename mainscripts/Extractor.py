@@ -135,7 +135,7 @@ class ExtractSubprocessor(Subprocessor):
                 if filename_path.suffix == '.png':
                     src_dflimg = DFLPNG.load ( str(filename_path) )
                 if filename_path.suffix == '.jpg':
-                    src_dflimg = DFLPNG.load ( str(filename_path) )
+                    src_dflimg = DFLJPG.load ( str(filename_path) )
 
             if 'rects' in self.type:
                 if min(w,h) < 128:
@@ -249,7 +249,7 @@ class ExtractSubprocessor(Subprocessor):
                                                            str(face_idx), '.jpg')
                             if str(filename_path) != str(output_file):
                                 shutil.copy(str(filename_path), str(output_file))
-                            cv2_imwrite(output_file, face_image, [int(cv2.IMWRITE_JPEG_QUALITY), 85])
+                            cv2_imwrite(output_file, face_image, [int(cv2.IMWRITE_JPEG_QUALITY), 95])
                             DFLJPG.embed_data(output_file, face_type=FaceType.toString(self.face_type),
                                               landmarks=face_image_landmarks.tolist(),
                                               source_filename=filename_path.name,
@@ -262,7 +262,7 @@ class ExtractSubprocessor(Subprocessor):
 
                             output_file = '{}_{}{}'.format(str(self.final_output_path / filename_path.stem),
                                                            str(face_idx), '.png')
-                            cv2_imwrite(output_file, face_image, [int(cv2.IMWRITE_PNG_COMPRESSION), 0])
+                            cv2_imwrite(output_file, face_image, [int(cv2.IMWRITE_PNG_COMPRESSION), 3])
                             DFLPNG.embed_data(output_file, face_type=FaceType.toString(self.face_type),
                                               landmarks=face_image_landmarks.tolist(),
                                               source_filename=filename_path.name,
