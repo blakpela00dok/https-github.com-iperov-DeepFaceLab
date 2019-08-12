@@ -18,11 +18,12 @@ output_sample_types = [
                       ]
 '''
 class SampleGeneratorFace(SampleGeneratorBase):
-    def __init__ (self, samples_path, debug, batch_size, sort_by_yaw=False, sort_by_yaw_target_samples_path=None, random_ct_samples_path=None, sample_process_options=SampleProcessor.Options(), output_sample_types=[], add_sample_idx=False, generators_count=2, generators_random_seed=None, **kwargs):
+    def __init__ (self, samples_path, debug, batch_size, sort_by_yaw=False, sort_by_yaw_target_samples_path=None, random_ct_samples_path=None, random_ct_type=0, sample_process_options=SampleProcessor.Options(), output_sample_types=[], add_sample_idx=False, generators_count=2, generators_random_seed=None, **kwargs):
         super().__init__(samples_path, debug, batch_size)
         self.sample_process_options = sample_process_options
         self.output_sample_types = output_sample_types
         self.add_sample_idx = add_sample_idx
+        self.apply_ct_type = random_ct_type
 
         if sort_by_yaw_target_samples_path is not None:
             self.sample_type = SampleType.FACE_YAW_SORTED_AS_TARGET
@@ -114,12 +115,12 @@ class SampleGeneratorFace(SampleGeneratorBase):
 
                     if sample is not None:
                         try:
-                            ct_sample=None                            
-                            if ct_samples is not None:                                
+                            ct_sample=None
+                            if ct_samples is not None:
                                 if np.random.randint(100) < self.random_ct_sample_chance:
                                     ct_sample=ct_samples[np.random.randint(ct_samples_len)]
-                            
-                            x = SampleProcessor.process (sample, self.sample_process_options, self.output_sample_types, self.debug, ct_sample=ct_sample)
+
+                            x = SampleProcessor.process (sample, self.sample_process_options, self.output_sample_types, self.debug, ct_sample=ct_sample, apply_ct_type=self.apply_ct_type)
                         except:
                             raise Exception ("Exception occured in sample %s. Error: %s" % (sample.filename, traceback.format_exc() ) )
 
