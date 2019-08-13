@@ -235,13 +235,15 @@ class SampleProcessor(object):
                         img_bgr = imagelib.linear_color_transfer(img_bgr, ct_sample_bgr)
 
                     elif apply_ct == ColorTransferMode.RCT:
-                        img_bgr = imagelib.reinhard_color_transfer(img_bgr, ct_sample_bgr)
+                        img_bgr = imagelib.reinhard_color_transfer(img_bgr, ct_sample_bgr, clip=True, preserve_paper=True)
 
                     elif apply_ct == ColorTransferMode.RCT_MASKED and ct_sample_mask is None:
                         ct_sample_mask = ct_sample.load_fanseg_mask() or \
                                          LandmarksProcessor.get_image_hull_mask(ct_sample_bgr.shape, ct_sample.landmarks)
                         img_bgr = imagelib.reinhard_color_transfer(img_bgr,
                                                                    ct_sample_bgr,
+                                                                   clip=True,
+                                                                   preserve_paper=True,
                                                                    target_mask=img_mask,
                                                                    source_mask=ct_sample_mask)
 

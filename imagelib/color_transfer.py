@@ -76,7 +76,7 @@ def reinhard_color_transfer(target, source, clip=False, preserve_paper=False, ta
     a += aMeanSrc
     b += bMeanSrc
 
-    # clip/scale the pixel intensities to [0, 255] if they fall
+    # clip/scale the pixel intensities to [0, 1] if they fall
     # outside this range
     l = _scale_array(l, clip=clip)
     a = _scale_array(a, clip=clip)
@@ -156,15 +156,15 @@ def _scale_array(arr, clip=True):
     if clip:
         return np.clip(arr, 0, 1)
 
-    return (arr - np.min(arr)) / np.ptp(arr)
-    # mn = arr.min()
-    # mx = arr.max()
-    # scale_range = (max([mn, 0]), min([mx, 1]))
-    #
-    # if mn < scale_range[0] or mx > scale_range[1]:
-    #     return (scale_range[1] - scale_range[0]) * (arr - mn) / (mx - mn) + scale_range[0]
-    #
-    # return arr
+    # return (arr - np.min(arr)) / np.ptp(arr)
+    mn = arr.min()
+    mx = arr.max()
+    scale_range = (max([mn, 0]), min([mx, 1]))
+
+    if mn < scale_range[0] or mx > scale_range[1]:
+        return (scale_range[1] - scale_range[0]) * (arr - mn) / (mx - mn) + scale_range[0]
+
+    return arr
 
 
 def channel_hist_match(source, template, hist_match_threshold=255, mask=None):
