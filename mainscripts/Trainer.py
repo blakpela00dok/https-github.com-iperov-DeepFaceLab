@@ -109,7 +109,7 @@ def trainerThread (s2c, c2s, args, device_args):
                         loss_history = model.get_loss_history()
                         time_str = time.strftime("[%H:%M:%S]")
                         if iter_time >= 10:
-                            loss_string = "{0}[#{1:06d}][{2:.5s}s]".format ( time_str, iter, '{:0.4f}'.format(iter_time) )
+                            loss_string = "{0}[#{1:06d}][{2:.5s}s][bs: {3}]".format ( time_str, iter, '{:0.4f}'.format(iter_time), batch_size )
                         else:
                             loss_string = "{0}[#{1:06d}][{2:04d}ms][bs: {3}]".format ( time_str, iter, int(iter_time*1000), batch_size)
 
