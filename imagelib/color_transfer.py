@@ -151,6 +151,7 @@ def lab_image_stats(image, mask=None):
 
 
 def _scale_array(l, a, b, clip=True):
+    print('l*a*b*:', l, a, b)
     if clip:
         return np.clip(l, 0, 100), np.clip(a, -127, 127), np.clip(b, -127, 127)
 
