@@ -78,9 +78,9 @@ def reinhard_color_transfer(target, source, clip=False, preserve_paper=False, ta
 
     # clip/scale the pixel intensities to [0, 1] if they fall
     # outside this range
-    l = _scale_array(l, clip=clip)
-    a = _scale_array(a, clip=clip)
-    b = _scale_array(b, clip=clip)
+    # l = _scale_array(l, clip=clip)
+    # a = _scale_array(a, clip=clip)
+    # b = _scale_array(b, clip=clip)
 
     # merge the channels together and convert back to the RGB color
     # space
