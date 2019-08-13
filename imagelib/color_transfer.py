@@ -156,14 +156,15 @@ def _scale_array(arr, clip=True):
     if clip:
         return np.clip(arr, 0, 1)
 
-    mn = arr.min()
-    mx = arr.max()
-    scale_range = (max([mn, 0]), min([mx, 1]))
-
-    if mn < scale_range[0] or mx > scale_range[1]:
-        return (scale_range[1] - scale_range[0]) * (arr - mn) / (mx - mn) + scale_range[0]
-
-    return arr
+    return (arr - np.min(arr)) / np.ptp(arr)
+    # mn = arr.min()
+    # mx = arr.max()
+    # scale_range = (max([mn, 0]), min([mx, 1]))
+    #
+    # if mn < scale_range[0] or mx > scale_range[1]:
+    #     return (scale_range[1] - scale_range[0]) * (arr - mn) / (mx - mn) + scale_range[0]
+    #
+    # return arr
 
 
 def channel_hist_match(source, template, hist_match_threshold=255, mask=None):
