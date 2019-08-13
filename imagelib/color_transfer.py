@@ -41,8 +41,8 @@ def reinhard_color_transfer(target, source, clip=False, preserve_paper=False, ta
         OpenCV image (w, h, 3) NumPy array (float32)
     """
 
-    np.clip(source, 0, 1, out=source)
-    np.clip(target, 0, 1, out=target)
+    # np.clip(source, 0, 1, out=source)
+    # np.clip(target, 0, 1, out=target)
 
     # convert the images from the RGB to L*ab* color space, being
     # sure to utilizing the floating point data type (note: OpenCV
