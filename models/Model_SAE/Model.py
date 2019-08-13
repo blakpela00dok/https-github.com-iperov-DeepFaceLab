@@ -7,8 +7,11 @@ from facelib import FaceType
 from samplelib import *
 from interact import interact as io
 
+from samplelib.SampleProcessor import ColorTransferMode
 
 # SAE - Styled AutoEncoder
+
+
 class SAEModel(ModelBase):
     encoderH5 = 'encoder.h5'
     inter_BH5 = 'inter_B.h5'
@@ -119,8 +122,8 @@ class SAEModel(ModelBase):
                                 help_message="Learn to transfer image around face. This can make face more like dst. Enabling this option increases the chance of model collapse."),
                 0.0, 100.0)
 
-            default_apply_random_ct = 0 if is_first_run else self.options.get('apply_random_ct', 0)
-            self.options['apply_random_ct'] = io.input_bool(
+            default_apply_random_ct = ColorTransferMode.NONE if is_first_run else self.options.get('apply_random_ct', ColorTransferMode.NONE)
+            self.options['apply_random_ct'] = io.input_int(
                 "Apply random color transfer to src faceset? (0) None, (1) LCT, (2) RCT, (3) RCT-masked ?:help skip:%s) : " % (
                 yn_str[default_apply_random_ct]), default_apply_random_ct,
                 help_message="Increase variativity of src samples by apply LCT color transfer from random dst "
@@ -140,7 +143,7 @@ class SAEModel(ModelBase):
             self.options['pixel_loss'] = self.options.get('pixel_loss', False)
             self.options['face_style_power'] = self.options.get('face_style_power', default_face_style_power)
             self.options['bg_style_power'] = self.options.get('bg_style_power', default_bg_style_power)
-            self.options['apply_random_ct'] = self.options.get('apply_random_ct', 0)
+            self.options['apply_random_ct'] = self.options.get('apply_random_ct', ColorTransferMode.NONE)
             self.options['clipgrad'] = self.options.get('clipgrad', False)
 
         if is_first_run:
@@ -169,7 +172,7 @@ class SAEModel(ModelBase):
 
         self.ms_count = ms_count = 3 if (self.options['multiscale_decoder']) else 1
 
-        apply_random_ct = self.options.get('apply_random_ct', 0)
+        apply_random_ct = self.options.get('apply_random_ct', ColorTransferMode.NONE)
         masked_training = True
 
         warped_src = Input(bgr_shape)
@@ -456,8 +459,7 @@ class SAEModel(ModelBase):
             self.set_training_data_generators([
                 SampleGeneratorFace(training_data_src_path,
                                     sort_by_yaw_target_samples_path=training_data_dst_path if sort_by_yaw else None,
-                                    random_ct_samples_path=training_data_dst_path if apply_random_ct else None,
-                                    random_ct_type=apply_random_ct,
+                                    random_ct_samples_path=training_data_dst_path if apply_random_ct != ColorTransferMode.NONE else None,
                                     debug=self.is_debug(), batch_size=self.batch_size,
                                     sample_process_options=SampleProcessor.Options(random_flip=self.random_flip,
                                                                                    scale_range=np.array([-0.05,
@@ -590,7 +592,7 @@ class SAEModel(ModelBase):
         face_type = FaceType.FULL if self.options['face_type'] == 'f' else FaceType.HALF
 
         from converters import ConverterMasked
-        # TODO apply_random_ct
+
         return ConverterMasked(self.predictor_func,
                                predictor_input_size=self.options['resolution'],
                                predictor_masked=self.options['learn_mask'],

@@ -42,6 +42,13 @@ opts:
 """
 
 
+class ColorTransferMode(IntEnum):
+    NONE = 0
+    LCT = 1
+    RCT = 2
+    RCT_MASKED = 3
+
+
 class SampleProcessor(object):
     class Types(IntEnum):
         NONE = 0
@@ -82,7 +89,7 @@ class SampleProcessor(object):
             self.ty_range = ty_range
 
     @staticmethod
-    def process(sample, sample_process_options, output_sample_types, debug, ct_sample=None, apply_ct_type=0):
+    def process(sample, sample_process_options, output_sample_types, debug, ct_sample=None):
         SPTF = SampleProcessor.Types
 
         sample_bgr = sample.load_bgr()
@@ -120,8 +127,7 @@ class SampleProcessor(object):
             normalize_std_dev = opts.get('normalize_std_dev', False)
             normalize_vgg = opts.get('normalize_vgg', False)
             motion_blur = opts.get('motion_blur', None)
-            apply_ct = opts.get('apply_ct', False)
-            apply_ct_type = opts.get('apply_ct_type', 0)
+            apply_ct = opts.get('apply_ct', ColorTransferMode.NONE)
             normalize_tanh = opts.get('normalize_tanh', False)
 
             img_type = SPTF.NONE
@@ -225,16 +231,15 @@ class SampleProcessor(object):
                     if ct_sample_bgr is None:
                         ct_sample_bgr = ct_sample.load_bgr()
 
-                    # TODO enum, apply_ct_type
-                    if apply_ct_type == 3 and ct_sample_mask is None:
+                    if apply_ct == ColorTransferMode.LCT:
+                        img_bgr = imagelib.linear_color_transfer(img_bgr, ct_sample_bgr)
+
+                    elif apply_ct == ColorTransferMode.RCT:
+                        img_bgr = imagelib.reinhard_color_transfer(img_bgr, ct_sample_bgr, clip=True)
+
+                    elif apply_ct == ColorTransferMode.RCT_MASKED and ct_sample_mask is None:
                         ct_sample_mask = ct_sample.load_fanseg_mask() or \
                                          LandmarksProcessor.get_image_hull_mask(ct_sample_bgr.shape, ct_sample.landmarks)
-
-                    if apply_ct_type == 1:
-                        img_bgr = imagelib.linear_color_transfer(img_bgr, ct_sample_bgr)
-                    if apply_ct_type == 2:
-                        img_bgr = imagelib.reinhard_color_transfer(img_bgr, ct_sample_bgr, clip=True)
-                    if apply_ct_type == 3:
                         img_bgr = imagelib.reinhard_color_transfer(img_bgr,
                                                                    ct_sample_bgr,
                                                                    clip=True,
