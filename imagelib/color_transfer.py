@@ -76,17 +76,13 @@ def reinhard_color_transfer(target, source, clip=False, preserve_paper=False, ta
     a += aMeanSrc
     b += bMeanSrc
 
-    # clip/scale the pixel intensities to [0, 1] if they fall
-    # outside this range
-    # l = _scale_array(l, clip=clip)
-    # a = _scale_array(a, clip=clip)
-    # b = _scale_array(b, clip=clip)
-
     # merge the channels together and convert back to the RGB color
-    # space
     transfer = cv2.merge([l, a, b])
     transfer = cv2.cvtColor(transfer, cv2.COLOR_LAB2BGR)
-    np.clip(transfer, 0, 1, out=transfer)
+    if clip:
+        np.clip(transfer, 0, 1, out=transfer)
+    else:
+        transfer = (transfer - np.min(transfer)) / np.ptp(transfer)
 
     # return the color transferred image
     return transfer
