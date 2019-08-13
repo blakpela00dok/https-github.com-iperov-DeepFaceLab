@@ -154,11 +154,11 @@ def lab_image_stats(image, mask=None):
 
 def _scale_array(arr, clip=True):
     if clip:
-        return np.clip(arr, 0, 255)
+        return np.clip(arr, 0, 1)
 
     mn = arr.min()
     mx = arr.max()
-    scale_range = (max([mn, 0]), min([mx, 255]))
+    scale_range = (max([mn, 0]), min([mx, 1]))
 
     if mn < scale_range[0] or mx > scale_range[1]:
         return (scale_range[1] - scale_range[0]) * (arr - mn) / (mx - mn) + scale_range[0]
