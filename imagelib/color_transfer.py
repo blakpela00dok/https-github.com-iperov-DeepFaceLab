@@ -84,7 +84,7 @@ def reinhard_color_transfer(target, source, clip=False, preserve_paper=False, ta
 
     # merge the channels together and convert back to the RGB color
     transfer = cv2.merge([l, a, b])
-    transfer = cv2.cvtColor(transfer.astype("uint8"), cv2.COLOR_LAB2BGR)
+    transfer = cv2.cvtColor(transfer.astype("uint8"), cv2.COLOR_LAB2BGR).astype("float32")
     np.clip(transfer, 0, 1, out=transfer)
 
     # return the color transferred image
