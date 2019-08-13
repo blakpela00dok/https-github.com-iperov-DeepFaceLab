@@ -76,10 +76,11 @@ def reinhard_color_transfer(target, source, clip=False, preserve_paper=False, ta
     a += aMeanSrc
     b += bMeanSrc
 
-    # clip/scale the pixel intensities if they fall outside
-    # L*a*b* space (0 ≤ L ≤ 100, −127 ≤ a ≤ 127, −127 ≤ b ≤ 127)
-    # https://docs.opencv.org/3.3.0/de/d25/imgproc_color_conversions.html
-    # l, a, b = _scale_array(l, a, b, clip=clip)
+    # clip/scale the pixel intensities to [0, 255] if they fall
+    # outside this range
+    l = _scale_array(l, clip=clip)
+    a = _scale_array(a, clip=clip)
+    b = _scale_array(b, clip=clip)
 
     # merge the channels together and convert back to the RGB color
     transfer = cv2.merge([l, a, b])
@@ -150,31 +151,55 @@ def lab_image_stats(image, mask=None):
     return l_mean, l_std, a_mean, a_std, b_mean, b_std
 
 
-def _scale_array(l, a, b, clip=True):
+def _min_max_scale(arr, new_range=(0, 255)):
+    """
+    Perform min-max scaling to a NumPy array
+    Parameters:
+    -------
+    arr: NumPy array to be scaled to [new_min, new_max] range
+    new_range: tuple of form (min, max) specifying range of
+        transformed array
+    Returns:
+    -------
+    NumPy array that has been scaled to be in
+    [new_range[0], new_range[1]] range
+    """
+    # get array's current min and max
+    mn = arr.min()
+    mx = arr.max()
+
+    # check if scaling needs to be done to be in new_range
+    if mn < new_range[0] or mx > new_range[1]:
+        # perform min-max scaling
+        scaled = (new_range[1] - new_range[0]) * (arr - mn) / (mx - mn) + new_range[0]
+    else:
+        # return array if already in range
+        scaled = arr
+
+    return scaled
+
+
+def _scale_array(arr, clip=True):
+    """
+    Trim NumPy array values to be in [0, 255] range with option of
+    clipping or scaling.
+    Parameters:
+    -------
+    arr: array to be trimmed to [0, 255] range
+    clip: should array be scaled by np.clip? if False then input
+        array will be min-max scaled to range
+        [max([arr.min(), 0]), min([arr.max(), 255])]
+    Returns:
+    -------
+    NumPy array that has been scaled to be in [0, 255] range
+    """
     if clip:
-        return np.clip(l, 0, 255), np.clip(a, 0, 255), np.clip(b, 0, 255)
-        # return np.clip(l, 0, 100), np.clip(a, -127, 127), np.clip(b, -127, 127)
+        scaled = np.clip(arr, 0, 255)
+    else:
+        scale_range = (max([arr.min(), 0]), min([arr.max(), 255]))
+        scaled = _min_max_scale(arr, new_range=scale_range)
 
-    # return (arr - np.min(arr)) / np.ptp(arr)
-    l_min, a_min, b_min = np.min(l), np.min(a), np.min(b)
-    l_ptp, a_ptp, b_ptp = np.ptp(l), np.ptp(a), np.ptp(b)
-    # l_max, a_max, b_max = np.max(l), np.max(a), np.max(b)
-    # print('l*a*b* min:', l_min, a_min, b_min)
-    # print('l*a*b* ptp:', l_ptp, a_ptp, b_ptp)
-    # print('l*a*b* max:', l_max, a_max, b_max)
-
-    l -= min(l_min, 0)
-    a -= min(a_min, 0)
-    b -= min(b_min, 0)
-
-    if l_ptp > 255:
-        l = 255 * l / l_ptp
-    if a_ptp > 255:
-        a = 255 * a / a_ptp
-    if b_ptp:
-        b = 255 * b / b_ptp
-
-    return l, a, b
+    return scaled
 
 
 def channel_hist_match(source, template, hist_match_threshold=255, mask=None):
