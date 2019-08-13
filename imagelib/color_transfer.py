@@ -152,7 +152,8 @@ def lab_image_stats(image, mask=None):
 
 def _scale_array(l, a, b, clip=True):
     if clip:
-        return np.clip(l, 0, 100), np.clip(a, -127, 127), np.clip(b, -127, 127)
+        return np.clip(l, 0, 255), np.clip(a, 0, 255), np.clip(b, 0, 255)
+        # return np.clip(l, 0, 100), np.clip(a, -127, 127), np.clip(b, -127, 127)
 
     # return (arr - np.min(arr)) / np.ptp(arr)
     l_min, a_min, b_min = np.min(l), np.min(a), np.min(b)
@@ -163,15 +164,15 @@ def _scale_array(l, a, b, clip=True):
     print('l*a*b* max:', l_max, a_max, b_max)
 
     l -= min(l_min, 0)
-    a -= min(a_min, -127)
-    b -= min(b_min, -127)
+    a -= min(a_min, 0)
+    b -= min(b_min, 0)
 
-    if l_ptp > 100:
-        l = 100 * l / l_ptp
-    if a_ptp > 254:
-        a = 254 * a / a_ptp - 127
+    if l_ptp > 255:
+        l = 255 * l / l_ptp
+    if a_ptp > 255:
+        a = 255 * a / a_ptp
     if b_ptp:
-        b = 254 * b / b_ptp - 127
+        b = 255 * b / b_ptp
 
     return l, a, b
 
