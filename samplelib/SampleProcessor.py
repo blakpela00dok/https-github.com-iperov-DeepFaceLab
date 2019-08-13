@@ -235,7 +235,7 @@ class SampleProcessor(object):
                         img_bgr = imagelib.linear_color_transfer(img_bgr, ct_sample_bgr)
 
                     elif apply_ct == ColorTransferMode.RCT:
-                        img_bgr = imagelib.reinhard_color_transfer(img_bgr, ct_sample_bgr, clip=False, preserve_paper=True)
+                        img_bgr = imagelib.reinhard_color_transfer(img_bgr, ct_sample_bgr, clip=False)
 
                     elif apply_ct == ColorTransferMode.RCT_MASKED:
                         if ct_sample_mask is None:
@@ -244,7 +244,6 @@ class SampleProcessor(object):
                         img_bgr = imagelib.reinhard_color_transfer(img_bgr,
                                                                    ct_sample_bgr,
                                                                    clip=False,
-                                                                   preserve_paper=True,
                                                                    target_mask=img_mask,
                                                                    source_mask=ct_sample_mask)
 

@@ -76,13 +76,15 @@ def reinhard_color_transfer(target, source, clip=False, preserve_paper=False, ta
     a += aMeanSrc
     b += bMeanSrc
 
+    # clip/scale the pixel intensities if they fall outside
+    # L*a*b* space (0 ≤ L ≤ 100, −127 ≤ a ≤ 127, −127 ≤ b ≤ 127)
+    # https://docs.opencv.org/3.3.0/de/d25/imgproc_color_conversions.html
+    l, a, b = _scale_array(l, a, b, clip=clip)
+
     # merge the channels together and convert back to the RGB color
     transfer = cv2.merge([l, a, b])
     transfer = cv2.cvtColor(transfer, cv2.COLOR_LAB2BGR)
-    if clip:
-        np.clip(transfer, 0, 1, out=transfer)
-    else:
-        transfer = (transfer - np.min(transfer)) / np.ptp(transfer)
+    np.clip(transfer, 0, 1, out=transfer)
 
     # return the color transferred image
     return transfer
@@ -148,19 +150,26 @@ def lab_image_stats(image, mask=None):
     return l_mean, l_std, a_mean, a_std, b_mean, b_std
 
 
-def _scale_array(arr, clip=True):
+def _scale_array(l, a, b, clip=True):
     if clip:
-        return np.clip(arr, 0, 1)
+        return np.clip(l, 0, 100), np.clip(a, -127, 127), np.clip(b, -127, 127)
 
     # return (arr - np.min(arr)) / np.ptp(arr)
-    mn = arr.min()
-    mx = arr.max()
-    scale_range = (max([mn, 0]), min([mx, 1]))
+    l_min, a_min, b_min = np.min(l), np.min(a), np.min(b)
+    l_ptp, a_ptp, b_ptp = np.ptp(l), np.ptp(a), np.ptp(b)
 
-    if mn < scale_range[0] or mx > scale_range[1]:
-        return (scale_range[1] - scale_range[0]) * (arr - mn) / (mx - mn) + scale_range[0]
+    l -= min(l_min, 0)
+    a -= min(a_min, -127)
+    b -= min(b_min, -127)
 
-    return arr
+    if l_ptp > 100:
+        l = 100 * l / l_ptp
+    if a_ptp > 254:
+        a = 254 * a / a_ptp - 127
+    if b_ptp:
+        b = 254 * b / b_ptp - 127
+
+    return l, a, b
 
 
 def channel_hist_match(source, template, hist_match_threshold=255, mask=None):
