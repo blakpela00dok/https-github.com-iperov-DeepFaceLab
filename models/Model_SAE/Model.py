@@ -124,8 +124,8 @@ class SAEModel(ModelBase):
 
             default_apply_random_ct = ColorTransferMode.NONE if is_first_run else self.options.get('apply_random_ct', ColorTransferMode.NONE)
             self.options['apply_random_ct'] = io.input_int(
-                "Apply random color transfer to src faceset? (0) None, (1) LCT, (2) RCT, (3) RCT-masked ?:help skip:%s) : " % (
-                yn_str[default_apply_random_ct]), default_apply_random_ct,
+                "Apply random color transfer to src faceset? (0) None, (1) LCT, (2) RCT, (3) RCT-masked ?:help skip:%s) : " % (default_apply_random_ct),
+                default_apply_random_ct,
                 help_message="Increase variativity of src samples by apply LCT color transfer from random dst "
                              "samples. It is like 'face_style' learning, but more precise color transfer and without "
                              "risk of model collapse, also it does not require additional GPU resources, "
