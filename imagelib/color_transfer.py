@@ -79,7 +79,7 @@ def reinhard_color_transfer(target, source, clip=False, preserve_paper=False, ta
     # clip/scale the pixel intensities if they fall outside
     # L*a*b* space (0 ≤ L ≤ 100, −127 ≤ a ≤ 127, −127 ≤ b ≤ 127)
     # https://docs.opencv.org/3.3.0/de/d25/imgproc_color_conversions.html
-    l, a, b = _scale_array(l, a, b, clip=clip)
+    # l, a, b = _scale_array(l, a, b, clip=clip)
 
     # merge the channels together and convert back to the RGB color
     transfer = cv2.merge([l, a, b])
