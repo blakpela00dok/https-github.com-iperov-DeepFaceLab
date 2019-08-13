@@ -104,14 +104,14 @@ def trainerThread (s2c, c2s, args, device_args):
                                 print("Unable to execute program: %s" % (prog) )
 
                     if not is_reached_goal:
-                        iter, iter_time = model.train_one_iter()
+                        iter, iter_time, batch_size = model.train_one_iter()
 
                         loss_history = model.get_loss_history()
                         time_str = time.strftime("[%H:%M:%S]")
                         if iter_time >= 10:
                             loss_string = "{0}[#{1:06d}][{2:.5s}s]".format ( time_str, iter, '{:0.4f}'.format(iter_time) )
                         else:
-                            loss_string = "{0}[#{1:06d}][{2:04d}ms]".format ( time_str, iter, int(iter_time*1000) )
+                            loss_string = "{0}[#{1:06d}][{2:04d}ms][bs: {3}]".format ( time_str, iter, int(iter_time*1000), batch_size)
 
                         if shared_state['after_save']:
                             shared_state['after_save'] = False
@@ -186,6 +186,7 @@ def main(args, device_args):
 
     no_preview = args.get('no_preview', False)
 
+
     s2c = queue.Queue()
     c2s = queue.Queue()
 
@@ -216,6 +217,7 @@ def main(args, device_args):
         is_waiting_preview = False
         show_last_history_iters_count = 0
         iter = 0
+        batch_size = 1
         while True:
             if not c2s.empty():
                 input = c2s.get()
@@ -225,6 +227,7 @@ def main(args, device_args):
                     loss_history = input['loss_history'] if 'loss_history' in input.keys() else None
                     previews = input['previews'] if 'previews' in input.keys() else None
                     iter = input['iter'] if 'iter' in input.keys() else 0
+                    #batch_size = input['batch_size'] if 'iter' in input.keys() else 1
                     if previews is not None:
                         max_w = 0
                         max_h = 0
@@ -280,7 +283,7 @@ def main(args, device_args):
                     else:
                         loss_history_to_show = loss_history[-show_last_history_iters_count:]
 
-                    lh_img = models.ModelBase.get_loss_history_preview(loss_history_to_show, iter, w, c)
+                    lh_img = models.ModelBase.get_loss_history_preview(loss_history_to_show, iter, batch_size, w, c)
                     final = np.concatenate ( [final, lh_img], axis=0 )
 
                 final = np.concatenate ( [final, selected_preview_rgb], axis=0 )
