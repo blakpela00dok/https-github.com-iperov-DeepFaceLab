@@ -9,6 +9,8 @@ from interact import interact as io
 
 from samplelib.SampleProcessor import ColorTransferMode
 
+
+
 # SAE - Styled AutoEncoder
 
 
@@ -160,7 +162,8 @@ class SAEModel(ModelBase):
         SAEModel.initialize_nn_functions()
         self.set_vram_batch_requirements({1.5: 4})
 
-        resolution = self.options['resolution']
+        global resolution
+        resolution= self.options['resolution']
         ae_dims = self.options['ae_dims']
         e_ch_dims = self.options['e_ch_dims']
         d_ch_dims = self.options['d_ch_dims']
@@ -171,9 +174,10 @@ class SAEModel(ModelBase):
         d_residual_blocks = True
         bgr_shape = (resolution, resolution, 3)
         mask_shape = (resolution, resolution, 1)
-
+        global ms_count
         self.ms_count = ms_count = 3 if (self.options['multiscale_decoder']) else 1
 
+        global apply_random_ct
         apply_random_ct = self.options.get('apply_random_ct', ColorTransferMode.NONE)
         masked_training = True
 
@@ -444,18 +448,24 @@ class SAEModel(ModelBase):
             self.src_sample_losses = []
             self.dst_sample_losses = []
 
+            global t
             t = SampleProcessor.Types
+            global face_type
             face_type = t.FACE_TYPE_FULL if self.options['face_type'] == 'f' else t.FACE_TYPE_HALF
 
+            global t_mode_bgr
             t_mode_bgr = t.MODE_BGR if not self.pretrain else t.MODE_BGR_SHUFFLE
 
+            global training_data_src_path
             training_data_src_path = self.training_data_src_path
-            training_data_dst_path = self.training_data_dst_path
+            global training_data_dst_path
+            training_data_dst_path= self.training_data_dst_path
+            global sort_by_yaw
             sort_by_yaw = self.sort_by_yaw
 
             if self.pretrain and self.pretraining_data_path is not None:
                 training_data_src_path = self.pretraining_data_path
-                training_data_dst_path = self.pretraining_data_path
+                training_data_dst_path= self.pretraining_data_path
                 sort_by_yaw = False
 
             self.set_training_data_generators([
@@ -466,8 +476,9 @@ class SAEModel(ModelBase):
                                     sample_process_options=SampleProcessor.Options(random_flip=self.random_flip,
                                                                                    scale_range=np.array([-0.05,
                                                                                                          0.05]) + self.src_scale_mod / 100.0),
-                                    output_sample_types=[{'types': (t.IMG_WARPED_TRANSFORMED, face_type, t_mode_bgr),
-                                                          'resolution': resolution, 'apply_ct': apply_random_ct}] + \
+                                    output_sample_types=[{'types': (
+                                        t.IMG_WARPED_TRANSFORMED, face_type, t_mode_bgr),
+                                        'resolution': resolution, 'apply_ct': apply_random_ct}] + \
                                                         [{'types': (t.IMG_TRANSFORMED, face_type, t_mode_bgr),
                                                           'resolution': resolution // (2 ** i),
                                                           'apply_ct': apply_random_ct} for i in range(ms_count)] + \
@@ -478,8 +489,9 @@ class SAEModel(ModelBase):
 
                 SampleGeneratorFace(training_data_dst_path, debug=self.is_debug(), batch_size=self.batch_size,
                                     sample_process_options=SampleProcessor.Options(random_flip=self.random_flip, ),
-                                    output_sample_types=[{'types': (t.IMG_WARPED_TRANSFORMED, face_type, t_mode_bgr),
-                                                          'resolution': resolution}] + \
+                                    output_sample_types=[{'types': (
+                                        t.IMG_WARPED_TRANSFORMED, face_type, t_mode_bgr),
+                                        'resolution': resolution}] + \
                                                         [{'types': (t.IMG_TRANSFORMED, face_type, t_mode_bgr),
                                                           'resolution': resolution // (2 ** i)} for i in
                                                          range(ms_count)] + \
@@ -521,6 +533,43 @@ class SAEModel(ModelBase):
     # override
     def onSave(self):
         self.save_weights_safe(self.get_model_filename_list())
+
+    # override
+    def set_batch_size(self, batch_size):
+        self.batch_size = batch_size
+        self.set_training_data_generators([
+            SampleGeneratorFace(training_data_src_path,
+                                sort_by_yaw_target_samples_path=training_data_dst_path if sort_by_yaw else None,
+                                random_ct_samples_path=training_data_dst_path if apply_random_ct else None,
+                                debug=self.is_debug(), batch_size=self.batch_size,
+                                sample_process_options=SampleProcessor.Options(random_flip=self.random_flip,
+                                                                               scale_range=np.array([-0.05,
+                                                                                                     0.05]) + self.src_scale_mod / 100.0),
+                                output_sample_types=[{'types': (
+                                    t.IMG_WARPED_TRANSFORMED, face_type, t_mode_bgr),
+                                    'resolution': resolution, 'apply_ct': apply_random_ct}] + \
+                                                    [{'types': (t.IMG_TRANSFORMED, face_type, t_mode_bgr),
+                                                      'resolution': resolution // (2 ** i),
+                                                      'apply_ct': apply_random_ct} for i in range(ms_count)] + \
+                                                    [{'types': (t.IMG_TRANSFORMED, face_type, t.MODE_M),
+                                                      'resolution': resolution // (2 ** i)} for i in
+                                                     range(ms_count)]
+                                ),
+
+            SampleGeneratorFace(training_data_dst_path, debug=self.is_debug(), batch_size=self.batch_size,
+                                sample_process_options=SampleProcessor.Options(random_flip=self.random_flip, ),
+                                output_sample_types=[{'types': (
+                                    t.IMG_WARPED_TRANSFORMED, face_type, t_mode_bgr),
+                                    'resolution': resolution}] + \
+                                                    [{'types': (t.IMG_TRANSFORMED, face_type, t_mode_bgr),
+                                                      'resolution': resolution // (2 ** i)} for i in
+                                                     range(ms_count)] + \
+                                                    [{'types': (t.IMG_TRANSFORMED, face_type, t.MODE_M),
+                                                      'resolution': resolution // (2 ** i)} for i in
+                                                     range(ms_count)])
+        ])
+
+
 
     # override
     def onTrainOneIter(self, generators_samples, generators_list):
