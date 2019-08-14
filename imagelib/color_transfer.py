@@ -136,14 +136,14 @@ def linear_color_transfer(target_img, source_img, mode='sym', eps=1e-3):
 
 
 def lab_image_stats(image, mask=None):
+    print('np.shape(image):', np.shape(image), )
     # compute the mean and standard deviation of each channel
     l, a, b = cv2.split(image)
 
     if mask is not None:
         im_mask = np.squeeze(mask) if len(np.shape(mask)) == 3 else mask
         l, a, b = l[im_mask == 1], a[im_mask == 1], b[im_mask == 1]
-
-    print('np.shape(image):', np.shape(image), 'np.shape(im_mask):', np.shape(im_mask))
+        print('np.shape(im_mask):', np.shape(im_mask))
 
     l_mean, l_std = np.mean(l), np.std(l)
     a_mean, a_std = np.mean(a), np.std(a)
