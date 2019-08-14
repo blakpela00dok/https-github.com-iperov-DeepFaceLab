@@ -143,21 +143,21 @@ def get_transform_mat (image_landmarks, output_size, face_type, scale=1.0):
         face_type = FaceType.FULL
         remove_align = True
     
-    if face_type == FaceType.HALF:
-        padding = 0
-    elif face_type == FaceType.FULL:
-        padding = (output_size / 64) * 12
-    elif face_type == FaceType.HEAD:
-        padding = (output_size / 64) * 24
-    else:
-        raise ValueError ('wrong face_type: ', face_type)
+        if face_type == FaceType.HALF:
+            padding = 0
+        elif face_type == FaceType.FULL:
+            padding = (output_size / 64) * 12
+        elif face_type == FaceType.HEAD:
+            padding = (output_size / 64) * 24
+        else:
+            raise ValueError ('wrong face_type: ', face_type)
 
-    mat = umeyama(image_landmarks[17:], landmarks_2D, True)[0:2]
-    mat = mat * (output_size - 2 * padding)
-    mat[:,2] += padding
-    mat *= (1 / scale)
-    mat[:,2] += -output_size*( ( (1 / scale) - 1.0 ) / 2 )
-    
+        mat = umeyama(image_landmarks[17:], landmarks_2D, True)[0:2]
+        mat = mat * (output_size - 2 * padding)
+        mat[:,2] += padding
+        mat *= (1 / scale)
+        mat[:,2] += -output_size*( ( (1 / scale) - 1.0 ) / 2 )
+
     if remove_align:
         bbox = transform_points ( [ (0,0), (0,output_size-1), (output_size-1, output_size-1), (output_size-1,0) ], mat, True)
         area = mathlib.polygon_area(bbox[:,0], bbox[:,1] )
@@ -178,6 +178,7 @@ def get_image_hull_mask (image_shape, image_landmarks, ie_polys=None):
     hull_mask = np.zeros(image_shape[0:2]+(1,),dtype=np.float32)
 
     # #nose
+    # cv2.fillConvexPoly( hull_mask, cv2.convexHull(int_lmrks[27:36]), (1,) )
     ml_pnt = (int_lmrks[36] + int_lmrks[0]) // 2
     mr_pnt = (int_lmrks[16] + int_lmrks[45]) // 2
 
@@ -209,7 +210,7 @@ def get_image_hull_mask (image_shape, image_landmarks, ie_polys=None):
 
     for item in parts:
         merged = np.concatenate(item)
-        cv2.fillConvexPoly(hull_mask, cv2.convexHull(merged), 1)
+        cv2.fillConvexPoly(hull_mask, cv2.convexHull(merged), 255.)  # pylint: disable=no-member
 
     if ie_polys is not None:
         ie_polys.overlay_mask(hull_mask)
@@ -321,7 +322,7 @@ def draw_landmarks (image, image_landmarks, color=(0,255,0), transparent_mask=Fa
         mask = get_image_hull_mask (image.shape, image_landmarks, ie_polys)
         image[...] = ( image * (1-mask) + image * mask / 2 )[...]
 
-def draw_rect_landmarks (image, rect, image_landmarks, face_size, face_type, transparent_mask=False, ie_polys=None, landmarks_color=(0,255,0)):
+def draw_rect_landmarks (image, rect, image_landmarks, face_size, face_type, transparent_mask=False, ie_polys=None, landmarks_color=(0,255,0) ):
     draw_landmarks(image, image_landmarks, color=landmarks_color, transparent_mask=transparent_mask, ie_polys=ie_polys)
     imagelib.draw_rect (image, rect, (255,0,0), 2 )
 
