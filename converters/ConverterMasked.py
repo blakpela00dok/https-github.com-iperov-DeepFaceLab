@@ -366,21 +366,21 @@ class ConverterMasked(Converter):
                                 ColorTransferMode.MASKED_RCT_PAPER_CLIP:    (True, True, True),
                             }
 
-                        use_masks, use_paper, use_clip = ct_options[self.color_transfer_mode]
+                            use_masks, use_paper, use_clip = ct_options[self.color_transfer_mode]
 
-                        if not use_masks:
-                            img_bgr = imagelib.reinhard_color_transfer(prd_face_bgr, dst_face_bgr, clip=use_clip,
-                                                                       preserve_paper=use_paper)
-                        else:
-                            img_bgr = imagelib.reinhard_color_transfer(prd_face_bgr, dst_face_bgr, clip=use_clip,
-                                                                       preserve_paper=use_paper, source_mask=prd_face_mask_a,
-                                                                       target_mask=prd_face_mask_a)
+                            if not use_masks:
+                                img_bgr = imagelib.reinhard_color_transfer(prd_face_bgr, dst_face_bgr, clip=use_clip,
+                                                                           preserve_paper=use_paper)
+                            else:
+                                img_bgr = imagelib.reinhard_color_transfer(prd_face_bgr, dst_face_bgr, clip=use_clip,
+                                                                           preserve_paper=use_paper, source_mask=prd_face_mask_a,
+                                                                           target_mask=prd_face_mask_a)
 
-                        if debug:
-                            debugs += [np.clip(cv2.warpAffine(prd_face_bgr, face_output_mat, img_size,
-                                                              np.zeros(img_bgr.shape, dtype=np.float32),
-                                                              cv2.WARP_INVERSE_MAP | cv2.INTER_LANCZOS4,
-                                                              cv2.BORDER_TRANSPARENT), 0, 1.0)]
+                            if debug:
+                                debugs += [np.clip(cv2.warpAffine(prd_face_bgr, face_output_mat, img_size,
+                                                                  np.zeros(img_bgr.shape, dtype=np.float32),
+                                                                  cv2.WARP_INVERSE_MAP | cv2.INTER_LANCZOS4,
+                                                                  cv2.BORDER_TRANSPARENT), 0, 1.0)]
 
                 if self.mode == 'hist-match-bw':
                     prd_face_bgr = cv2.cvtColor(prd_face_bgr, cv2.COLOR_BGR2GRAY)
