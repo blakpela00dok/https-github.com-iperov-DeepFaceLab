@@ -63,14 +63,14 @@ def reinhard_color_transfer(source, target, clip=False, preserve_paper=False, so
 
     if preserve_paper:
         # scale by the standard deviations using paper proposed factor
-        l = (lStdTar / lStdSrc) * l
-        a = (aStdTar / aStdSrc) * a
-        b = (bStdTar / bStdSrc) * b
+        l = (lStdTar / lStdSrc) * l if lStdSrc != 0 else l
+        a = (aStdTar / aStdSrc) * a if aStdSrc != 0 else l
+        b = (bStdTar / bStdSrc) * b if bStdSrc != 0 else l
     else:
         # scale by the standard deviations using reciprocal of paper proposed factor
-        l = (lStdSrc / lStdTar) * l
-        a = (aStdSrc / aStdTar) * a
-        b = (bStdSrc / bStdTar) * b
+        l = (lStdSrc / lStdTar) * l if lStdTar != 0 else l
+        a = (aStdSrc / aStdTar) * a if aStdTar != 0 else l
+        b = (bStdSrc / bStdTar) * b if bStdTar != 0 else l
 
     # add in the source mean
     l += lMeanTar
