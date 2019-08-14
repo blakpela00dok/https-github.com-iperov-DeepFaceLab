@@ -77,11 +77,11 @@ def reinhard_color_transfer(source, target, clip=False, preserve_paper=False, so
     a += aMeanTar
     b += bMeanTar
 
-    # clip/scale the pixel intensities to [0, 255] if they fall
-    # outside this range
-    l = _scale_array(l, 0, 100, clip=clip)
-    a = _scale_array(a, -127, 127, clip=clip)
-    b = _scale_array(b, -127, 127, clip=clip)
+    # clip/scale the pixel intensities if they fall
+    # outside the ranges for LAB
+    l = _scale_array(l, 0, 100, clip=clip, mask=source_mask)
+    a = _scale_array(a, -127, 127, clip=clip, mask=source_mask)
+    b = _scale_array(b, -127, 127, clip=clip, mask=source_mask)
 
     # merge the channels together and convert back to the RGB color
     transfer = cv2.merge([l, a, b])
@@ -180,7 +180,7 @@ def _min_max_scale(arr, new_range=(0, 255)):
     return scaled
 
 
-def _scale_array(arr, mn, mx, clip=True):
+def _scale_array(arr, mn, mx, clip=True, mask=None):
     """
     Trim NumPy array values to be in [0, 255] range with option of
     clipping or scaling.
@@ -197,7 +197,10 @@ def _scale_array(arr, mn, mx, clip=True):
     if clip:
         scaled = np.clip(arr, mn, mx)
     else:
-        scale_range = (max([arr.min(), mn]), min([arr.max(), mx]))
+        if mask is not None:
+            scale_range = (max([np.min(mask * arr), mn]), min([np.max(mask * arr), mx]))
+        else:
+            scale_range = (max([np.min(arr), mn]), min([np.max(arr), mx]))
         scaled = _min_max_scale(arr, new_range=scale_range)
 
     return scaled
