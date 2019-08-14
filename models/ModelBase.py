@@ -198,7 +198,8 @@ class ModelBase(object):
         self.sort_by_yaw = self.options.get('sort_by_yaw', False)
         self.random_flip = self.options.get('random_flip', True)
         if self.batch_cap == 0:
-            self.batch_cap = self.options['batch_cap'] = self.batch_size
+            self.options['batch_cap'] = self.batch_size
+            self.batch_cap = self.options.get('batch_cap',16)
 
         self.src_scale_mod = self.options.get('src_scale_mod', 0)
         if self.src_scale_mod == 0 and 'src_scale_mod' in self.options:
