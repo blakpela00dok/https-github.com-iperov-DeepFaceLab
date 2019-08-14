@@ -123,13 +123,15 @@ class SAEModel(ModelBase):
                 0.0, 100.0)
 
             default_apply_random_ct = ColorTransferMode.NONE if is_first_run else self.options.get('apply_random_ct', ColorTransferMode.NONE)
-            self.options['apply_random_ct'] = io.input_int(
-                "Apply random color transfer to src faceset? (0) None, (1) LCT, (2) RCT, (3) RCT-c, (4) RCT-p, (5) RCT-pc, (6) mRTC, (7) mRTC-c, (8) mRTC-p, (9) mRTC-pc ?:help skip:%s) : " % (default_apply_random_ct),
+            self.options['apply_random_ct'] = np.clip(io.input_int(
+                "Apply random color transfer to src faceset? (0) None, (1) LCT, (2) RCT, (3) RCT-c, (4) RCT-p, "
+                "(5) RCT-pc, (6) mRTC, (7) mRTC-c, (8) mRTC-p, (9) mRTC-pc ?:help skip:%s) : " % default_apply_random_ct,
                 default_apply_random_ct,
                 help_message="Increase variativity of src samples by apply LCT color transfer from random dst "
                              "samples. It is like 'face_style' learning, but more precise color transfer and without "
                              "risk of model collapse, also it does not require additional GPU resources, "
-                             "but the training time may be longer, due to the src faceset is becoming more diverse.")
+                             "but the training time may be longer, due to the src faceset is becoming more diverse."),
+                ColorTransferMode.NONE, ColorTransferMode.MASKED_RCT_PAPER_CLIP)
 
             if nnlib.device.backend != 'plaidML':  # todo https://github.com/plaidml/plaidml/issues/301
                 default_clipgrad = False if is_first_run else self.options.get('clipgrad', False)

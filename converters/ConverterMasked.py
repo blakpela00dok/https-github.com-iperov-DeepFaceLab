@@ -8,6 +8,7 @@ import imagelib
 from facelib import FaceType, FANSegmentator, LandmarksProcessor
 from interact import interact as io
 from joblib import SubprocessFunctionCaller
+from samplelib.SampleProcessor import ColorTransferMode
 from utils.pickle_utils import AntiPickler
 
 from .Converter import Converter
@@ -116,8 +117,10 @@ class ConverterMasked(Converter):
             1.0 + io.input_int("Choose output face scale modifier [-50..50] (skip:0) : ", 0) * 0.01, 0.5, 1.5)
 
         if self.mode != 'raw':
-            self.color_transfer_mode = io.input_str(
-                "Apply color transfer to predicted face? Choose mode ( rct/lct skip:None ) : ", None, ['rct', 'lct'])
+            self.color_transfer_mode = np.clip(io.input_int(
+                "Apply color transfer to predicted face? (0) None, (1) LCT, (2) RCT, (3) RCT-c, (4) RCT-p, "
+                "(5) RCT-pc, (6) mRTC, (7) mRTC-c, (8) mRTC-p, (9) mRTC-pc ?:help skip:%s) : ", ColorTransferMode.NONE),
+                ColorTransferMode.NONE, ColorTransferMode.MASKED_RCT_PAPER_CLIP)
 
         self.super_resolution = io.input_bool("Apply super resolution? (y/n ?:help skip:n) : ", False,
                                               help_message="Enhance details by applying DCSCN network.")
