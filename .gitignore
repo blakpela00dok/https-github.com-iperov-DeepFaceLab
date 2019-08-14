@@ -1,8 +1,0 @@
-*
-!*.py
-!*.md
-!*.txt
-!*.jpg
-!requirements*
-!Dockerfile*
-!*.sh
