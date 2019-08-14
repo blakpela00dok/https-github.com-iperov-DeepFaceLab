@@ -433,19 +433,13 @@ class SAEModel(ModelBase):
                 self.AE_view = K.function([warped_src, warped_dst],
                                           [pred_src_src[-1], pred_dst_dst[-1], pred_src_dst[-1]])
 
+
         else:
             # Updated "pred_src_dst[-1]" to "pred_src_dst[-1][:4]", as it was breaking on images with 4th channel
             if self.options['learn_mask']:
-                if self.options['apply_random_ct']:
-                    params = [pred_src_dst[-1], pred_dst_dstm[-1], pred_src_dstm[-1]]
+                self.AE_convert = K.function([warped_dst], [pred_src_dst[-1][:4], pred_dst_dstm[-1], pred_src_dstm[-1]])
                 else:
-                    params = [pred_src_dst[-1][:4], pred_dst_dstm[-1], pred_src_dstm[-1]]
-            else:
-                if self.options['apply_random_ct']:
-                    params = [pred_src_dst[-1]]
-                else:
-                    params = [pred_src_dst[-1][:4]]
-            self.AE_convert = K.function([warped_dst], params)
+                self.AE_convert = K.function([warped_dst], [pred_src_dst[-1][:4]])
 
         if self.is_training_mode:
             self.src_sample_losses = []
