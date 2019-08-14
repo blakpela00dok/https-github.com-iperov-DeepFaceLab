@@ -152,7 +152,7 @@ class ModelBase(object):
             self.options['paddle'] = self.options.get('paddle','ping')
 
         else:
-            self.options['batch_cap'] = self.options.get('batch_cap', 0)
+            self.options['batch_cap'] = self.options.get('batch_cap', 16)
             self.options['ping_pong'] = self.options.get('ping_pong', True)
 
         if ask_sort_by_yaw:
@@ -193,7 +193,7 @@ class ModelBase(object):
         if self.target_iter == 0 and 'target_iter' in self.options:
             self.options.pop('target_iter')
 
-        self.batch_size = self.options.get('batch_size', 0)
+        self.batch_size = self.options.get('batch_size', 8)
         self.batch_cap = self.options.get('batch_cap',16)
         self.sort_by_yaw = self.options.get('sort_by_yaw', False)
         self.random_flip = self.options.get('random_flip', True)
