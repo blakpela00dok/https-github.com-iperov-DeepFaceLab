@@ -1,4 +1,4 @@
-﻿import cv2
+import cv2
 from pathlib import Path
 from utils import Path_utils
 from utils.DFLPNG import DFLPNG

@@ -1,4 +1,4 @@
-﻿import traceback
+import traceback
 import os
 import sys
 import time

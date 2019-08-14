@@ -1,4 +1,4 @@
-﻿import sys
+import sys
 import multiprocessing
 import operator
 import os
