@@ -566,8 +566,10 @@ class ModelBase(object):
             if self.batch_size == 1:
                 self.paddle = 'ping'
             if self.paddle == 'ping':
+                self.save()
                 self.set_batch_size(self.batch_size + 1)
             else:
+                self.save()
                 self.set_batch_size(self.batch_size - 1)
 
         self.iter += 1
