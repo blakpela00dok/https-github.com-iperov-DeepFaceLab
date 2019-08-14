@@ -144,7 +144,7 @@ class ConverterMasked(Converter):
             #     ColorTransferMode.NONE, ColorTransferMode.MASKED_RCT_PAPER_CLIP)
 
             self.color_transfer_mode = np.clip(io.input_int(
-                "Apply color transfer to predicted face? (0) None, (1) LCT (2) RCT-legacy?:help skip:%s) : " % default_apply_random_ct,
+                "Apply color transfer to predicted face? (0) None, (1) LCT, (2) RCT-legacy?:help skip:%s) : " % default_apply_random_ct,
                 default_apply_random_ct,
                 help_message="Increase variativity of src samples by apply color transfer from random dst "
                              "samples. It is like 'face_style' learning, but more precise color transfer and without "
