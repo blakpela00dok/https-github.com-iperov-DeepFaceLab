@@ -35,6 +35,7 @@ class ConverterMasked(Converter):
                  base_blur_mask_modifier=0,
                  default_erode_mask_modifier=0,
                  default_blur_mask_modifier=0,
+                 default_apply_random_ct=ColorTransferMode.NONE,
                  clip_hborder_mask_per=0,
                  force_mask_mode=-1):
 
@@ -119,7 +120,12 @@ class ConverterMasked(Converter):
         if self.mode != 'raw':
             self.color_transfer_mode = np.clip(io.input_int(
                 "Apply color transfer to predicted face? (0) None, (1) LCT, (2) RCT, (3) RCT-c, (4) RCT-p, "
-                "(5) RCT-pc, (6) mRTC, (7) mRTC-c, (8) mRTC-p, (9) mRTC-pc ?:help skip:%s) : ", ColorTransferMode.NONE),
+                "(5) RCT-pc, (6) mRTC, (7) mRTC-c, (8) mRTC-p, (9) mRTC-pc ?:help skip:%s) : " % default_apply_random_ct,
+                default_apply_random_ct,
+                help_message="Increase variativity of src samples by apply LCT color transfer from random dst "
+                             "samples. It is like 'face_style' learning, but more precise color transfer and without "
+                             "risk of model collapse, also it does not require additional GPU resources, "
+                             "but the training time may be longer, due to the src faceset is becoming more diverse."),
                 ColorTransferMode.NONE, ColorTransferMode.MASKED_RCT_PAPER_CLIP)
 
         self.super_resolution = io.input_bool("Apply super resolution? (y/n ?:help skip:n) : ", False,
