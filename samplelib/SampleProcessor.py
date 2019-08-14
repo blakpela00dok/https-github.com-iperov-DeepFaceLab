@@ -70,10 +70,11 @@ class SampleProcessor(object):
         IMG_TYPE_END = 10
 
         FACE_TYPE_BEGIN = 10
-        FACE_TYPE_HALF = 10
-        FACE_TYPE_FULL = 11
-        FACE_TYPE_HEAD = 12  # currently unused
-        FACE_TYPE_AVATAR = 13  # currently unused
+        FACE_TYPE_HALF             = 10
+        FACE_TYPE_FULL             = 11
+        FACE_TYPE_HEAD             = 12  #currently unused
+        FACE_TYPE_AVATAR           = 13  #currently unused
+        FACE_TYPE_FULL_NO_ALIGN    = 14
         FACE_TYPE_END = 20
 
         MODE_BEGIN = 40
@@ -118,10 +119,10 @@ class SampleProcessor(object):
 
         sample_rnd_seed = np.random.randint(0x80000000)
 
-        SPTF_FACETYPE_TO_FACETYPE = {SPTF.FACE_TYPE_HALF: FaceType.HALF,
-                                     SPTF.FACE_TYPE_FULL: FaceType.FULL,
-                                     SPTF.FACE_TYPE_HEAD: FaceType.HEAD,
-                                     SPTF.FACE_TYPE_AVATAR: FaceType.AVATAR}
+        SPTF_FACETYPE_TO_FACETYPE =  {  SPTF.FACE_TYPE_HALF : FaceType.HALF,
+                                        SPTF.FACE_TYPE_FULL : FaceType.FULL,
+                                        SPTF.FACE_TYPE_HEAD : FaceType.HEAD,
+                                        SPTF.FACE_TYPE_FULL_NO_ALIGN : FaceType.FULL_NO_ALIGN }
 
         outputs = []
         for opts in output_sample_types:
@@ -175,6 +176,20 @@ class SampleProcessor(object):
                 if mode_type == SPTF.NONE:
                     raise ValueError('expected MODE_ type')
 
+                def do_transform(img, mask):
+                    warp = (img_type==SPTF.IMG_WARPED or img_type==SPTF.IMG_WARPED_TRANSFORMED)
+                    transform = (img_type==SPTF.IMG_WARPED_TRANSFORMED or img_type==SPTF.IMG_TRANSFORMED)
+                    flip = img_type != SPTF.IMG_WARPED
+
+                    img = imagelib.warp_by_params (params, img, warp, transform, flip, True)
+                    if mask is not None:
+                        mask = imagelib.warp_by_params (params, mask, warp, transform, flip, False)
+                        if len(mask.shape) == 2:
+                            mask = mask[...,np.newaxis]
+
+                        img = np.concatenate( (img, mask ), -1 )
+                    return img
+                    
                 img = cached_images.get(img_type, None)
                 if img is None:
 
@@ -199,26 +214,30 @@ class SampleProcessor(object):
 
                         if cur_sample.ie_polys is not None:
                             cur_sample.ie_polys.overlay_mask(mask)
-
-                    warp = (img_type == SPTF.IMG_WARPED or img_type == SPTF.IMG_WARPED_TRANSFORMED)
-                    transform = (img_type == SPTF.IMG_WARPED_TRANSFORMED or img_type == SPTF.IMG_TRANSFORMED)
-                    flip = img_type != SPTF.IMG_WARPED
-
-                    img = imagelib.warp_by_params(params, img, warp, transform, flip, True)
-                    if mask is not None:
-                        mask = imagelib.warp_by_params(params, mask, warp, transform, flip, False)[..., np.newaxis]
-                        img = np.concatenate((img, mask), -1)
+                
+                    if sample.face_type == FaceType.MARK_ONLY:
+                        if mask is not None:
+                            img = np.concatenate( (img, mask), -1 )
+                    else:
+                        img = do_transform (img, mask)
 
                     cached_images[img_type] = img
 
                 if is_face_sample and target_face_type != SPTF.NONE:
                     ft = SPTF_FACETYPE_TO_FACETYPE[target_face_type]
                     if ft > sample.face_type:
-                        raise Exception(
-                            'sample %s type %s does not match model requirement %s. Consider extract necessary type of faces.' % (
-                            sample.filename, sample.face_type, ft))
-                    img = cv2.warpAffine(img, LandmarksProcessor.get_transform_mat(sample.landmarks, resolution, ft),
-                                         (resolution, resolution), flags=cv2.INTER_CUBIC)
+                        raise Exception ('sample %s type %s does not match model requirement %s. Consider extract necessary type of faces.' % (sample.filename, sample.face_type, ft) )
+                    
+                    if sample.face_type == FaceType.MARK_ONLY:               
+                        img = cv2.warpAffine( img, LandmarksProcessor.get_transform_mat (sample.landmarks, sample.shape[0], ft), (sample.shape[0],sample.shape[0]), flags=cv2.INTER_CUBIC )
+                             
+                        mask = img[...,3:4] if img.shape[2] > 3 else None
+                        img  = img[...,0:3]
+                        img = do_transform (img, mask)
+                        img = cv2.resize( img, (resolution,resolution), cv2.INTER_CUBIC )
+                    else:
+                        img = cv2.warpAffine( img, LandmarksProcessor.get_transform_mat (sample.landmarks, resolution, ft), (resolution,resolution), flags=cv2.INTER_CUBIC )
+                    
                 else:
                     img = cv2.resize(img, (resolution, resolution), cv2.INTER_CUBIC)
 
