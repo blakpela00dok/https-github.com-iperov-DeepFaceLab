@@ -435,6 +435,7 @@ class SAEModel(ModelBase):
 
 
         else:
+            # Updated "pred_src_dst[-1]" to "pred_src_dst[-1][:4]", as it was breaking on images with 4th channel
             if self.options['learn_mask']:
                 self.AE_convert = K.function([warped_dst], [pred_src_dst[-1][:4], pred_dst_dstm[-1], pred_src_dstm[-1]])
             else:
