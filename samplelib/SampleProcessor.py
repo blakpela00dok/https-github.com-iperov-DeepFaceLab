@@ -259,6 +259,7 @@ class SampleProcessor(object):
                         else:
                             if ct_sample_mask is None:
                                 ct_sample_mask = ct_sample.load_mask()
+                            print(np.shape(img_bgr), np.shape(img_mask), np.shape(ct_sample_bgr), np.shape(ct_sample_mask))
                             img_bgr = imagelib.reinhard_color_transfer(img_bgr, ct_sample_bgr, clip=use_clip,
                                                                        preserve_paper=use_paper, source_mask=img_mask,
                                                                        target_mask=ct_sample_mask)
