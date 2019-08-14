@@ -245,8 +245,8 @@ class SampleProcessor(object):
                                                                    ct_sample_bgr,
                                                                    clip=False,
                                                                    preserve_paper=True,
-                                                                   target_mask=img_mask,
-                                                                   source_mask=ct_sample_mask)
+                                                                   source_mask=img_mask,
+                                                                   target_mask=ct_sample_mask)
 
 
                 if normalize_std_dev:
