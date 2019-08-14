@@ -150,10 +150,13 @@ class ModelBase(object):
                 True,
                 help_message="Cycles batch size between 1 and chosen batch size, simulating super convergence")
             self.options['paddle'] = self.options.get('paddle','ping')
+            if self.options.get('ping_pong',True):
+                self.options['ping_pong_iter'] = max(0, io.input_int("Ping-pong iteration (skip:1000/default) : ", 1000))
 
         else:
             self.options['batch_cap'] = self.options.get('batch_cap', 16)
             self.options['ping_pong'] = self.options.get('ping_pong', True)
+            self.options['ping_pong_iter'] = self.options.get('ping_pong_iter',1000)
 
         if ask_sort_by_yaw:
             if (self.iter == 0 or ask_override):
@@ -195,6 +198,7 @@ class ModelBase(object):
 
         self.batch_size = self.options.get('batch_size', 8)
         self.batch_cap = self.options.get('batch_cap',16)
+        self.ping_pong_iter = self.options.get('ping_pong_iter',1000)
         self.sort_by_yaw = self.options.get('sort_by_yaw', False)
         self.random_flip = self.options.get('random_flip', True)
         if self.batch_cap == 0:
@@ -553,7 +557,7 @@ class ModelBase(object):
                 img = (np.concatenate([preview_lh, preview], axis=0) * 255).astype(np.uint8)
                 cv2_imwrite(filepath, img)
 
-        if self.iter % 1000 == 0 and self.iter != 0 and self.options.get('ping_pong', True):
+        if self.iter % self.ping_pong_iter == 0 and self.iter != 0 and self.options.get('ping_pong', True):
             if self.batch_size == self.batch_cap:
                 self.paddle = 'pong'
             if self.batch_size > self.batch_cap:
