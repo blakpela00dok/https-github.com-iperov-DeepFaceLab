@@ -124,7 +124,7 @@ class SAEModel(ModelBase):
             default_apply_random_ct = False if is_first_run else self.options.get('apply_random_ct', False)
             self.options['apply_random_ct'] = io.input_bool(
                 "Apply random color transfer to src faceset? (y/n, ?:help skip:%s) : " % (
-                yn_str[default_apply_random_ct]), default_apply_random_ct,
+                yn_str[bool(default_apply_random_ct)]), bool(default_apply_random_ct),
                 help_message="Increase variativity of src samples by apply LCT color transfer from random dst samples. It is like 'face_style' learning, but more precise color transfer and without risk of model collapse, also it does not require additional GPU resources, but the training time may be longer, due to the src faceset is becoming more diverse.")
 
             if nnlib.device.backend != 'plaidML':  # todo https://github.com/plaidml/plaidml/issues/301
