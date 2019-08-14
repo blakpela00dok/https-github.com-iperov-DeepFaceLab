@@ -122,10 +122,22 @@ class ConverterMasked(Converter):
                 "Apply color transfer to predicted face? (0) None, (1) LCT, (2) RCT, (3) RCT-c, (4) RCT-p, "
                 "(5) RCT-pc, (6) mRTC, (7) mRTC-c, (8) mRTC-p, (9) mRTC-pc ?:help skip:%s) : " % default_apply_random_ct,
                 default_apply_random_ct,
-                help_message="Increase variativity of src samples by apply LCT color transfer from random dst "
+                help_message="Increase variativity of src samples by apply color transfer from random dst "
                              "samples. It is like 'face_style' learning, but more precise color transfer and without "
                              "risk of model collapse, also it does not require additional GPU resources, "
-                             "but the training time may be longer, due to the src faceset is becoming more diverse."),
+                             "but the training time may be longer, due to the src faceset is becoming more "
+                             "diverse.\n\n"
+                             "===Modes===:\n"
+                             "(0) None - No transformation\n"
+                             "(1) LCT - Linear Color Transfer\n"
+                             "(2) RCT - Reinhard Color Transfer (Uses L*A*B* colorspace)\n"
+                             "(3) RCT-c - RCT, clipping LAB values outside of range instead of scaling\n"
+                             "(4) RCT-p - RCT, preserves paper's method of sTar/sSrc, instead of sSrc/sTar\n"
+                             "(5) RCT-pc - RCT with both clipping and preserve paper\n"
+                             "(6) mRCT - Masked RCT, computed using only masked portion of faces\n"
+                             "(7) mRCT-c - Masked RCT with clipping\n"
+                             "(8) mRCT-p - Masked RCT with preserve paper\n"
+                             "(9) mRCT-pc - Masked RCT with both clipping and preserve paper"),
                 ColorTransferMode.NONE, ColorTransferMode.MASKED_RCT_PAPER_CLIP)
 
         self.super_resolution = io.input_bool("Apply super resolution? (y/n ?:help skip:n) : ", False,
