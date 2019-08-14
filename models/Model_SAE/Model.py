@@ -575,8 +575,6 @@ class SAEModel(ModelBase):
 
     def predictor_func(self, face):
         if self.options['learn_mask']:
-            print('np.shape(face):', np.shape(face))
-            print('np.shape(face[np.newaxis, ...]):', np.shape(face[np.newaxis, ...]))
             bgr, mask_dst_dstm, mask_src_dstm = self.AE_convert([face[np.newaxis, ...]])
             mask = mask_dst_dstm[0] * mask_src_dstm[0]
             return bgr[0], mask[..., 0]
