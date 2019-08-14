@@ -92,7 +92,7 @@ def reinhard_color_transfer(source, target, clip=False, preserve_paper=False, so
     return transfer
 
 
-def linear_color_transfer(target_img, source_img, mode='pca', eps=1e-5):
+def linear_color_transfer(target_img, source_img, mode='sym', eps=1e-3):
     """
     Matches the colour distribution of the target image to that of the source image
     using a linear transform.
@@ -128,11 +128,10 @@ def linear_color_transfer(target_img, source_img, mode='pca', eps=1e-5):
         Qt_Cs_Qt = Qt.dot(Cs).dot(Qt)
         eva_QtCsQt, eve_QtCsQt = np.linalg.eigh(Qt_Cs_Qt)
         QtCsQt = eve_QtCsQt.dot(np.sqrt(np.diag(eva_QtCsQt))).dot(eve_QtCsQt.T)
-        ts = np.linalg.inv(Qt).dot(QtCsQt).dot(np.linalg.pinv(Qt)).dot(t)
+        ts = np.linalg.pinv(Qt).dot(QtCsQt).dot(np.linalg.pinv(Qt)).dot(t)
     matched_img = ts.reshape(*target_img.transpose(2, 0, 1).shape).transpose(1, 2, 0)
     matched_img += mu_s
-    matched_img[matched_img > 1] = 1
-    matched_img[matched_img < 0] = 0
+    np.clip(matched_img, 0, 1, out=matched_img)
     return matched_img
 
 

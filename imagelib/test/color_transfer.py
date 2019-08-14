@@ -55,6 +55,41 @@ class ColorTranfer(unittest.TestCase):
             cv2.waitKey(0)
         cv2.destroyAllWindows()
 
+    def test_lct_algorithms(self):
+        src_samples = SampleLoader.load(SampleType.FACE, './test_src', None)
+        dst_samples = SampleLoader.load(SampleType.FACE, './test_dst', None)
+
+        for src_sample in src_samples:
+            src_img = src_sample.load_bgr()
+            src_mask = src_sample.load_mask()
+
+            # Toggle to see masks
+            show_masks = True
+
+            grid = []
+            for ct_sample in dst_samples:
+                print(src_sample.filename, ct_sample.filename)
+                ct_img = ct_sample.load_bgr()
+                ct_mask = ct_sample.load_mask()
+
+                results = []
+                for mode in ['sym']:
+                    for eps in [10**-n for n in range(1, 10, 2)]:
+                        results.append(linear_color_transfer(src_img, ct_img, mode=mode, eps=eps))
+
+                if show_masks:
+                    results = [src_mask * im for im in results]
+                    src_img *= src_mask
+                    ct_img *= ct_mask
+
+                results = np.concatenate((src_img, ct_img, *results), axis=1)
+                grid.append(results)
+
+            cv2.namedWindow('test output', cv2.WINDOW_NORMAL)
+            cv2.imshow('test output', np.concatenate(grid, axis=0))
+            cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
 
 if __name__ == '__main__':
     unittest.main()
