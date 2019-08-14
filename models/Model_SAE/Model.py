@@ -7,10 +7,13 @@ from facelib import FaceType
 from samplelib import *
 from interact import interact as io
 
+from samplelib.SampleProcessor import ColorTransferMode
 
 
 
 # SAE - Styled AutoEncoder
+
+
 class SAEModel(ModelBase):
     encoderH5 = 'encoder.h5'
     inter_BH5 = 'inter_B.h5'
@@ -121,11 +124,16 @@ class SAEModel(ModelBase):
                                 help_message="Learn to transfer image around face. This can make face more like dst. Enabling this option increases the chance of model collapse."),
                 0.0, 100.0)
 
-            default_apply_random_ct = False if is_first_run else self.options.get('apply_random_ct', False)
-            self.options['apply_random_ct'] = io.input_bool(
-                "Apply random color transfer to src faceset? (y/n, ?:help skip:%s) : " % (
-                yn_str[bool(default_apply_random_ct)]), bool(default_apply_random_ct),
-                help_message="Increase variativity of src samples by apply LCT color transfer from random dst samples. It is like 'face_style' learning, but more precise color transfer and without risk of model collapse, also it does not require additional GPU resources, but the training time may be longer, due to the src faceset is becoming more diverse.")
+            default_apply_random_ct = ColorTransferMode.NONE if is_first_run else self.options.get('apply_random_ct', ColorTransferMode.NONE)
+            self.options['apply_random_ct'] = np.clip(io.input_int(
+                "Apply random color transfer to src faceset? (0) None, (1) LCT, (2) RCT, (3) RCT-c, (4) RCT-p, "
+                "(5) RCT-pc, (6) mRTC, (7) mRTC-c, (8) mRTC-p, (9) mRTC-pc ?:help skip:%s) : " % default_apply_random_ct,
+                default_apply_random_ct,
+                help_message="Increase variativity of src samples by apply LCT color transfer from random dst "
+                             "samples. It is like 'face_style' learning, but more precise color transfer and without "
+                             "risk of model collapse, also it does not require additional GPU resources, "
+                             "but the training time may be longer, due to the src faceset is becoming more diverse."),
+                ColorTransferMode.NONE, ColorTransferMode.MASKED_RCT_PAPER_CLIP)
 
             if nnlib.device.backend != 'plaidML':  # todo https://github.com/plaidml/plaidml/issues/301
                 default_clipgrad = False if is_first_run else self.options.get('clipgrad', False)
@@ -139,7 +147,7 @@ class SAEModel(ModelBase):
             self.options['pixel_loss'] = self.options.get('pixel_loss', False)
             self.options['face_style_power'] = self.options.get('face_style_power', default_face_style_power)
             self.options['bg_style_power'] = self.options.get('bg_style_power', default_bg_style_power)
-            self.options['apply_random_ct'] = self.options.get('apply_random_ct', False)
+            self.options['apply_random_ct'] = self.options.get('apply_random_ct', ColorTransferMode.NONE)
             self.options['clipgrad'] = self.options.get('clipgrad', False)
 
         if is_first_run:
@@ -170,7 +178,7 @@ class SAEModel(ModelBase):
         self.ms_count = ms_count = 3 if (self.options['multiscale_decoder']) else 1
 
         global apply_random_ct
-        apply_random_ct = self.options.get('apply_random_ct', False)
+        apply_random_ct = self.options.get('apply_random_ct', ColorTransferMode.NONE)
         masked_training = True
 
         warped_src = Input(bgr_shape)
@@ -463,7 +471,7 @@ class SAEModel(ModelBase):
             self.set_training_data_generators([
                 SampleGeneratorFace(training_data_src_path,
                                     sort_by_yaw_target_samples_path=training_data_dst_path if sort_by_yaw else None,
-                                    random_ct_samples_path=training_data_dst_path if apply_random_ct else None,
+                                    random_ct_samples_path=training_data_dst_path if apply_random_ct != ColorTransferMode.NONE else None,
                                     debug=self.is_debug(), batch_size=self.batch_size,
                                     sample_process_options=SampleProcessor.Options(random_flip=self.random_flip,
                                                                                    scale_range=np.array([-0.05,
@@ -635,6 +643,7 @@ class SAEModel(ModelBase):
         face_type = FaceType.FULL if self.options['face_type'] == 'f' else FaceType.HALF
 
         from converters import ConverterMasked
+
         return ConverterMasked(self.predictor_func,
                                predictor_input_size=self.options['resolution'],
                                predictor_masked=self.options['learn_mask'],

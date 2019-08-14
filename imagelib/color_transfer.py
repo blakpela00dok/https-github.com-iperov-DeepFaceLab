@@ -2,9 +2,9 @@ import numpy as np
 import cv2
 
 
-def reinhard_color_transfer(target, source, clip=False, preserve_paper=False, source_mask=None, target_mask=None):
+def reinhard_color_transfer(source, target, clip=False, preserve_paper=False, source_mask=None, target_mask=None):
     """
-    Transfers the color distribution from the source to the target
+    Transfers the color distribution from the target to the source
     image using the mean and standard deviations of the L*a*b*
     color space.
 
@@ -41,51 +41,49 @@ def reinhard_color_transfer(target, source, clip=False, preserve_paper=False, so
         OpenCV image (w, h, 3) NumPy array (float32)
     """
 
-    np.clip(source, 0, 1, out=source)
-    np.clip(target, 0, 1, out=target)
+    # np.clip(source, 0, 1, out=source)
+    # np.clip(target, 0, 1, out=target)
 
     # convert the images from the RGB to L*ab* color space, being
     # sure to utilizing the floating point data type (note: OpenCV
     # expects floats to be 32-bit, so use that instead of 64-bit)
-    source = cv2.cvtColor(source.astype(np.float32), cv2.COLOR_BGR2LAB)
-    target = cv2.cvtColor(target.astype(np.float32), cv2.COLOR_BGR2LAB)
+    source = cv2.cvtColor(source, cv2.COLOR_BGR2LAB)
+    target = cv2.cvtColor(target, cv2.COLOR_BGR2LAB)
 
     # compute color statistics for the source and target images
-    src_input = source if source_mask is None else source * source_mask
-    tgt_input = target if target_mask is None else target * target_mask
-    (lMeanSrc, lStdSrc, aMeanSrc, aStdSrc, bMeanSrc, bStdSrc) = lab_image_stats(src_input)
-    (lMeanTar, lStdTar, aMeanTar, aStdTar, bMeanTar, bStdTar) = lab_image_stats(tgt_input)
+    (lMeanSrc, lStdSrc, aMeanSrc, aStdSrc, bMeanSrc, bStdSrc) = lab_image_stats(source, mask=source_mask)
+    (lMeanTar, lStdTar, aMeanTar, aStdTar, bMeanTar, bStdTar) = lab_image_stats(target, mask=target_mask)
 
-    # subtract the means from the target image
-    (l, a, b) = cv2.split(target)
-    l -= lMeanTar
-    a -= aMeanTar
-    b -= bMeanTar
+
+    # subtract the means from the source image
+    (l, a, b) = cv2.split(source)
+    l -= lMeanSrc
+    a -= aMeanSrc
+    b -= bMeanSrc
 
     if preserve_paper:
         # scale by the standard deviations using paper proposed factor
-        l = (lStdTar / lStdSrc) * l
-        a = (aStdTar / aStdSrc) * a
-        b = (bStdTar / bStdSrc) * b
+        l = (lStdTar / lStdSrc) * l if lStdSrc != 0 else l
+        a = (aStdTar / aStdSrc) * a if aStdSrc != 0 else l
+        b = (bStdTar / bStdSrc) * b if bStdSrc != 0 else l
     else:
         # scale by the standard deviations using reciprocal of paper proposed factor
-        l = (lStdSrc / lStdTar) * l
-        a = (aStdSrc / aStdTar) * a
-        b = (bStdSrc / bStdTar) * b
+        l = (lStdSrc / lStdTar) * l if lStdTar != 0 else l
+        a = (aStdSrc / aStdTar) * a if aStdTar != 0 else l
+        b = (bStdSrc / bStdTar) * b if bStdTar != 0 else l
 
     # add in the source mean
-    l += lMeanSrc
-    a += aMeanSrc
-    b += bMeanSrc
+    l += lMeanTar
+    a += aMeanTar
+    b += bMeanTar
 
-    # clip/scale the pixel intensities to [0, 255] if they fall
-    # outside this range
-    l = _scale_array(l, clip=clip)
-    a = _scale_array(a, clip=clip)
-    b = _scale_array(b, clip=clip)
+    # clip/scale the pixel intensities if they fall
+    # outside the ranges for LAB
+    l = _scale_array(l, 0, 100, clip=clip, mask=source_mask)
+    a = _scale_array(a, -127, 127, clip=clip, mask=source_mask)
+    b = _scale_array(b, -127, 127, clip=clip, mask=source_mask)
 
     # merge the channels together and convert back to the RGB color
-    # space
     transfer = cv2.merge([l, a, b])
     transfer = cv2.cvtColor(transfer, cv2.COLOR_LAB2BGR)
     np.clip(transfer, 0, 1, out=transfer)
@@ -94,7 +92,7 @@ def reinhard_color_transfer(target, source, clip=False, preserve_paper=False, so
     return transfer
 
 
-def linear_color_transfer(target_img, source_img, mode='pca', eps=1e-5):
+def linear_color_transfer(target_img, source_img, mode='sym', eps=1e-3):
     """
     Matches the colour distribution of the target image to that of the source image
     using a linear transform.
@@ -130,54 +128,81 @@ def linear_color_transfer(target_img, source_img, mode='pca', eps=1e-5):
         Qt_Cs_Qt = Qt.dot(Cs).dot(Qt)
         eva_QtCsQt, eve_QtCsQt = np.linalg.eigh(Qt_Cs_Qt)
         QtCsQt = eve_QtCsQt.dot(np.sqrt(np.diag(eva_QtCsQt))).dot(eve_QtCsQt.T)
-        ts = np.linalg.inv(Qt).dot(QtCsQt).dot(np.linalg.pinv(Qt)).dot(t)
+        ts = np.linalg.pinv(Qt).dot(QtCsQt).dot(np.linalg.pinv(Qt)).dot(t)
     matched_img = ts.reshape(*target_img.transpose(2, 0, 1).shape).transpose(1, 2, 0)
     matched_img += mu_s
-    matched_img[matched_img > 1] = 1
-    matched_img[matched_img < 0] = 0
+    np.clip(matched_img, 0, 1, out=matched_img)
     return matched_img
 
 
-def linear_lab_color_transform(target_img, source_img, eps=1e-5, mode='pca'):
-    """doesn't work yet"""
-    np.clip(source_img, 0, 1, out=source_img)
-    np.clip(target_img, 0, 1, out=target_img)
-
-    # convert the images from the RGB to L*ab* color space, being
-    # sure to utilizing the floating point data type (note: OpenCV
-    # expects floats to be 32-bit, so use that instead of 64-bit)
-    source_img = cv2.cvtColor(source_img.astype(np.float32), cv2.COLOR_BGR2LAB)
-    target_img = cv2.cvtColor(target_img.astype(np.float32), cv2.COLOR_BGR2LAB)
-
-    target_img = linear_color_transfer(target_img, source_img, mode=mode, eps=eps)
-    target_img = cv2.cvtColor(np.clip(target_img, 0, 1).astype(np.float32), cv2.COLOR_LAB2BGR)
-    np.clip(target_img, 0, 1, out=target_img)
-    return target_img
-
-
-def lab_image_stats(image):
+def lab_image_stats(image, mask=None):
     # compute the mean and standard deviation of each channel
-    (l, a, b) = cv2.split(image)
-    (lMean, lStd) = (l.mean(), l.std())
-    (aMean, aStd) = (a.mean(), a.std())
-    (bMean, bStd) = (b.mean(), b.std())
+    l, a, b = cv2.split(image)
+
+    if mask is not None:
+        im_mask = np.squeeze(mask) if len(np.shape(mask)) == 3 else mask
+        l, a, b = l[im_mask == 1], a[im_mask == 1], b[im_mask == 1]
+
+    l_mean, l_std = np.mean(l), np.std(l)
+    a_mean, a_std = np.mean(a), np.std(a)
+    b_mean, b_std = np.mean(b), np.std(b)
 
     # return the color statistics
-    return (lMean, lStd, aMean, aStd, bMean, bStd)
+    return l_mean, l_std, a_mean, a_std, b_mean, b_std
 
 
-def _scale_array(arr, clip=True):
-    if clip:
-        return np.clip(arr, 0, 255)
-
+def _min_max_scale(arr, new_range=(0, 255)):
+    """
+    Perform min-max scaling to a NumPy array
+    Parameters:
+    -------
+    arr: NumPy array to be scaled to [new_min, new_max] range
+    new_range: tuple of form (min, max) specifying range of
+        transformed array
+    Returns:
+    -------
+    NumPy array that has been scaled to be in
+    [new_range[0], new_range[1]] range
+    """
+    # get array's current min and max
     mn = arr.min()
     mx = arr.max()
-    scale_range = (max([mn, 0]), min([mx, 255]))
 
-    if mn < scale_range[0] or mx > scale_range[1]:
-        return (scale_range[1] - scale_range[0]) * (arr - mn) / (mx - mn) + scale_range[0]
+    # check if scaling needs to be done to be in new_range
+    if mn < new_range[0] or mx > new_range[1]:
+        # perform min-max scaling
+        scaled = (new_range[1] - new_range[0]) * (arr - mn) / (mx - mn) + new_range[0]
+    else:
+        # return array if already in range
+        scaled = arr
 
-    return arr
+    return scaled
+
+
+def _scale_array(arr, mn, mx, clip=True, mask=None):
+    """
+    Trim NumPy array values to be in [0, 255] range with option of
+    clipping or scaling.
+    Parameters:
+    -------
+    arr: array to be trimmed to [0, 255] range
+    clip: should array be scaled by np.clip? if False then input
+        array will be min-max scaled to range
+        [max([arr.min(), 0]), min([arr.max(), 255])]
+    Returns:
+    -------
+    NumPy array that has been scaled to be in [0, 255] range
+    """
+    if clip:
+        scaled = np.clip(arr, mn, mx)
+    else:
+        if mask is not None:
+            scale_range = (max([np.min(mask * arr), mn]), min([np.max(mask * arr), mx]))
+        else:
+            scale_range = (max([np.min(arr), mn]), min([np.max(arr), mx]))
+        scaled = _min_max_scale(arr, new_range=scale_range)
+
+    return scaled
 
 
 def channel_hist_match(source, template, hist_match_threshold=255, mask=None):

@@ -4,6 +4,7 @@ from pathlib import Path
 import cv2
 import numpy as np
 
+from facelib import LandmarksProcessor
 from utils.cv2_utils import *
 from utils.DFLJPG import DFLJPG
 from utils.DFLPNG import DFLPNG
@@ -67,6 +68,12 @@ class Sample(object):
             return dflimg.get_fanseg_mask()
 
         return None
+
+    def load_image_hull_mask(self):
+        return LandmarksProcessor.get_image_hull_mask(self.load_bgr().shape, self.landmarks)
+
+    def load_mask(self):
+        return self.load_fanseg_mask() or self.load_image_hull_mask()
 
     def get_random_close_target_sample(self):
         if self.close_target_list is None:

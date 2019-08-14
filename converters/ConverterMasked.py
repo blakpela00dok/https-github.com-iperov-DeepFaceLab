@@ -5,9 +5,11 @@ import cv2
 import numpy as np
 
 import imagelib
+import imagelib_legacy
 from facelib import FaceType, FANSegmentator, LandmarksProcessor
 from interact import interact as io
 from joblib import SubprocessFunctionCaller
+from samplelib.SampleProcessor import ColorTransferMode
 from utils.pickle_utils import AntiPickler
 
 from .Converter import Converter
@@ -34,6 +36,7 @@ class ConverterMasked(Converter):
                  base_blur_mask_modifier=0,
                  default_erode_mask_modifier=0,
                  default_blur_mask_modifier=0,
+                 default_apply_random_ct=ColorTransferMode.NONE,
                  clip_hborder_mask_per=0,
                  force_mask_mode=-1):
 
@@ -116,8 +119,43 @@ class ConverterMasked(Converter):
             1.0 + io.input_int("Choose output face scale modifier [-50..50] (skip:0) : ", 0) * 0.01, 0.5, 1.5)
 
         if self.mode != 'raw':
-            self.color_transfer_mode = io.input_str(
-                "Apply color transfer to predicted face? Choose mode ( rct/lct skip:None ) : ", None, ['rct', 'lct'])
+
+            # FIXME
+            # self.color_transfer_mode = np.clip(io.input_int(
+            #     "Apply color transfer to predicted face? (0) None, (1) LCT, (2) RCT, (3) RCT-c, (4) RCT-p, "
+            #     "(5) RCT-pc, (6) mRTC, (7) mRTC-c, (8) mRTC-p, (9) mRTC-pc ?:help skip:%s) : " % default_apply_random_ct,
+            #     default_apply_random_ct,
+            #     help_message="Increase variativity of src samples by apply color transfer from random dst "
+            #                  "samples. It is like 'face_style' learning, but more precise color transfer and without "
+            #                  "risk of model collapse, also it does not require additional GPU resources, "
+            #                  "but the training time may be longer, due to the src faceset is becoming more "
+            #                  "diverse.\n\n"
+            #                  "===Modes===:\n"
+            #                  "(0) None - No transformation\n"
+            #                  "(1) LCT - Linear Color Transfer\n"
+            #                  "(2) RCT - Reinhard Color Transfer (Uses L*A*B* colorspace)\n"
+            #                  "(3) RCT-c - RCT, clipping LAB values outside of range instead of scaling\n"
+            #                  "(4) RCT-p - RCT, preserves paper's method of sTar/sSrc, instead of sSrc/sTar\n"
+            #                  "(5) RCT-pc - RCT with both clipping and preserve paper\n"
+            #                  "(6) mRCT - Masked RCT, computed using only masked portion of faces\n"
+            #                  "(7) mRCT-c - Masked RCT with clipping\n"
+            #                  "(8) mRCT-p - Masked RCT with preserve paper\n"
+            #                  "(9) mRCT-pc - Masked RCT with both clipping and preserve paper"),
+            #     ColorTransferMode.NONE, ColorTransferMode.MASKED_RCT_PAPER_CLIP)
+
+            self.color_transfer_mode = np.clip(io.input_int(
+                "Apply color transfer to predicted face? (0) None, (1) LCT, (2) RCT-legacy?:help skip:%s) : " % default_apply_random_ct,
+                default_apply_random_ct,
+                help_message="Increase variativity of src samples by apply color transfer from random dst "
+                             "samples. It is like 'face_style' learning, but more precise color transfer and without "
+                             "risk of model collapse, also it does not require additional GPU resources, "
+                             "but the training time may be longer, due to the src faceset is becoming more "
+                             "diverse.\n\n"
+                             "===Modes===:\n"
+                             "(0) None - No transformation\n"
+                             "(1) LCT - Linear Color Transfer\n"
+                             "(2) RCT - Reinhard Color Transfer (legacy/original version)"),
+                ColorTransferMode.NONE, ColorTransferMode.RCT)
 
         self.super_resolution = io.input_bool("Apply super resolution? (y/n ?:help skip:n) : ", False,
                                               help_message="Enhance details by applying DCSCN network.")
@@ -322,41 +360,51 @@ class ConverterMasked(Converter):
                 if debug:
                     debugs += [img_mask_blurry_aaa.copy()]
 
-                if 'seamless' not in self.mode and self.color_transfer_mode is not None:
-                    if self.color_transfer_mode == 'rct':
+                if 'seamless' not in self.mode and self.color_transfer_mode:
+                    if self.color_transfer_mode:
                         if debug:
                             debugs += [np.clip(cv2.warpAffine(prd_face_bgr, face_output_mat, img_size,
                                                               np.zeros(img_bgr.shape, dtype=np.float32),
                                                               cv2.WARP_INVERSE_MAP | cv2.INTER_LANCZOS4,
                                                               cv2.BORDER_TRANSPARENT), 0, 1.0)]
 
-                        prd_face_bgr = imagelib.reinhard_color_transfer(
-                            prd_face_bgr,
-                            dst_face_bgr,
-                            source_mask=prd_face_mask_a, target_mask=prd_face_mask_a)
+                        if self.color_transfer_mode == ColorTransferMode.LCT:
+                            prd_face_bgr = imagelib.linear_color_transfer(prd_face_bgr, dst_face_bgr)
 
-                        if debug:
-                            debugs += [np.clip(cv2.warpAffine(prd_face_bgr, face_output_mat, img_size,
-                                                              np.zeros(img_bgr.shape, dtype=np.float32),
-                                                              cv2.WARP_INVERSE_MAP | cv2.INTER_LANCZOS4,
-                                                              cv2.BORDER_TRANSPARENT), 0, 1.0)]
+                        if self.color_transfer_mode == ColorTransferMode.RCT:
+                            prd_face_bgr = imagelib_legacy.reinhard_color_transfer ( np.clip( (prd_face_bgr*255).astype(np.uint8), 0, 255),
+                                                                              np.clip( (dst_face_bgr*255).astype(np.uint8), 0, 255),
+                                                                              source_mask=prd_face_mask_a, target_mask=prd_face_mask_a)
+                            prd_face_bgr = np.clip( prd_face_bgr.astype(np.float32) / 255.0, 0.0, 1.0)
 
+                        # FIXME
+                        # elif ColorTransferMode.RCT <= self.color_transfer_mode <= ColorTransferMode.MASKED_RCT_PAPER_CLIP:
+                        #     ct_options = {
+                        #         ColorTransferMode.RCT:                      (False, False, False),
+                        #         ColorTransferMode.RCT_CLIP:                 (False, False, True),
+                        #         ColorTransferMode.RCT_PAPER:                (False, True, False),
+                        #         ColorTransferMode.RCT_PAPER_CLIP:           (False, True, True),
+                        #         ColorTransferMode.MASKED_RCT:               (True, False, False),
+                        #         ColorTransferMode.MASKED_RCT_CLIP:          (True, False, True),
+                        #         ColorTransferMode.MASKED_RCT_PAPER:         (True, True, False),
+                        #         ColorTransferMode.MASKED_RCT_PAPER_CLIP:    (True, True, True),
+                        #     }
+                        #
+                        #     use_masks, use_paper, use_clip = ct_options[self.color_transfer_mode]
+                        #
+                        #     if not use_masks:
+                        #         img_bgr = imagelib.reinhard_color_transfer(prd_face_bgr, dst_face_bgr, clip=use_clip,
+                        #                                                    preserve_paper=use_paper)
+                        #     else:
+                        #         img_bgr = imagelib.reinhard_color_transfer(prd_face_bgr, dst_face_bgr, clip=use_clip,
+                        #                                                    preserve_paper=use_paper, source_mask=prd_face_mask_a,
+                        #                                                    target_mask=prd_face_mask_a)
 
-                    elif self.color_transfer_mode == 'lct':
-                        if debug:
-                            debugs += [np.clip(cv2.warpAffine(prd_face_bgr, face_output_mat, img_size,
-                                                              np.zeros(img_bgr.shape, dtype=np.float32),
-                                                              cv2.WARP_INVERSE_MAP | cv2.INTER_LANCZOS4,
-                                                              cv2.BORDER_TRANSPARENT), 0, 1.0)]
-
-                        prd_face_bgr = imagelib.linear_color_transfer(prd_face_bgr, dst_face_bgr)
-                        prd_face_bgr = np.clip(prd_face_bgr, 0.0, 1.0)
-
-                        if debug:
-                            debugs += [np.clip(cv2.warpAffine(prd_face_bgr, face_output_mat, img_size,
-                                                              np.zeros(img_bgr.shape, dtype=np.float32),
-                                                              cv2.WARP_INVERSE_MAP | cv2.INTER_LANCZOS4,
-                                                              cv2.BORDER_TRANSPARENT), 0, 1.0)]
+                            if debug:
+                                debugs += [np.clip(cv2.warpAffine(prd_face_bgr, face_output_mat, img_size,
+                                                                  np.zeros(img_bgr.shape, dtype=np.float32),
+                                                                  cv2.WARP_INVERSE_MAP | cv2.INTER_LANCZOS4,
+                                                                  cv2.BORDER_TRANSPARENT), 0, 1.0)]
 
                 if self.mode == 'hist-match-bw':
                     prd_face_bgr = cv2.cvtColor(prd_face_bgr, cv2.COLOR_BGR2GRAY)
@@ -436,36 +484,47 @@ class ConverterMasked(Converter):
 
                 out_img = np.clip(img_bgr * (1 - img_mask_blurry_aaa) + (out_img * img_mask_blurry_aaa), 0, 1.0)
 
-                if 'seamless' in self.mode and self.color_transfer_mode is not None:
+                if 'seamless' in self.mode and self.color_transfer_mode:
                     out_face_bgr = cv2.warpAffine(out_img, face_mat, (output_size, output_size))
 
-                    if self.color_transfer_mode == 'rct':
+                    if self.color_transfer_mode:
                         if debug:
-                            debugs += [np.clip(cv2.warpAffine(out_face_bgr, face_output_mat, img_size,
+                            debugs += [np.clip(cv2.warpAffine(prd_face_bgr, face_output_mat, img_size,
                                                               np.zeros(img_bgr.shape, dtype=np.float32),
                                                               cv2.WARP_INVERSE_MAP | cv2.INTER_LANCZOS4,
                                                               cv2.BORDER_TRANSPARENT), 0, 1.0)]
 
-                        new_out_face_bgr = imagelib.reinhard_color_transfer(
-                            out_face_bgr,
-                            dst_face_bgr,
-                            source_mask=face_mask_blurry_aaa, target_mask=face_mask_blurry_aaa)
+                        if self.color_transfer_mode == ColorTransferMode.LCT:
+                            new_out_face_bgr = imagelib.linear_color_transfer(out_face_bgr, dst_face_bgr)
 
-                        if debug:
-                            debugs += [np.clip(cv2.warpAffine(new_out_face_bgr, face_output_mat, img_size,
-                                                              np.zeros(img_bgr.shape, dtype=np.float32),
-                                                              cv2.WARP_INVERSE_MAP | cv2.INTER_LANCZOS4,
-                                                              cv2.BORDER_TRANSPARENT), 0, 1.0)]
+                        if self.color_transfer_mode == ColorTransferMode.RCT:
+                            new_out_face_bgr = imagelib_legacy.reinhard_color_transfer ( np.clip( (out_face_bgr*255).astype(np.uint8), 0, 255),
+                                                                                  np.clip( (dst_face_bgr*255).astype(np.uint8), 0, 255),
+                                                                                  source_mask=face_mask_blurry_aaa, target_mask=face_mask_blurry_aaa)
+                            new_out_face_bgr = np.clip( new_out_face_bgr.astype(np.float32) / 255.0, 0.0, 1.0)
 
-                    elif self.color_transfer_mode == 'lct':
-                        if debug:
-                            debugs += [np.clip(cv2.warpAffine(out_face_bgr, face_output_mat, img_size,
-                                                              np.zeros(img_bgr.shape, dtype=np.float32),
-                                                              cv2.WARP_INVERSE_MAP | cv2.INTER_LANCZOS4,
-                                                              cv2.BORDER_TRANSPARENT), 0, 1.0)]
-
-                        new_out_face_bgr = imagelib.linear_color_transfer(out_face_bgr, dst_face_bgr)
-                        new_out_face_bgr = np.clip(new_out_face_bgr, 0.0, 1.0)
+                        # FIXME
+                        # elif ColorTransferMode.RCT <= self.color_transfer_mode <= ColorTransferMode.MASKED_RCT_PAPER_CLIP:
+                        #     ct_options = {
+                        #         ColorTransferMode.RCT:                      (False, False, False),
+                        #         ColorTransferMode.RCT_CLIP:                 (False, False, True),
+                        #         ColorTransferMode.RCT_PAPER:                (False, True, False),
+                        #         ColorTransferMode.RCT_PAPER_CLIP:           (False, True, True),
+                        #         ColorTransferMode.MASKED_RCT:               (True, False, False),
+                        #         ColorTransferMode.MASKED_RCT_CLIP:          (True, False, True),
+                        #         ColorTransferMode.MASKED_RCT_PAPER:         (True, True, False),
+                        #         ColorTransferMode.MASKED_RCT_PAPER_CLIP:    (True, True, True),
+                        #     }
+                        #
+                        #     use_masks, use_paper, use_clip = ct_options[self.color_transfer_mode]
+                        #
+                        #     if not use_masks:
+                        #         new_out_face_bgr = imagelib.reinhard_color_transfer(out_face_bgr, dst_face_bgr, clip=use_clip,
+                        #                                                    preserve_paper=use_paper)
+                        #     else:
+                        #         new_out_face_bgr = imagelib.reinhard_color_transfer(out_face_bgr, dst_face_bgr, clip=use_clip,
+                        #                                                    preserve_paper=use_paper, source_mask=face_mask_blurry_aaa,
+                        #                                                    target_mask=face_mask_blurry_aaa)
 
                         if debug:
                             debugs += [np.clip(cv2.warpAffine(new_out_face_bgr, face_output_mat, img_size,
