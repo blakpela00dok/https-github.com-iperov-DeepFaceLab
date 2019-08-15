@@ -116,7 +116,7 @@ def transform_points(points, mat, invert=False):
     points = cv2.transform(points, mat, points.shape)
     points = np.squeeze(points)
     return points
-    
+
 def get_transform_mat (image_landmarks, output_size, face_type, scale=1.0):
     if not isinstance(image_landmarks, np.ndarray):
         image_landmarks = np.array (image_landmarks)
@@ -142,7 +142,7 @@ def get_transform_mat (image_landmarks, output_size, face_type, scale=1.0):
     if face_type == FaceType.FULL_NO_ALIGN:
         face_type = FaceType.FULL
         remove_align = True
-    
+
         if face_type == FaceType.HALF:
             padding = 0
         elif face_type == FaceType.FULL:
@@ -163,7 +163,7 @@ def get_transform_mat (image_landmarks, output_size, face_type, scale=1.0):
         area = mathlib.polygon_area(bbox[:,0], bbox[:,1] )
         side = math.sqrt(area) / 2
         center = transform_points ( [(output_size/2,output_size/2)], mat, True)
-        
+
         pts1 = np.float32([ center+[-side,-side], center+[side,-side], center+[-side,side] ])
         pts2 = np.float32([[0,0],[output_size-1,0],[0,output_size-1]])
         mat = cv2.getAffineTransform(pts1,pts2)
@@ -209,7 +209,7 @@ def get_image_hull_mask (image_shape, image_landmarks, ie_polys=None):
 
     for item in parts:
         merged = np.concatenate(item)
-        cv2.fillConvexPoly(hull_mask, cv2.convexHull(merged), 255.)  # pylint: disable=no-member
+        cv2.fillConvexPoly(hull_mask, cv2.convexHull(merged), 1)
 
     if ie_polys is not None:
         ie_polys.overlay_mask(hull_mask)
