@@ -116,7 +116,7 @@ def transform_points(points, mat, invert=False):
     points = cv2.transform(points, mat, points.shape)
     points = np.squeeze(points)
     return points
-    
+
 def get_transform_mat (image_landmarks, output_size, face_type, scale=1.0):
     if not isinstance(image_landmarks, np.ndarray):
         image_landmarks = np.array (image_landmarks)
@@ -142,28 +142,28 @@ def get_transform_mat (image_landmarks, output_size, face_type, scale=1.0):
     if face_type == FaceType.FULL_NO_ALIGN:
         face_type = FaceType.FULL
         remove_align = True
-    
-    if face_type == FaceType.HALF:
-        padding = 0
-    elif face_type == FaceType.FULL:
-        padding = (output_size / 64) * 12
-    elif face_type == FaceType.HEAD:
-        padding = (output_size / 64) * 24
-    else:
-        raise ValueError ('wrong face_type: ', face_type)
 
-    mat = umeyama(image_landmarks[17:], landmarks_2D, True)[0:2]
-    mat = mat * (output_size - 2 * padding)
-    mat[:,2] += padding
-    mat *= (1 / scale)
-    mat[:,2] += -output_size*( ( (1 / scale) - 1.0 ) / 2 )
-    
+        if face_type == FaceType.HALF:
+            padding = 0
+        elif face_type == FaceType.FULL:
+            padding = (output_size / 64) * 12
+        elif face_type == FaceType.HEAD:
+            padding = (output_size / 64) * 24
+        else:
+            raise ValueError ('wrong face_type: ', face_type)
+
+        mat = umeyama(image_landmarks[17:], landmarks_2D, True)[0:2]
+        mat = mat * (output_size - 2 * padding)
+        mat[:,2] += padding
+        mat *= (1 / scale)
+        mat[:,2] += -output_size*( ( (1 / scale) - 1.0 ) / 2 )
+
     if remove_align:
         bbox = transform_points ( [ (0,0), (0,output_size-1), (output_size-1, output_size-1), (output_size-1,0) ], mat, True)
         area = mathlib.polygon_area(bbox[:,0], bbox[:,1] )
         side = math.sqrt(area) / 2
         center = transform_points ( [(output_size/2,output_size/2)], mat, True)
-        
+
         pts1 = np.float32([ center+[-side,-side], center+[side,-side], center+[-side,side] ])
         pts2 = np.float32([[0,0],[output_size-1,0],[0,output_size-1]])
         mat = cv2.getAffineTransform(pts1,pts2)
@@ -321,7 +321,7 @@ def draw_landmarks (image, image_landmarks, color=(0,255,0), transparent_mask=Fa
         mask = get_image_hull_mask (image.shape, image_landmarks, ie_polys)
         image[...] = ( image * (1-mask) + image * mask / 2 )[...]
 
-def draw_rect_landmarks (image, rect, image_landmarks, face_size, face_type, transparent_mask=False, ie_polys=None, landmarks_color=(0,255,0)):
+def draw_rect_landmarks (image, rect, image_landmarks, face_size, face_type, transparent_mask=False, ie_polys=None, landmarks_color=(0,255,0) ):
     draw_landmarks(image, image_landmarks, color=landmarks_color, transparent_mask=transparent_mask, ie_polys=ie_polys)
     imagelib.draw_rect (image, rect, (255,0,0), 2 )
 
