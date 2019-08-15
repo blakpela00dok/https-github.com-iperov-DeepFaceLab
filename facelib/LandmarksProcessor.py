@@ -124,13 +124,10 @@ def get_transform_mat (image_landmarks, output_size, face_type, scale=1.0):
     """
     if face_type == FaceType.AVATAR:
         centroid = np.mean (image_landmarks, axis=0)
-
         mat = umeyama(image_landmarks[17:], landmarks_2D, True)[0:2]
         a, c = mat[0,0], mat[1,0]
         scale = math.sqrt((a * a) + (c * c))
-
         padding = (output_size / 64) * 32
-
         mat = np.eye ( 2,3 )
         mat[0,2] = -centroid[0]
         mat[1,2] = -centroid[1]
@@ -143,20 +140,20 @@ def get_transform_mat (image_landmarks, output_size, face_type, scale=1.0):
         face_type = FaceType.FULL
         remove_align = True
 
-        if face_type == FaceType.HALF:
-            padding = 0
-        elif face_type == FaceType.FULL:
-            padding = (output_size / 64) * 12
-        elif face_type == FaceType.HEAD:
-            padding = (output_size / 64) * 24
-        else:
-            raise ValueError ('wrong face_type: ', face_type)
+    if face_type == FaceType.HALF:
+        padding = 0
+    elif face_type == FaceType.FULL:
+        padding = (output_size / 64) * 12
+    elif face_type == FaceType.HEAD:
+        padding = (output_size / 64) * 24
+    else:
+        raise ValueError ('wrong face_type: ', face_type)
 
-        mat = umeyama(image_landmarks[17:], landmarks_2D, True)[0:2]
-        mat = mat * (output_size - 2 * padding)
-        mat[:,2] += padding
-        mat *= (1 / scale)
-        mat[:,2] += -output_size*( ( (1 / scale) - 1.0 ) / 2 )
+    mat = umeyama(image_landmarks[17:], landmarks_2D, True)[0:2]
+    mat = mat * (output_size - 2 * padding)
+    mat[:,2] += padding
+    mat *= (1 / scale)
+    mat[:,2] += -output_size*( ( (1 / scale) - 1.0 ) / 2 )
 
     if remove_align:
         bbox = transform_points ( [ (0,0), (0,output_size-1), (output_size-1, output_size-1), (output_size-1,0) ], mat, True)
