@@ -139,8 +139,7 @@ class ModelBase(object):
 
         if ask_batch_size and (self.iter == 0 or ask_override):
             default_batch_size = 0 if self.iter == 0 else self.options.get('batch_size', 0)
-            self.options['batch_cap'] = max(0, io.input_int("Batch_size (?:help skip:%d) : " % 0,
-                                                             0,
+            self.options['batch_cap'] = max(0, io.input_int("Batch_size (?:help skip:%d) : " % self.options.get('batch_cap', 16),
                                                              help_message="Larger batch size is better for NN's"
                                                                           " generalization, but it can cause Out of"
                                                                           " Memory error. Tune this value for your"
