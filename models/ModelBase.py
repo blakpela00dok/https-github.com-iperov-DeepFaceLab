@@ -145,8 +145,8 @@ class ModelBase(object):
                                                                           " Memory error. Tune this value for your"
                                                                           " videocard manually."))
             self.options['ping_pong'] = io.input_bool(
-                "Enable ping-pong? (y/n ?:help skip:%s) : " % self.options.get('batch_cap', False),
-                self.options.get('batch_cap', False),
+                "Enable ping-pong? (y/n ?:help skip:%s) : " % self.options.get('ping_pong', False),
+                self.options.get('ping_pong', False),
                 help_message="Cycles batch size between 1 and chosen batch size, simulating super convergence")
             self.options['paddle'] = self.options.get('paddle','ping')
             if self.options.get('ping_pong',False):
