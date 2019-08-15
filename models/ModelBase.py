@@ -145,16 +145,16 @@ class ModelBase(object):
                                                                           " Memory error. Tune this value for your"
                                                                           " videocard manually."))
             self.options['ping_pong'] = io.input_bool(
-                "Enable ping-pong? (y/n ?:help skip:%s) : " % (yn_str[True]),
-                True,
+                "Enable ping-pong? (y/n ?:help skip:%s) : " % self.options.get('batch_cap', False),
+                self.options.get('batch_cap', False),
                 help_message="Cycles batch size between 1 and chosen batch size, simulating super convergence")
             self.options['paddle'] = self.options.get('paddle','ping')
-            if self.options.get('ping_pong',True):
+            if self.options.get('ping_pong',False):
                 self.options['ping_pong_iter'] = max(0, io.input_int("Ping-pong iteration (skip:1000/default) : ", 1000))
 
         else:
             self.options['batch_cap'] = self.options.get('batch_cap', 16)
-            self.options['ping_pong'] = self.options.get('ping_pong', True)
+            self.options['ping_pong'] = self.options.get('ping_pong', False)
             self.options['ping_pong_iter'] = self.options.get('ping_pong_iter',1000)
 
         if ask_sort_by_yaw:
@@ -525,10 +525,10 @@ class ModelBase(object):
 
     def train_one_iter(self):
 
-        if self.iter == 1 and self.options.get('ping_pong', True):
+        if self.iter == 1 and self.options.get('ping_pong', False):
             self.set_batch_size(1)
             self.paddle = 'ping'
-        elif not self.options.get('ping_pong', True) and self.batch_cap != self.batch_size:
+        elif not self.options.get('ping_pong', False) and self.batch_cap != self.batch_size:
             self.set_batch_size(self.batch_cap)
         sample = self.generate_next_sample()
         iter_time = time.time()
@@ -556,7 +556,7 @@ class ModelBase(object):
                 img = (np.concatenate([preview_lh, preview], axis=0) * 255).astype(np.uint8)
                 cv2_imwrite(filepath, img)
 
-        if self.iter % self.ping_pong_iter == 0 and self.iter != 0 and self.options.get('ping_pong', True):
+        if self.iter % self.ping_pong_iter == 0 and self.iter != 0 and self.options.get('ping_pong', False):
             if self.batch_size == self.batch_cap:
                 self.paddle = 'pong'
             if self.batch_size > self.batch_cap:
