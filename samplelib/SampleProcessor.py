@@ -42,6 +42,19 @@ opts:
 """
 
 
+class ColorTransferMode(IntEnum):
+    NONE = 0
+    LCT = 1
+    RCT = 2
+    RCT_CLIP = 3
+    RCT_PAPER = 4
+    RCT_PAPER_CLIP = 5
+    MASKED_RCT = 6
+    MASKED_RCT_CLIP = 7
+    MASKED_RCT_PAPER = 8
+    MASKED_RCT_PAPER_CLIP = 9
+
+
 class SampleProcessor(object):
     class Types(IntEnum):
         NONE = 0
@@ -120,7 +133,7 @@ class SampleProcessor(object):
             normalize_std_dev = opts.get('normalize_std_dev', False)
             normalize_vgg = opts.get('normalize_vgg', False)
             motion_blur = opts.get('motion_blur', None)
-            apply_ct = opts.get('apply_ct', False)
+            apply_ct = opts.get('apply_ct', ColorTransferMode.NONE)
             normalize_tanh = opts.get('normalize_tanh', False)
 
             img_type = SPTF.NONE
@@ -223,7 +236,32 @@ class SampleProcessor(object):
                 if apply_ct and ct_sample is not None:
                     if ct_sample_bgr is None:
                         ct_sample_bgr = ct_sample.load_bgr()
-                    img_bgr = imagelib.reinhard_color_transfer(img_bgr, ct_sample_bgr, clip=True)
+
+                    if apply_ct == ColorTransferMode.LCT:
+                        img_bgr = imagelib.linear_color_transfer(img_bgr, ct_sample_bgr)
+
+                    elif ColorTransferMode.RCT <= apply_ct <= ColorTransferMode.MASKED_RCT_PAPER_CLIP:
+                        ct_options = {
+                                ColorTransferMode.RCT:                      (False, False, False),
+                                ColorTransferMode.RCT_CLIP:                 (False, False, True),
+                                ColorTransferMode.RCT_PAPER:                (False, True, False),
+                                ColorTransferMode.RCT_PAPER_CLIP:           (False, True, True),
+                                ColorTransferMode.MASKED_RCT:               (True, False, False),
+                                ColorTransferMode.MASKED_RCT_CLIP:          (True, False, True),
+                                ColorTransferMode.MASKED_RCT_PAPER:         (True, True, False),
+                                ColorTransferMode.MASKED_RCT_PAPER_CLIP:    (True, True, True),
+                            }
+
+                        use_masks, use_paper, use_clip = ct_options[apply_ct]
+                        if not use_masks:
+                            img_bgr = imagelib.reinhard_color_transfer(img_bgr, ct_sample_bgr, clip=use_clip,
+                                                                       preserve_paper=use_paper)
+                        else:
+                            if ct_sample_mask is None:
+                                ct_sample_mask = ct_sample.load_mask()
+                            img_bgr = imagelib.reinhard_color_transfer(img_bgr, ct_sample_bgr, clip=use_clip,
+                                                                       preserve_paper=use_paper, source_mask=img_mask,
+                                                                       target_mask=ct_sample_mask)
 
                 if normalize_std_dev:
                     img_bgr = (img_bgr - img_bgr.mean((0, 1))) / img_bgr.std((0, 1))
