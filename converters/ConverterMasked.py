@@ -328,14 +328,13 @@ class ConverterMasked(Converter):
 
                 img_mask_blurry_aaa = img_face_mask_aaa
 
-                if self.clip_hborder_mask_per > 0:  # clip hborder before blur
-                    prd_hborder_rect_mask_a = np.ones(prd_face_mask_a.shape, dtype=np.float32)
-                    prd_border_size = int(prd_hborder_rect_mask_a.shape[1] * self.clip_hborder_mask_per)
-                    prd_hborder_rect_mask_a[:, 0:prd_border_size, :] = 0
-                    prd_hborder_rect_mask_a[:, -prd_border_size:, :] = 0
-                    prd_hborder_rect_mask_a[-prd_border_size:, :, :] = 0
-                    prd_hborder_rect_mask_a = np.expand_dims(
-                        cv2.blur(prd_hborder_rect_mask_a, (prd_border_size, prd_border_size)), -1)
+                if self.clip_hborder_mask_per > 0: #clip hborder before blur
+                    prd_hborder_rect_mask_a = np.ones ( prd_face_mask_a.shape, dtype=np.float32)
+                    prd_border_size = int ( prd_hborder_rect_mask_a.shape[1] * self.clip_hborder_mask_per )
+                    prd_hborder_rect_mask_a[:,0:prd_border_size,:] = 0
+                    prd_hborder_rect_mask_a[:,-prd_border_size:,:] = 0
+                    prd_hborder_rect_mask_a[-prd_border_size:,:,:] = 0
+                    prd_hborder_rect_mask_a = np.expand_dims(cv2.blur(prd_hborder_rect_mask_a, (prd_border_size, prd_border_size) ),-1)
 
                     img_prd_hborder_rect_mask_a = cv2.warpAffine(prd_hborder_rect_mask_a, face_output_mat, img_size,
                                                                  np.zeros(img_bgr.shape, dtype=np.float32),
