@@ -140,3 +140,7 @@ class SampleGeneratorFace(SampleGeneratorBase):
 
                         break
             yield [ np.array(batch) for batch in batches]
+
+    def update_batch(self, batch_size):
+        self.batch_size = batch_size
+
