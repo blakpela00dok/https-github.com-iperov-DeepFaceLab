@@ -1,11 +1,12 @@
 from operator import attrgetter
 from pathlib import Path
 from os import scandir
+from typing import List, Optional, Callable
 
-image_extensions = [".jpg", ".jpeg", ".png", ".tif", ".tiff"]
+IMAGE_EXTENSIONS = (".jpg", ".jpeg", ".png", ".tif", ".tiff")
 
 
-def get_image_paths(dir_path, image_extensions=image_extensions):
+def get_image_paths(dir_path: str, image_extensions: List[str] = IMAGE_EXTENSIONS) -> List[str]:
     dir_path = Path(dir_path)
 
     result = []
@@ -16,7 +17,7 @@ def get_image_paths(dir_path, image_extensions=image_extensions):
     return sorted(result)
 
 
-def get_image_unique_filestem_paths(dir_path, verbose_print_func=None):
+def get_image_unique_filestem_paths(dir_path: str, verbose_print_func: Optional[Callable[[str], None]] = None) -> List[str]:
     result = get_image_paths(dir_path)
     result_dup = set()
 
@@ -32,26 +33,21 @@ def get_image_unique_filestem_paths(dir_path, verbose_print_func=None):
     return sorted(result)
 
 
-def get_file_paths(dir_path):
+def get_file_paths(dir_path: str) -> List[str]:
     dir_path = Path(dir_path)
-
-    result = []
     if dir_path.exists():
         return [x.path for x in scandir(str(dir_path)) if x.is_file()]
-    return sorted(result)
+    return []
 
 
-def get_all_dir_names(dir_path):
+def get_all_dir_names(dir_path: str) -> List[str]:
     dir_path = Path(dir_path)
-
-    result = []
     if dir_path.exists():
         return [x.name for x in scandir(str(dir_path)) if x.is_dir()]
+    return []
 
-    return sorted(result)
 
-
-def get_all_dir_names_startswith(dir_path, startswith):
+def get_all_dir_names_startswith(dir_path: str, startswith: str) -> List[str]:
     dir_path = Path(dir_path)
     startswith = startswith.lower()
 
@@ -63,7 +59,7 @@ def get_all_dir_names_startswith(dir_path, startswith):
     return sorted(result)
 
 
-def get_first_file_by_stem(dir_path, stem, exts=None):
+def get_first_file_by_stem(dir_path: str, stem: str, exts: List[str] = None) -> Optional[Path]:
     dir_path = Path(dir_path)
     stem = stem.lower()
 
@@ -78,14 +74,14 @@ def get_first_file_by_stem(dir_path, stem, exts=None):
     return None
 
 
-def move_all_files(src_dir_path, dst_dir_path):
+def move_all_files(src_dir_path: str, dst_dir_path: str) -> None:
     paths = get_file_paths(src_dir_path)
     for p in paths:
         p = Path(p)
         p.rename(Path(dst_dir_path) / p.name)
 
 
-def delete_all_files(dir_path):
+def delete_all_files(dir_path: str) -> None:
     paths = get_file_paths(dir_path)
     for p in paths:
         p = Path(p)
