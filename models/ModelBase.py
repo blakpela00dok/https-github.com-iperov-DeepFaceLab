@@ -262,11 +262,11 @@ class ModelBase(object):
         if self.device_config.cpu_only:
             model_summary_text += [f'=={"Using device": >{width_name}}: {"CPU": <{width_value}}=='] # cpu_only
         else:
-          for idx in self.device_config.gpu_idxs:
-            model_summary_text += [f'=={"Device index": >{width_name}}: {idx: <{width_value}}=='] # GPU hardware device index
-            model_summary_text += [f'=={"Name": >{width_name}}: {nnlib.device.getDeviceName(idx): <{width_value}}=='] # GPU name
-            vram_str = f'{nnlib.device.getDeviceVRAMTotalGb(idx):.2f}GB' # GPU VRAM - Formated as #.## (or ##.##)
-            model_summary_text += [f'=={"VRAM": >{width_name}}: {vram_str: <{width_value}}=='] 
+            for idx in self.device_config.gpu_idxs:
+                model_summary_text += [f'=={"Device index": >{width_name}}: {idx: <{width_value}}=='] # GPU hardware device index
+                model_summary_text += [f'=={"Name": >{width_name}}: {nnlib.device.getDeviceName(idx): <{width_value}}=='] # GPU name
+                vram_str = f'{nnlib.device.getDeviceVRAMTotalGb(idx):.2f}GB' # GPU VRAM - Formated as #.## (or ##.##)
+                model_summary_text += [f'=={"VRAM": >{width_name}}: {vram_str: <{width_value}}=='] 
         model_summary_text += [f'=={" "*width_total}==']
         model_summary_text += [f'=={"="*width_total}==']
         
