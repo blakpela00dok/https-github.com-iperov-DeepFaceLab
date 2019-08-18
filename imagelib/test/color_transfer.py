@@ -23,6 +23,22 @@ class ColorTranfer(unittest.TestCase):
             show_masks = False
 
             grid = []
+
+            labels = []
+            fontFace = cv2.FONT_HERSHEY_SIMPLEX
+            fontScale = 1.5
+            thickness = 4
+            src_h, src_w, src_c = np.shape(src_img)
+            src_h //= 3
+            for text in ['src', 'dst', 'LCT', 'RCT', 'RCT-c', 'RCT-p', 'RCT-pc', 'mRTC', 'mRTC-c', 'mRTC-p', 'mRTC-pc']:
+                label = np.zeros((src_h, src_w, src_c))
+                size, baseline = cv2.getTextSize(text, fontFace, fontScale, thickness)
+                w, h = size
+                label = cv2.putText(label, text, ((src_w - w)//2, (src_h - h + baseline * 2)//2), fontFace, fontScale, (1, 1, 1), thickness=thickness)
+                labels.append(label)
+            labels = np.concatenate(labels, axis=1)
+            grid.append(labels)
+
             for ct_sample in dst_samples:
                 print(src_sample.filename, ct_sample.filename)
                 ct_img = ct_sample.load_bgr()
@@ -51,6 +67,8 @@ class ColorTranfer(unittest.TestCase):
                 grid.append(results)
 
             cv2.namedWindow('test output', cv2.WINDOW_NORMAL)
+            for g in grid:
+                print(np.shape(g))
             cv2.imshow('test output', np.concatenate(grid, axis=0))
             cv2.waitKey(0)
         cv2.destroyAllWindows()
@@ -67,6 +85,7 @@ class ColorTranfer(unittest.TestCase):
             show_masks = True
 
             grid = []
+
             for ct_sample in dst_samples:
                 print(src_sample.filename, ct_sample.filename)
                 ct_img = ct_sample.load_bgr()
