@@ -233,14 +233,14 @@ class ExtractSubprocessor(Subprocessor):
                         rect = np.array(rect)
                         rect_area = mathlib.polygon_area(np.array(rect[[0, 2, 2, 0]]), np.array(rect[[1, 1, 3, 3]]))
                         self.image_size = int(math.sqrt(rect_area))
-                        print(rect_area)
+
                         if self.face_type == FaceType.MARK_ONLY:
                             image_to_face_mat = None
                             face_image = image
                             face_image_landmarks = image_landmarks
                         else:
                             image_to_face_mat = LandmarksProcessor.get_transform_mat (image_landmarks, self.image_size, self.face_type)
-                            #print(image_landmarks)
+
                             face_image = cv2.warpAffine(image, image_to_face_mat, (self.image_size, self.image_size), cv2.INTER_LANCZOS4)
                             face_image_landmarks = LandmarksProcessor.transform_points (image_landmarks, image_to_face_mat)
 
