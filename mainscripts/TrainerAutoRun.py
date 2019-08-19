@@ -55,8 +55,6 @@ def trainerThread (s2c, c2s, args, device_args):
                         ask_random_flip=False, 
                         ask_src_scale_mod=False)
 
-            model.is_first_run = False
-
             is_reached_goal = model.is_reached_iter_goal()
 
             shared_state = { 'after_save' : False }
