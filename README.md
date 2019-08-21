@@ -6,8 +6,6 @@
 
 ## **DeepFaceLab** is a tool that utilizes machine learning to replace faces in videos.
 
-If you like this software, please consider a donation.
-
 GOAL: next DeepFacelab update.
 
 - ### [Gallery](doc/gallery/doc_gallery.md)
@@ -15,8 +13,6 @@ GOAL: next DeepFacelab update.
 - ### Manuals:
 
 [English (google translated)](doc/manual_en_google_translated.pdf)
-
-[На русском](doc/manual_ru.pdf)
 
 - ### [Prebuilt windows app](doc/doc_prebuilt_windows_app.md)
 
@@ -29,15 +25,3 @@ GOAL: next DeepFacelab update.
 - ### [Ready to work facesets](doc/doc_ready_to_work_facesets.md)
 
 - ### [Build and repository info](doc/doc_build_and_repository_info.md)
-
-- ### Communication groups:
-
-[mrdeepfakes (English)](https://mrdeepfakes.com/forums/) - the biggest SFW and NSFW community
-
-(Chinese) QQ group 951138799 for ML/AI experts
-
-[deepfakes (Chinese)](https://deepfakescn.com)
-
-[deepfakes (Chinese) (outdated) ](https://deepfakes.com.cn/)
-
-[reddit (English)](https://www.reddit.com/r/GifFakes/new/)
