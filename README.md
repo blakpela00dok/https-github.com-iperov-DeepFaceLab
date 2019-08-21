@@ -32,6 +32,8 @@ GOAL: next DeepFacelab update.
 
 - ### Communication groups:
 
+[mrdeepfakes (English)](https://mrdeepfakes.com/forums/) - the biggest SFW and NSFW community
+
 (Chinese) QQ group 951138799 for ML/AI experts
 
 [deepfakes (Chinese)](https://deepfakescn.com)
