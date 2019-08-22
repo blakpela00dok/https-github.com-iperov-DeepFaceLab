@@ -1,4 +1,4 @@
-﻿﻿![](doc/DFL_welcome.jpg)
+﻿﻿![](doc/DFL_welcome.png)
 
 ![](doc/logo_cuda.jpg)![](doc/logo_opencl.jpg)![](doc/logo_keras.jpg)![](doc/logo_tensorflow.jpg)![](doc/logo_plaidml.jpg)
 
