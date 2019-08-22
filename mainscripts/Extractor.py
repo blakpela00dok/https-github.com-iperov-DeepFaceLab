@@ -561,6 +561,7 @@ class ExtractSubprocessor(Subprocessor):
                 self.landmarks = landmarks[0]
 
             (h,w,c) = self.image.shape
+            self.image_size = h
 
             if not self.hide_help:
                 image = cv2.addWeighted (self.image,1.0,self.text_lines_img,1.0,0)

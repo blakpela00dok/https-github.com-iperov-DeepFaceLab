@@ -25,8 +25,8 @@ class MaskEditor:
         self.img = imagelib.normalize_channels (img,3)
         h, w, c = img.shape
 
-        if h != w and w != 256:
-            #to support any square res, scale img,mask and ie_polys to 256, then scale ie_polys back on .get_ie_polys()
+        if h != w or w != 256:
+            self.img = cv2.resize(img, (256,256))
             raise Exception ("MaskEditor does not support image size != 256x256")
 
         ph, pw = h // 4, w // 4 #pad wh
@@ -257,7 +257,7 @@ class MaskEditor:
                 preview_images += [ np.concatenate (prev_images, axis=1) ]
 
             img = np.full ( (prh,prw, sc), (0,0,1), dtype=np.float )
-            img[border:-border,border:-border] = cv2.resize( self.img, max_wh_bordered )
+            img[border:-border,border:-border] = cv2.resize( self.img, 256 )
 
             preview_images += [ img ]
 
@@ -276,7 +276,6 @@ class MaskEditor:
             self.preview_images = np.clip(preview_images * 255, 0, 255 ).astype(np.uint8)
 
         status_img = self.get_screen_status_block( screens.shape[1], screens.shape[2] )
-
         result = np.concatenate ( [self.preview_images, screens, status_img], axis=0  )
 
         return result
