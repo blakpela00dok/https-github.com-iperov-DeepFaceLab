@@ -487,7 +487,8 @@ class SAEModel(ModelBase):
                                                           'apply_ct': apply_random_ct} for i in range(ms_count)] + \
                                                         [{'types': (t.IMG_TRANSFORMED, face_type, t.MODE_M),
                                                           'resolution': resolution // (2 ** i)} for i in
-                                                         range(ms_count)]
+                                                         range(ms_count)],
+                                    ping_pong=self.ping_pong_options,
                                     ),
 
                 SampleGeneratorFace(training_data_dst_path, debug=self.is_debug(), batch_size=self.batch_size,
@@ -500,7 +501,8 @@ class SAEModel(ModelBase):
                                                          range(ms_count)] + \
                                                         [{'types': (t.IMG_TRANSFORMED, face_type, t.MODE_M),
                                                           'resolution': resolution // (2 ** i)} for i in
-                                                         range(ms_count)])
+                                                         range(ms_count)],
+                                    ping_pong=self.ping_pong_options,)
             ])
 
     # override
@@ -557,7 +559,8 @@ class SAEModel(ModelBase):
                                                       'apply_ct': apply_random_ct} for i in range(ms_count)] + \
                                                     [{'types': (t.IMG_TRANSFORMED, face_type, t.MODE_M),
                                                       'resolution': resolution // (2 ** i)} for i in
-                                                     range(ms_count)]
+                                                     range(ms_count)],
+                                ping_pong=self.ping_pong_options,
                                 ),
 
             SampleGeneratorFace(training_data_dst_path, debug=self.is_debug(), batch_size=self.batch_size,
@@ -570,7 +573,8 @@ class SAEModel(ModelBase):
                                                      range(ms_count)] + \
                                                     [{'types': (t.IMG_TRANSFORMED, face_type, t.MODE_M),
                                                       'resolution': resolution // (2 ** i)} for i in
-                                                     range(ms_count)])
+                                                     range(ms_count)],
+                                ping_pong=self.ping_pong_options,)
         ])
 
     # override
@@ -705,7 +709,7 @@ class SAEModel(ModelBase):
             return func
 
         SAEModel.downscale = downscale
-        
+
         #def downscale (dim, padding='zero', norm='', act='', **kwargs):
         #    def func(x):
         #        return BlurPool()( Norm(norm)( Act(act) (Conv2D(dim, kernel_size=5, strides=1, padding=padding)(x)) ) )

@@ -6,7 +6,7 @@ You can implement your own SampleGenerator
 class SampleGeneratorBase(object):
 
 
-    def __init__ (self, samples_path, debug, batch_size):
+    def __init__(self, samples_path, debug, batch_size):
         if samples_path is None:
             raise Exception('samples_path is None')
 
@@ -15,21 +15,21 @@ class SampleGeneratorBase(object):
         self.batch_size = 1 if self.debug else batch_size
         self.last_generation = None
         self.active = True
-        
+
     def set_active(self, is_active):
         self.active = is_active
-        
+
     def generate_next(self):
         if not self.active and self.last_generation is not None:
             return self.last_generation
         self.last_generation = next(self)
         return self.last_generation
-        
-    #overridable
+
+    # overridable
     def __iter__(self):
-        #implement your own iterator
+        # implement your own iterator
         return self
 
     def __next__(self):
-        #implement your own iterator
+        # implement your own iterator
         return None
