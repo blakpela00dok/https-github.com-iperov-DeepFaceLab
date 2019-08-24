@@ -7,7 +7,7 @@ import numpy as np
 from facelib import LandmarksProcessor
 from samplelib import (SampleGeneratorBase, SampleLoader, SampleProcessor, SampleGeneratorPingPong,
                        SampleType)
-from samplelib.SampleGeneratorPingPong import PingPongOptions
+from samplelib.SampleGeneratorPingPong import PingPongOptions, SampleGeneratorPingPong
 from utils import iter_utils
 
 
@@ -25,7 +25,7 @@ class SampleGeneratorFace(SampleGeneratorPingPong):
                  random_ct_samples_path=None, sample_process_options=SampleProcessor.Options(),
                  output_sample_types=[], add_sample_idx=False, generators_count=2, generators_random_seed=None,
                  ping_pong=PingPongOptions(), **kwargs):
-        super().__init__(samples_path, debug, batch_size, ping_pong)
+        super().__init__(samples_path, debug, batch_size=batch_size, ping_pong=ping_pong)
         self.sample_process_options = sample_process_options
         self.output_sample_types = output_sample_types
         self.add_sample_idx = add_sample_idx
