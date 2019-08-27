@@ -5,7 +5,7 @@
 #deepfakes #faceswap #face-swap #deep-learning #deeplearning #deep-neural-networks #deepface #deep-face-swap #fakeapp #fake-app #neural-networks #neural-nets
 
 ## **DeepFaceLab** is a tool that utilizes machine learning to replace faces in videos.
-
+ 
 GOAL: next DeepFacelab update.
 
 - ### [Gallery](doc/gallery/doc_gallery.md)
