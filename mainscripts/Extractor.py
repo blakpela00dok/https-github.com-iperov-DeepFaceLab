@@ -26,7 +26,7 @@ DEBUG = False
 
 class ExtractSubprocessor(Subprocessor):
     class Data(object):
-        def __init__(self, filename=None, rects=None, landmarks = None, landmarks_accurate=True, pitch_yaw_roll=None, final_output_files = None):
+        def __init__(self, filename=None, rects=None, landmarks = None, landmarks_accurate=True, pitch_yaw_roll=None, final_output_files = None, size = 0):
             self.filename = filename
             self.rects = rects or []
             self.rects_rotation = 0
@@ -35,6 +35,7 @@ class ExtractSubprocessor(Subprocessor):
             self.pitch_yaw_roll = pitch_yaw_roll
             self.final_output_files = final_output_files or []
             self.faces_detected = 0
+            self.image_size = size
 
     class Cli(Subprocessor.Cli):
 
@@ -46,6 +47,9 @@ class ExtractSubprocessor(Subprocessor):
             self.cpu_only     = client_dict['device_type'] == 'CPU'
             self.final_output_path  = Path(client_dict['final_output_dir']) if 'final_output_dir' in client_dict.keys() else None
             self.debug_dir    = client_dict['debug_dir']
+            self.image_size = client_dict['image_size']
+
+
             
             #transfer and set stdin in order to work code.interact in debug subprocess
             stdin_fd         = client_dict['stdin_fd']
@@ -63,6 +67,8 @@ class ExtractSubprocessor(Subprocessor):
                 intro_str += " Recommended to close all programs using this device."
 
             self.log_info (intro_str)
+
+
 
             if 'rects' in self.type:
                 if self.type == 'rects-mt':
@@ -232,7 +238,9 @@ class ExtractSubprocessor(Subprocessor):
 
                         rect = np.array(rect)
                         rect_area = mathlib.polygon_area(np.array(rect[[0, 2, 2, 0]]), np.array(rect[[1, 1, 3, 3]]))
-                        self.image_size = int(math.sqrt(rect_area))
+                        if self.image_size == 0:
+                            self.image_size = int(math.sqrt(rect_area))
+
 
                         if self.face_type == FaceType.MARK_ONLY:
                             image_to_face_mat = None
@@ -308,7 +316,7 @@ class ExtractSubprocessor(Subprocessor):
             return data.filename
 
     #override
-    def __init__(self, input_data, type, face_type=None, debug_dir=None, multi_gpu=False, cpu_only=False, manual=False, manual_window_size=0, final_output_path=None):
+    def __init__(self, input_data, type, face_type=None, debug_dir=None, multi_gpu=False, cpu_only=False, manual=False, manual_window_size=0,size=0, final_output_path=None):
         self.input_data = input_data
         self.type = type
         self.face_type = face_type
@@ -317,6 +325,7 @@ class ExtractSubprocessor(Subprocessor):
         self.manual = manual
         self.manual_window_size = manual_window_size
         self.result = []
+        self.image_size = size
 
         self.devices = ExtractSubprocessor.get_devices_for_config(self.manual, self.type, multi_gpu, cpu_only)
 
@@ -363,6 +372,7 @@ class ExtractSubprocessor(Subprocessor):
     #override
     def process_info_generator(self):
         base_dict = {'type' : self.type,
+                     'image_size':self.image_size,
                      'face_type': self.face_type,
                      'debug_dir': self.debug_dir,
                      'final_output_dir': str(self.final_output_path),
@@ -825,6 +835,9 @@ def main(input_dir,
     multi_gpu = device_args.get('multi_gpu', False)
     cpu_only = device_args.get('cpu_only', False)
 
+    toscale = io.input_int("Output image Size (?:help skip:0 ) : ", 0,
+                                help_message="Select extracted image size. A size of 0 will leave the extracted images unscaled")
+
     if not input_path.exists():
         raise ValueError('Input directory not found. Please ensure it exists.')
 
@@ -867,16 +880,16 @@ def main(input_dir,
     if images_found != 0:
         if detector == 'manual':
             io.log_info ('Performing manual extract...')
-            data = ExtractSubprocessor ([ ExtractSubprocessor.Data(filename) for filename in input_path_image_paths ], 'landmarks', face_type, debug_dir, cpu_only=cpu_only, manual=True, manual_window_size=manual_window_size).run()
+            data = ExtractSubprocessor ([ ExtractSubprocessor.Data(filename) for filename in input_path_image_paths ], 'landmarks', face_type, debug_dir, cpu_only=cpu_only, manual=True,size=toscale, manual_window_size=manual_window_size).run()
         else:
             io.log_info ('Performing 1st pass...')
-            data = ExtractSubprocessor ([ ExtractSubprocessor.Data(filename) for filename in input_path_image_paths ], 'rects-'+detector, face_type, debug_dir, multi_gpu=multi_gpu, cpu_only=cpu_only, manual=False).run()
+            data = ExtractSubprocessor ([ ExtractSubprocessor.Data(filename) for filename in input_path_image_paths ], 'rects-'+detector, face_type, debug_dir, multi_gpu=multi_gpu, cpu_only=cpu_only, manual=False, size=toscale).run()
 
             io.log_info ('Performing 2nd pass...')
-            data = ExtractSubprocessor (data, 'landmarks',  face_type, debug_dir, multi_gpu=multi_gpu, cpu_only=cpu_only, manual=False).run()
+            data = ExtractSubprocessor (data, 'landmarks',  face_type, debug_dir, multi_gpu=multi_gpu, cpu_only=cpu_only, manual=False,size=toscale).run()
 
         io.log_info ('Performing 3rd pass...')
-        data = ExtractSubprocessor (data, 'final',  face_type, debug_dir, multi_gpu=multi_gpu, cpu_only=cpu_only, manual=False, final_output_path=output_path).run()
+        data = ExtractSubprocessor (data, 'final',  face_type, debug_dir, multi_gpu=multi_gpu, cpu_only=cpu_only, manual=False, final_output_path=output_path,size=toscale).run()
         faces_detected += sum([d.faces_detected for d in data])
 
         if manual_fix:
@@ -885,8 +898,8 @@ def main(input_dir,
             else:
                 fix_data = [ ExtractSubprocessor.Data(d.filename) for d in data if d.faces_detected == 0 ]
                 io.log_info ('Performing manual fix for %d images...' % (len(fix_data)) )
-                fix_data = ExtractSubprocessor (fix_data, 'landmarks',  face_type, debug_dir, manual=True, manual_window_size=manual_window_size).run()
-                fix_data = ExtractSubprocessor (fix_data, 'final',  face_type, debug_dir, multi_gpu=multi_gpu, cpu_only=cpu_only, manual=False, final_output_path=output_path).run()
+                fix_data = ExtractSubprocessor (fix_data, 'landmarks',  face_type, debug_dir, manual=True, manual_window_size=manual_window_size,size=toscale).run()
+                fix_data = ExtractSubprocessor (fix_data, 'final',  face_type, debug_dir, multi_gpu=multi_gpu, cpu_only=cpu_only, manual=False, final_output_path=output_path,size=toscale).run()
                 faces_detected += sum([d.faces_detected for d in fix_data])
 
 
