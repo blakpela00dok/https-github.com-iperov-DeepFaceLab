@@ -71,7 +71,7 @@ class ConvertSubprocessor(Subprocessor):
             self.device_idx  = client_dict['device_idx']
             self.device_name = client_dict['device_name']
             self.predictor_func = client_dict['predictor_func']
-            self.dcscn_upscale_func = client_dict['dcscn_upscale_func']
+            self.superres_func = client_dict['superres_func']
 
             #transfer and set stdin in order to work code.interact in debug subprocess
             stdin_fd         = client_dict['stdin_fd']
@@ -84,6 +84,23 @@ class ConvertSubprocessor(Subprocessor):
             #therefore forcing active_DeviceConfig to CPU only
             nnlib.active_DeviceConfig = nnlib.DeviceConfig (cpu_only=True)
 
+            def sharpen_func (img, sharpen_mode=0, kernel_size=3, amount=150):
+                if kernel_size % 2 == 0:
+                    kernel_size += 1
+                    
+                if sharpen_mode == 1: #box
+                    kernel = np.zeros( (kernel_size, kernel_size), dtype=np.float32)
+                    kernel[ kernel_size//2, kernel_size//2] = 1.0                    
+                    box_filter = np.ones( (kernel_size, kernel_size), dtype=np.float32) / (kernel_size**2)
+                    kernel = kernel + (kernel - box_filter) * amount
+                    return cv2.filter2D(img, -1, kernel)
+                elif sharpen_mode == 2: #gaussian                    
+                    blur = cv2.GaussianBlur(img, (kernel_size, kernel_size) , 0) 
+                    img = cv2.addWeighted(img, 1.0 + (0.5 * amount), blur, -(0.5 * amount), 0)
+                    return img
+                return img
+            self.sharpen_func = sharpen_func
+                    
             self.fanseg_by_face_type = {}
             self.fanseg_input_size = 256
 
@@ -103,7 +120,9 @@ class ConvertSubprocessor(Subprocessor):
         def process_data(self, pf): #pf=ProcessingFrame
             cfg = pf.cfg.copy()
             cfg.predictor_func = self.predictor_func
-
+            cfg.sharpen_func = self.sharpen_func
+            cfg.superres_func = self.superres_func
+            
             frame_info = pf.frame_info
 
             filename = frame_info.filename
@@ -127,7 +146,6 @@ class ConvertSubprocessor(Subprocessor):
                     pf.image = img_bgr
             else:
                 if cfg.type == ConverterConfig.TYPE_MASKED:
-                    cfg.dcscn_upscale_func = self.dcscn_upscale_func
                     cfg.fanseg_input_size = self.fanseg_input_size
                     cfg.fanseg_extract_func = self.fanseg_extract_func
 
@@ -176,12 +194,14 @@ class ConvertSubprocessor(Subprocessor):
         self.converter_config.predictor_func = None
 
         self.dcscn = None
-        def DCSCN_upscale(*args, **kwargs):
-            if self.dcscn is None:
-                self.dcscn = imagelib.DCSCN()
-            return self.dcscn.upscale(*args, **kwargs)
+        self.ranksrgan = None
+        def superres_func(mode, *args, **kwargs):
+            if mode == 1:
+                if self.ranksrgan is None:
+                    self.ranksrgan = imagelib.RankSRGAN()
+                return self.ranksrgan.upscale(*args, **kwargs)
 
-        self.dcscn_host, self.dcscn_upscale_func = SubprocessFunctionCaller.make_pair(DCSCN_upscale)
+        self.dcscn_host, self.superres_func = SubprocessFunctionCaller.make_pair(superres_func)
 
         self.frames = frames
         self.output_path = output_path
@@ -190,10 +210,11 @@ class ConvertSubprocessor(Subprocessor):
         self.frames_idxs = [ *range(len(self.frames)) ]
         self.frames_done_idxs = []
 
+        digits = [ str(i) for i in range(10)]
         for i in range( len(self.frames) ):
             frame = self.frames[i]
             frame.idx = i
-            frame.output_filename = self.output_path / ('%.5d.png' % i)
+            frame.output_filename = self.output_path / ( Path(frame.frame_info.filename).stem + '.png' )
 
         frames[0].cfg = self.converter_config.copy()
 
@@ -205,7 +226,7 @@ class ConvertSubprocessor(Subprocessor):
             yield 'CPU%d' % (i), {}, {'device_idx': i,
                                       'device_name': 'CPU%d' % (i),
                                       'predictor_func': self.predictor_func,
-                                      'dcscn_upscale_func': self.dcscn_upscale_func,
+                                      'superres_func': self.superres_func,
                                       'stdin_fd': sys.stdin.fileno() if CONVERTER_DEBUG else None
                                       }
 
@@ -237,8 +258,8 @@ class ConvertSubprocessor(Subprocessor):
         io.progress_bar_close()
 
     cfg_change_keys = ['`','1', '2', '3', '4', '5', '6', '7', '8', '9',
-                                 'q', 'a', 'w', 's', 'e', 'd', 'r', 'f', 't', 'g','y','h',
-                                 'z', 'x', 'c', 'v', 'b'    ]
+                                 'q', 'a', 'w', 's', 'e', 'd', 'r', 'f', 't', 'g','y','h','u','j',
+                                 'z', 'x', 'c', 'v', 'b','n'   ]
     #override
     def on_tick(self):
         self.predictor_func_host.process_messages()
@@ -322,8 +343,12 @@ class ConvertSubprocessor(Subprocessor):
                                 elif chr_key == 'g':
                                     cfg.add_color_degrade_power(-1 if not shift_pressed else -5)
                                 elif chr_key == 'y':
-                                    cfg.add_output_face_scale(1 if not shift_pressed else 5)
+                                    cfg.add_sharpen_amount(1 if not shift_pressed else 5)
                                 elif chr_key == 'h':
+                                    cfg.add_sharpen_amount(-1 if not shift_pressed else -5)
+                                elif chr_key == 'u':
+                                    cfg.add_output_face_scale(1 if not shift_pressed else 5)
+                                elif chr_key == 'j':
                                     cfg.add_output_face_scale(-1 if not shift_pressed else -5)
 
                                 elif chr_key == 'z':
@@ -333,12 +358,23 @@ class ConvertSubprocessor(Subprocessor):
                                 elif chr_key == 'c':
                                     cfg.toggle_color_transfer_mode()
                                 elif chr_key == 'v':
-                                    cfg.toggle_super_resolution()
+                                    cfg.toggle_super_resolution_mode()
                                 elif chr_key == 'b':
                                     cfg.toggle_export_mask_alpha()
+                                elif chr_key == 'n':
+                                    cfg.toggle_sharpen_mode()
+                                    
                             else:
-                                if chr_key == 's':
+                                if chr_key == 'y':
+                                    cfg.add_sharpen_amount(1 if not shift_pressed else 5)
+                                elif chr_key == 'h':
+                                    cfg.add_sharpen_amount(-1 if not shift_pressed else -5)
+                                elif chr_key == 's':
                                     cfg.toggle_add_source_image()
+                                elif chr_key == 'v':
+                                    cfg.toggle_super_resolution_mode()
+                                elif chr_key == 'n':
+                                    cfg.toggle_sharpen_mode()
 
                             if prev_cfg != cfg:
                                 io.log_info (cfg)
@@ -362,20 +398,19 @@ class ConvertSubprocessor(Subprocessor):
 
 
         if go_prev_frame:
-            if cur_frame is not None and cur_frame.is_done:
-                cur_frame.image = None
-          
-
-            if len(self.frames_done_idxs) > 0:
-                prev_frame = self.frames[self.frames_done_idxs.pop()]
-                self.frames_idxs.insert(0, prev_frame.idx)
-                prev_frame.is_shown = False
-                io.progress_bar_inc(-1)
-                
-                if go_prev_frame_overriding_cfg:
-                    if cur_frame is not None:
+            if cur_frame is None or cur_frame.is_done:
+                if cur_frame is not None:
+                    cur_frame.image = None
+                    
+                if len(self.frames_done_idxs) > 0:
+                    prev_frame = self.frames[self.frames_done_idxs.pop()]
+                    self.frames_idxs.insert(0, prev_frame.idx)
+                    prev_frame.is_shown = False
+                    io.progress_bar_inc(-1)
+                    
+                    if cur_frame is not None and go_prev_frame_overriding_cfg:
                         if prev_frame.cfg != cur_frame.cfg:
-                            prev_frame.cfg = cur_frame.cfg
+                            prev_frame.cfg = cur_frame.cfg.copy()
                             prev_frame.is_done = False
 
         elif go_next_frame:
