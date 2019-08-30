@@ -1,3 +1,5 @@
+**Note**: I am currently busy with other real-life matters, so I will not be able to continuously keep this repository updated. The scripts and installation guide should still be valid for quite some time. However, if you would like the most recent commits and changes, please pull from the main repo and simply copy the "scripts" directory over. The only change not merged into the main branch from this repository is a small fix for older Linux versions running older FFMpeg binaries. 
+
 # Universal Installation Method
 
 ### Install Anaconda3
