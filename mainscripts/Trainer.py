@@ -11,6 +11,7 @@ import imagelib
 import cv2
 import models
 from interact import interact as io
+import os
 
 def trainerThread (s2c, c2s, e, args, device_args):
     while True:
@@ -38,7 +39,7 @@ def trainerThread (s2c, c2s, e, args, device_args):
                 break
 
             if not model_path.exists():
-                model_path.mkdir(exist_ok=True)
+                os.makedirs(model_path, exist_ok=True)
 
             model = models.import_model(model_name)(
                         model_path,
