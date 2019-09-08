@@ -7,3 +7,4 @@ scikit-image
 tqdm
 ffmpeg-python==0.1.17
 git+https://www.github.com/keras-team/keras-contrib.git
+Flask==1.1.1

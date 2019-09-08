@@ -48,8 +48,8 @@ if __name__ == "__main__":
     p.add_argument('--manual-window-size', type=int, dest="manual_window_size", default=1368, help="Manual fix window size. Default: 1368.")
     p.add_argument('--cpu-only', action="store_true", dest="cpu_only", default=False, help="Extract on CPU. Forces to use MT extractor.")
     p.set_defaults (func=process_extract)
-
-
+    
+    
     def process_dev_extract_umd_csv(arguments):
         os_utils.set_process_lowest_prio()
         from mainscripts import Extractor
@@ -80,7 +80,7 @@ if __name__ == "__main__":
     p.add_argument('--cpu-only', action="store_true", dest="cpu_only", default=False, help="Extract on CPU.")
     p.set_defaults (func=process_extract_fanseg)
     """
-
+    
     def process_sort(arguments):
         os_utils.set_process_lowest_prio()
         from mainscripts import Sorter
@@ -106,7 +106,7 @@ if __name__ == "__main__":
 
         #if arguments.remove_fanseg:
         #    Util.remove_fanseg_folder (input_path=arguments.input_dir)
-        
+
         if arguments.remove_ie_polys:
             Util.remove_ie_polys_folder (input_path=arguments.input_dir)
         
@@ -134,8 +134,8 @@ if __name__ == "__main__":
         device_args = {'cpu_only'  : arguments.cpu_only,
                        'force_gpu_idx' : arguments.force_gpu_idx,
                        }
-        from mainscripts import Trainer
-        Trainer.main(args, device_args)
+        from mainscripts import FlaskTrainer
+        FlaskTrainer.main(args, device_args)
 
     p = subparsers.add_parser( "train", help="Trainer")
     p.add_argument('--training-data-src-dir', required=True, action=fixPathAction, dest="training_data_src_dir",
