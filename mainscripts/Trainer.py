@@ -19,10 +19,10 @@ def trainerThread (s2c, c2s, e, args, device_args):
 
             training_data_src_path = Path( args.get('training_data_src_dir', '') )
             training_data_dst_path = Path( args.get('training_data_dst_dir', '') )
-            
+
             pretraining_data_path = args.get('pretraining_data_dir', '')
             pretraining_data_path = Path(pretraining_data_path) if pretraining_data_path is not None else None
-            
+
             model_path = Path( args.get('model_path', '') )
             model_name = args.get('model_name', '')
             save_interval_min = 15
@@ -93,11 +93,11 @@ def trainerThread (s2c, c2s, e, args, device_args):
                         exec_prog = False
                         if prog_time > 0 and (cur_time - start_time) >= prog_time:
                             x[0] = 0
-                            exec_prog = True                            
-                        elif prog_time < 0 and (cur_time - last_time)  >= -prog_time:
-                            x[2] = cur_time                            
                             exec_prog = True
-                            
+                        elif prog_time < 0 and (cur_time - last_time)  >= -prog_time:
+                            x[2] = cur_time
+                            exec_prog = True
+
                         if exec_prog:
                             try:
                                 exec(prog)
@@ -222,6 +222,9 @@ def main(args, device_args):
         show_last_history_iters_count = 0
         iter = 0
         batch_size = 1
+        preview_min_height = 512
+        preview_max_height = 1024
+
         while True:
             if not c2s.empty():
                 input = c2s.get()
@@ -233,25 +236,24 @@ def main(args, device_args):
                     iter = input['iter'] if 'iter' in input.keys() else 0
                     #batch_size = input['batch_size'] if 'iter' in input.keys() else 1
                     if previews is not None:
-                        max_w = 0
-                        max_h = 0
-                        for (preview_name, preview_rgb) in previews:
-                            (h, w, c) = preview_rgb.shape
-                            max_h = max (max_h, h)
-                            max_w = max (max_w, w)
+                        preview_height = max((h for h, w, c in (im.shape for name, im in previews)))
 
-                        max_size = 800
-                        if max_h > max_size:
-                            max_w = int( max_w / (max_h / max_size) )
-                            max_h = max_size
+                        if preview_height > preview_max_height:
+                            preview_height = preview_max_height
+                        elif preview_height < preview_min_height:
+                            preview_height = preview_min_height
 
-                        #make all previews size equal
+                        # make all previews size equal
                         for preview in previews[:]:
                             (preview_name, preview_rgb) = preview
                             (h, w, c) = preview_rgb.shape
-                            if h != max_h or w != max_w:
+                            if h != preview_height:
+                                scale_factor = preview_height / float(h)
                                 previews.remove(preview)
-                                previews.append ( (preview_name, cv2.resize(preview_rgb, (max_w, max_h))) )
+                                previews.append((preview_name, cv2.resize(preview_rgb, (0, 0),
+                                                                          fx=scale_factor,
+                                                                          fy=scale_factor,
+                                                                          interpolation=cv2.INTER_AREA)))
                         selected_preview = selected_preview % len(previews)
                         update_preview = True
                 elif op == 'close':
