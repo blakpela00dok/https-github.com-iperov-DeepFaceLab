@@ -48,9 +48,10 @@ class ExtractSubprocessor(Subprocessor):
             self.final_output_path  = Path(client_dict['final_output_dir']) if 'final_output_dir' in client_dict.keys() else None
             self.debug_dir    = client_dict['debug_dir']
             self.image_size = client_dict['image_size']
+            self.log_info(f'on_initialize: {client_dict}')
 
 
-            
+
             #transfer and set stdin in order to work code.interact in debug subprocess
             stdin_fd         = client_dict['stdin_fd']
             if stdin_fd is not None and DEBUG:
@@ -111,7 +112,7 @@ class ExtractSubprocessor(Subprocessor):
 
         #override
         def process_data(self, data):
-            filename_path = Path( data.filename )
+            filename_path = Path(data.filename)
 
             filename_path_str = str(filename_path)
             if self.cached_image[0] == filename_path_str:
@@ -168,7 +169,7 @@ class ExtractSubprocessor(Subprocessor):
                         elif rot == 270:
                             rotated_image = image.swapaxes( 0,1 )[::-1,:,:]
 
-                        rects = data.rects = self.e.extract (rotated_image, is_bgr=True)
+                        rects = data.rects = self.e.extract(rotated_image, is_bgr=True)
                         if len(rects) != 0:
                             break
 
@@ -185,7 +186,7 @@ class ExtractSubprocessor(Subprocessor):
                 elif data.rects_rotation == 270:
                     rotated_image = image.swapaxes( 0,1 )[::-1,:,:]
 
-                data.landmarks = self.e.extract (rotated_image, data.rects, self.second_pass_e if (src_dflimg is None and data.landmarks_accurate) else None, is_bgr=True)
+                data.landmarks = self.e.extract(rotated_image, data.rects, self.second_pass_e if (src_dflimg is None and data.landmarks_accurate) else None, is_bgr=True)
                 if data.rects_rotation != 0:
                     for i, (rect, lmrks) in enumerate(zip(data.rects, data.landmarks)):
                         new_rect, new_lmrks = rect, lmrks
@@ -220,7 +221,8 @@ class ExtractSubprocessor(Subprocessor):
                     debug_image = image.copy()
 
                 if src_dflimg is not None and len(rects) != 1:
-                    #if re-extracting from dflimg and more than 1 or zero faces detected - dont process and just copy it
+                    # if re-extracting from dflimg and more than 1 or zero faces detected:
+                    # don't process and just copy it
                     print("src_dflimg is not None and len(rects) != 1", str(filename_path) )
                     output_file = str(self.final_output_path / filename_path.name)
                     if str(filename_path) != str(output_file):
@@ -230,7 +232,7 @@ class ExtractSubprocessor(Subprocessor):
                     face_idx = 0
                     for rect, image_landmarks in zip( rects, landmarks ):
                         if src_dflimg is not None and face_idx > 1:
-                            #cannot extract more than 1 face from dflimg
+                            # cannot extract more than 1 face from dflimg
                             break
 
                         if image_landmarks is None:
@@ -238,30 +240,36 @@ class ExtractSubprocessor(Subprocessor):
 
                         rect = np.array(rect)
                         rect_area = mathlib.polygon_area(np.array(rect[[0, 2, 2, 0]]), np.array(rect[[1, 1, 3, 3]]))
-                        if self.image_size == 0:
-                            self.image_size = int(math.sqrt(rect_area))
 
+                        # `self.image_size` is the output size for the entire process,
+                        # we don't want to overwrite it
+                        face_image_size = self.image_size
+                        # TODO
+                        self.log_info(f'BEFORE if face_image_size==0: {face_image_size}')
+                        if face_image_size == 0:
+                            face_image_size = LandmarksProcessor.calc_image_size_for_unscaled(image_landmarks, 1, self.face_type)
+                            # TODO
+                            self.log_info(f'AFTER if face_image_size==0: {face_image_size}')
 
                         if self.face_type == FaceType.MARK_ONLY:
                             image_to_face_mat = None
                             face_image = image
                             face_image_landmarks = image_landmarks
                         else:
-                            image_to_face_mat = LandmarksProcessor.get_transform_mat (image_landmarks, self.image_size, self.face_type)
-
-                            face_image = cv2.warpAffine(image, image_to_face_mat, (self.image_size, self.image_size), cv2.INTER_LANCZOS4)
-                            face_image_landmarks = LandmarksProcessor.transform_points (image_landmarks, image_to_face_mat)
-
-                            landmarks_bbox = LandmarksProcessor.transform_points ( [ (0,0), (0,self.image_size-1), (self.image_size-1, self.image_size-1), (self.image_size-1,0) ], image_to_face_mat, True)
-
+                            image_to_face_mat = LandmarksProcessor.get_transform_mat(image_landmarks, face_image_size, self.face_type)
+                            face_image = cv2.warpAffine(image, image_to_face_mat, (face_image_size, face_image_size), cv2.INTER_LANCZOS4)
+                            # TODO
+                            self.log_info(f'warpAffine size: {face_image.shape[[1, 0]]}')
+                            face_image_landmarks = LandmarksProcessor.transform_points(image_landmarks, image_to_face_mat)
+                            landmarks_bbox = LandmarksProcessor.transform_points([(0,0), (0, face_image_size-1), (face_image_size-1, face_image_size-1), (face_image_size-1,0) ], image_to_face_mat, True)
 
                             landmarks_area = mathlib.polygon_area(landmarks_bbox[:,0], landmarks_bbox[:,1] )
 
-                            if landmarks_area > 4*rect_area: #get rid of faces which umeyama-landmark-area > 4*detector-rect-area
+                            if self.face_type is not FaceType.HEAD and landmarks_area > 4*rect_area: #get rid of faces which umeyama-landmark-area > 4*detector-rect-area
                                 continue
 
                             if self.debug_dir is not None:
-                                LandmarksProcessor.draw_rect_landmarks (debug_image, rect, image_landmarks, self.image_size, self.face_type, transparent_mask=True)
+                                LandmarksProcessor.draw_rect_landmarks(debug_image, rect, image_landmarks, face_image_size, self.face_type, transparent_mask=True)
 
                         if filename_path.suffix == '.jpg':
 
