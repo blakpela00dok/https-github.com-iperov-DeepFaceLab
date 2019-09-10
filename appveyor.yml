@@ -28,6 +28,7 @@ install:
   - cmd: dir
   - cmd: dir .\deepfacelab
   - cmd: dir .\DeepFaceLab%ARCH%\_internal\DeepFaceLab
+  - cmd: rmdir /q/ s .\DeepFaceLab%ARCH%\_internal\DeepFaceLab
   - cmd: xcopy .\deepfacelab .\DeepFaceLab%ARCH%\_internal\DeepFaceLab\ /Y /O /X /E /H /K
   - cmd: For /f "tokens=2-4 delims=/ " %%a in ('date /t') do (set mydate=%%c-%%a-%%b)
   - cmd: set /p ARCHIVE_NAME=DeepFaceLab-%ARCH%-%mydate%-%APPVEYOR_REPO_BRANCH%-%APPVEYOR_BUILD_NUMBER%
