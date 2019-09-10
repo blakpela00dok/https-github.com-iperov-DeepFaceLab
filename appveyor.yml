@@ -18,16 +18,16 @@ install:
   - ps: python --version
   - ps: python -m pip install --upgrade pip
   - ps: python -m pip install -r appveyor/requirements.txt
-  - cmd: cd ..
-  - cmd: echo %cd%
-  - cmd: dir
-  - cmd: dir %home%
+  #- cmd: cd ..
+  #- cmd: echo %cd%
+  #- cmd: dir
+  #- cmd: dir %home%
   #- cmd: dir %home%\deepfacelab
   #- cmd: dir %home%\deepfacelab\appveyor
   - cmd: python deepfacelab\appveyor\gdrive.py %ARCH% > Output
   - cmd: set /p URL=<Output
   #- cmd: echo %URL%
-  - ps: wget $URL -OutFile prebuilt.zip
+  - ps: wget %URL% -OutFile prebuilt.zip
   - cmd: 7z e prebuilt.zip -y > nul
 
 build: off
