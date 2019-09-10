@@ -2,9 +2,9 @@ environment:
   global:
     PYTHON: "C:\\Python36-x64"
   matrix:
-    # - ARCH: "OpenCLSSE"
-    # - ARCH: "CUDA9.2SSE"
-    # - ARCH: "CUDA10.1SSE"
+    #- ARCH: "OpenCLSSE"
+    #- ARCH: "CUDA9.2SSE"
+    #- ARCH: "CUDA10.1SSE"
     - ARCH: "CUDA10.1AVX"
 
 
@@ -16,12 +16,13 @@ install:
   # Download the latest prebuilt exe
   - cmd: SET PATH=%PYTHON%;%PYTHON%\Scripts;%PATH%"
   - ps: python --version
-  - ps: python -m pip install --upgrade pip
+  #- ps: python -m pip install --upgrade pip
   - ps: python -m pip install -r appveyor/requirements.txt
   - cmd: cd ..
-  - cmd: python %home%/appveyor/gdrive.py %ARCH% > Output
+  - cmd: echo %cd%
+  - cmd: python %home%\appveyor\gdrive.py %ARCH% > Output
   - cmd: set /p URL=<Output
-  - cmd: echo %URL%
+  #- cmd: echo %URL%
   - ps: wget $URL -OutFile prebuilt.zip
   - cmd: 7z e prebuilt.zip -y > nul
 
