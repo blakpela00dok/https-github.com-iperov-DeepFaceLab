@@ -15,13 +15,13 @@ version: '{branch}-{build}'
 install:
   # Download the latest prebuilt exe
   - cmd: SET PATH=%PYTHON%;%PYTHON%\Scripts;%PATH%"
-  - cmd: python --version
+  - ps: python --version
   - ps: python -m pip install --upgrade pip
   - ps: python -m pip install -r appveyor/requirements.txt
   - cmd: cd ..
   - cmd: python %home%/appveyor/gdrive.py %ARCH% > Output
   - cmd: set /p URL=<Output
-  - cmd: %URL%
+  - cmd: echo %URL%
   - ps: wget $URL -OutFile prebuilt.zip
   - cmd: 7z e prebuilt.zip -y > nul
 
