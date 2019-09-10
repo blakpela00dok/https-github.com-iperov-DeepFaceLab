@@ -20,6 +20,10 @@ install:
   - ps: python -m pip install -r appveyor/requirements.txt
   - cmd: cd ..
   - cmd: echo %cd%
+  - cmd: dir
+  - cmd: dir %home%
+  - cmd: dir %home%\DeepFaceLab
+  - cmd: dir %home%\DeepFaceLab\appveyor
   - cmd: python %home%\DeepFaceLab\appveyor\gdrive.py %ARCH% > Output
   - cmd: set /p URL=<Output
   #- cmd: echo %URL%
