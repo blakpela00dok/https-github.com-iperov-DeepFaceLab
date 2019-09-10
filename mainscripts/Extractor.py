@@ -245,7 +245,7 @@ class ExtractSubprocessor(Subprocessor):
                         # we don't want to overwrite it
                         face_image_size = self.image_size
                         if face_image_size == 0 and self.face_type != FaceType.MARK_ONLY:
-                            face_image_size = LandmarksProcessor.calc_image_size_for_unscaled(image_landmarks, 1, self.face_type)
+                            face_image_size = LandmarksProcessor.calc_image_size_for_unscaled(image_landmarks, self.face_type)
 
                         if self.face_type == FaceType.MARK_ONLY:
                             image_to_face_mat = None
