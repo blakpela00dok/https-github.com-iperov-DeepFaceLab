@@ -13,8 +13,10 @@ version: '{branch}-{build}'
 #os: Visual Studio 2017
 
 install:
-  # Download the latest prebuilt exe
   - cmd: SET PATH=%PYTHON%;%PYTHON%\Scripts;%PATH%"
+  - cmd: For /f "tokens=2-4 delims=/ " %%a in ('date /t') do (set mydate=%%c-%%a-%%b)
+  - cmd: set /p ARCHIVE_NAME=DeepFaceLab-%ARCH%-%mydate%-%APPVEYOR_REPO_BRANCH%-%APPVEYOR_BUILD_NUMBER%
+  - cmd: echo %ARCHIVE_NAME%
   - ps: python --version
   - ps: python -m pip install --upgrade pip
   - ps: python -m pip install -r appveyor/requirements.txt
@@ -23,16 +25,13 @@ install:
   - cmd: set /p URL=<Output
   - ps: wget "$env:URL" -OutFile prebuilt.zip
   - cmd: 7z x prebuilt.zip -y > nul
-  - cmd: dir
-  - cmd: dir .\deepfacelab
-  - cmd: dir .\DeepFaceLab%ARCH%\_internal\DeepFaceLab
-  - cmd: rmdir /q/ s .\DeepFaceLab%ARCH%\_internal\DeepFaceLab
-  - cmd: xcopy .\deepfacelab .\DeepFaceLab%ARCH%\_internal\DeepFaceLab\ /Y /O /X /E /H /K
-  - cmd: For /f "tokens=2-4 delims=/ " %%a in ('date /t') do (set mydate=%%c-%%a-%%b)
-  - cmd: set /p ARCHIVE_NAME=DeepFaceLab-%ARCH%-%mydate%-%APPVEYOR_REPO_BRANCH%-%APPVEYOR_BUILD_NUMBER%
-  - cmd: echo %ARCHIVE_NAME%
-  - cmd: dir .\DeepFaceLab%ARCH%\_internal
-  - cmd: dir .\DeepFaceLab%ARCH%\_internal\DeepFaceLab
+  #- cmd: dir
+  #- cmd: dir .\deepfacelab
+  #- cmd: dir .\DeepFaceLab%ARCH%\_internal\DeepFaceLab
+  #- cmd: rmdir /q/ s .\DeepFaceLab%ARCH%\_internal\DeepFaceLab
+  #- cmd: xcopy .\deepfacelab .\DeepFaceLab%ARCH%\_internal\DeepFaceLab\ /Y /O /X /E /H /K
+  #- cmd: dir .\DeepFaceLab%ARCH%\_internal
+  #- cmd: dir .\DeepFaceLab%ARCH%\_internal\DeepFaceLab
   #- cmd: 7z a %ARCHIVE_NAME%.7z -r DeepFaceLab%ARCH%
 
 build: off
