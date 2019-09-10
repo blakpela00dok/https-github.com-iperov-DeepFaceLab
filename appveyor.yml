@@ -16,7 +16,7 @@ install:
   # Download the latest prebuilt exe
   - cmd: SET PATH=%PYTHON%;%PYTHON%\Scripts;%PATH%"
   - ps: python --version
-  #- ps: python -m pip install --upgrade pip
+  - ps: python -m pip install --upgrade pip
   - ps: python -m pip install -r appveyor/requirements.txt
   - cmd: cd ..
   - cmd: echo %cd%
