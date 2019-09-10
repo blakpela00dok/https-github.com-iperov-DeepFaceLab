@@ -22,11 +22,11 @@ install:
   - cmd: python deepfacelab\appveyor\gdrive.py %ARCH% > Output
   - cmd: set /p URL=<Output
   - ps: wget "$env:URL" -OutFile prebuilt.zip
-  - cmd: 7z l prebuilt.zip
+  #- cmd: 7z l prebuilt.zip
   - cmd: 7z e prebuilt.zip -y > nul
-  - cmd: dir DeepFaceLab*
+  #- cmd: dir DeepFaceLab*
   - cmd: xcopy deepfacelab DeepFaceLab*\_internal\deepfacelab  /O /X /E /H /K
-  - cmd: 7z a DeepFaceLab%ARCH%.zip DeepFaceLab\
+  - cmd: 7z a DeepFaceLab%ARCH%.7z -r DeepFaceLab\
 
 build: off
 
