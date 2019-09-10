@@ -11,10 +11,11 @@ version: '{branch}-{build}'
 
 install:
   # Download the latest prebuilt exe
-  - ps: python -m pip install -r appveyor/requirements.txt
+  - ps: pip install --user --upgrade pip
+  - ps: pip install --user -r appveyor/requirements.txt
   - ps: Set-Variable -Name "URL" -Value $(python appveyor/gdrive.py $ARCH)
   - ps: Write-Output $URL
-  - cmd: cd %home%
+  - cmd: cd ..
   - ps: wget $URL -OutFile prebuilt.zip
   - cmd: 7z e prebuilt.zip -y > nul
 
