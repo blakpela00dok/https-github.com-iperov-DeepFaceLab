@@ -1,9 +1,12 @@
 environment:
+  global:
+    PYTHON: "C:\\Python36-x64"
   matrix:
     # - ARCH: "OpenCLSSE"
     # - ARCH: "CUDA9.2SSE"
     # - ARCH: "CUDA10.1SSE"
     - ARCH: "CUDA10.1AVX"
+
 
 version: '{branch}-{build}'
 
@@ -11,8 +14,9 @@ version: '{branch}-{build}'
 
 install:
   # Download the latest prebuilt exe
-  - ps: pip install --user --upgrade pip
-  - ps: pip install --user -r appveyor/requirements.txt
+  - cmd: SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
+  - ps: python -m pip install --upgrade pip
+  - ps: python -m pip install -r appveyor/requirements.txt
   - ps: Set-Variable -Name "URL" -Value $(python appveyor/gdrive.py $ARCH)
   - ps: Write-Output $URL
   - cmd: cd ..
