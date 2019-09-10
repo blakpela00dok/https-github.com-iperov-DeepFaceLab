@@ -12,7 +12,8 @@ version: '{branch}-{build}'
 install:
   # Download the latest prebuilt exe
   - set URL=$(python ./appveyor/gdrive.py $ARCH)
-  - echo $URL
+  - cd ..
+  - wget $URL
 
 build: off
 
