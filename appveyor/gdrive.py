@@ -48,7 +48,7 @@ def get_download_url(file_id):
 
 def main():
     arch = sys.argv[1]
-    print(arch)
+    # print(arch)
     latest_build = get_latest_build(arch)
     # print(latest_build)
     download_url = get_download_url(latest_build['id'])
