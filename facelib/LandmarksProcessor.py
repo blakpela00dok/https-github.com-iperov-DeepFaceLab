@@ -119,9 +119,18 @@ def transform_points(points, mat, invert=False):
 
 
 def get_translation_scale_tan_rotation_of_mat(mat):
-    # TODO
-    # extracting rotation, scale values from 2d transformation matrix
-    # https://math.stackexchange.com/questions/13150/extracting-rotation-scale-values-from-2d-transformation-matrix/13165#13165
+    """
+    Get the (x, y) translation,
+    the (sx, sy) scaling factors,
+    and the tangent of the rotation angle
+    for a given affine transformation matrix.
+    Not actually used in scripts, just for debugging
+
+    "extracting rotation, scale values from 2d transformation matrix"
+    https://math.stackexchange.com/questions/13150/extracting-rotation-scale-values-from-2d-transformation-matrix/13165#13165
+    :param mat: The affine transformation matrix
+    :return: The dictionary of each parameter/value
+    """
     a, b, tx = mat[0, :]
     c, d, ty = mat[1, :]
 
@@ -129,25 +138,30 @@ def get_translation_scale_tan_rotation_of_mat(mat):
     sy = np.sign(d) * math.sqrt(c ** 2 + d ** 2)
 
     tan_psi = -b / a
-    return {
-        'tx': tx,
-        'ty': ty,
-        'sx': sx,
-        'sy': sy,
-        'tan_psi': tan_psi
-    }
+    return {'tx': tx, 'ty': ty, 'sx': sx, 'sy': sy, 'tan_psi': tan_psi}
 
 
 def get_scale_of_mat(mat):
-    # TODO
+    """
+    Calculates the scaling factor of affine transformation
+    See function "get_translation_scale_tan_rotation_of_mat" for more detail on this calculation
+    :param mat: the affine transformation matrix
+    :return: the scaling factor of transformation
+    """
     return np.mean(np.sqrt(np.sum(np.square(mat[:, :2]), axis=1)))
 
 
-def calc_image_size_for_unscaled(image_landmarks, face_type, scale=1.0):
-    # TODO
-    mat = get_transform_mat(image_landmarks, 1, face_type, scale=scale)
+def calc_image_size_for_unscaled(image_landmarks, face_type):
+    """
+    Given an image we wish to pass to "get_transform_mat" and preserve its density,
+    calculates the approximate size of output
+    :param image_landmarks: The landmarks of image
+    :param face_type: The face type
+    :return: The approximate output size
+    """
+    mat = get_transform_mat(image_landmarks, 2, face_type)
     scale = get_scale_of_mat(mat)
-    return int(1 / scale)
+    return int(2 / scale)
 
 
 def get_transform_mat(image_landmarks, output_size, face_type, scale=1.0):
@@ -172,6 +186,9 @@ def get_transform_mat(image_landmarks, output_size, face_type, scale=1.0):
     if face_type == FaceType.FULL_NO_ALIGN:
         face_type = FaceType.FULL
         remove_align = True
+    elif face_type == FaceType.HEAD_NO_ALIGN:
+        face_type = FaceType.HEAD
+        remove_align = True
 
     if face_type == FaceType.HALF:
         padding = 0
@@ -183,23 +200,10 @@ def get_transform_mat(image_landmarks, output_size, face_type, scale=1.0):
         raise ValueError('wrong face_type: ', face_type)
 
     mat = umeyama(image_landmarks[17:], landmarks_2D, True)[0:2]
-
-    # TODO
-    if output_size != 1:
-        print(
-            f'PREPAD - get_translation_scale_tan_rotation_of_mat: {get_translation_scale_tan_rotation_of_mat(mat)}')
     mat = mat * (output_size - 2 * padding)
     mat[:, 2] += padding
     mat *= (1 / scale)
     mat[:, 2] += -output_size * (((1 / scale) - 1.0) / 2)
-
-    # TODO
-    if output_size != 1:
-        print(
-            f'POSTPAD - get_translation_scale_tan_rotation_of_mat: {get_translation_scale_tan_rotation_of_mat(mat)}')
-    else:
-        print(
-            f'CALC SCALE - get_translation_scale_tan_rotation_of_mat: {get_translation_scale_tan_rotation_of_mat(mat)}')
 
     if remove_align:
         bbox = transform_points([(0, 0), (0, output_size - 1), (output_size - 1, output_size - 1),

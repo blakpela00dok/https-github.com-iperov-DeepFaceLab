@@ -4,10 +4,11 @@ class FaceType(IntEnum):
     HALF = 0,
     FULL = 1,
     HEAD = 2,
-    
+
     FULL_NO_ALIGN = 5,
+    HEAD_NO_ALIGN = 6,
     MARK_ONLY = 10, #no align at all, just embedded faceinfo
-    
+
     @staticmethod
     def fromString (s):
         r = from_string_dict.get (s.lower())
@@ -29,5 +30,5 @@ to_string_dict = { FaceType.HALF : 'half_face',
                    FaceType.FULL : 'full_face',
                    FaceType.HEAD : 'head',
                    FaceType.MARK_ONLY :'mark_only',
-                   FaceType.FULL_NO_ALIGN : 'full_face_no_align'                   
+                   FaceType.FULL_NO_ALIGN : 'full_face_no_align'
                  }

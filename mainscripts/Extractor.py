@@ -244,12 +244,8 @@ class ExtractSubprocessor(Subprocessor):
                         # `self.image_size` is the output size for the entire process,
                         # we don't want to overwrite it
                         face_image_size = self.image_size
-                        # TODO
-                        self.log_info(f'BEFORE if face_image_size==0: {face_image_size}')
-                        if face_image_size == 0:
+                        if face_image_size == 0 and self.face_type != FaceType.MARK_ONLY:
                             face_image_size = LandmarksProcessor.calc_image_size_for_unscaled(image_landmarks, 1, self.face_type)
-                            # TODO
-                            self.log_info(f'AFTER if face_image_size==0: {face_image_size}')
 
                         if self.face_type == FaceType.MARK_ONLY:
                             image_to_face_mat = None
@@ -258,14 +254,12 @@ class ExtractSubprocessor(Subprocessor):
                         else:
                             image_to_face_mat = LandmarksProcessor.get_transform_mat(image_landmarks, face_image_size, self.face_type)
                             face_image = cv2.warpAffine(image, image_to_face_mat, (face_image_size, face_image_size), cv2.INTER_LANCZOS4)
-                            # TODO
-                            self.log_info(f'warpAffine size: {face_image.shape[[1, 0]]}')
                             face_image_landmarks = LandmarksProcessor.transform_points(image_landmarks, image_to_face_mat)
                             landmarks_bbox = LandmarksProcessor.transform_points([(0,0), (0, face_image_size-1), (face_image_size-1, face_image_size-1), (face_image_size-1,0) ], image_to_face_mat, True)
-
                             landmarks_area = mathlib.polygon_area(landmarks_bbox[:,0], landmarks_bbox[:,1] )
 
-                            if self.face_type is not FaceType.HEAD and landmarks_area > 4*rect_area: #get rid of faces which umeyama-landmark-area > 4*detector-rect-area
+                            # get rid of faces which umeyama-landmark-area > 4*detector-rect-area
+                            if self.face_type not in (FaceType.HEAD, FaceType.HEAD_NO_ALIGN) and landmarks_area > 4*rect_area:
                                 continue
 
                             if self.debug_dir is not None:
