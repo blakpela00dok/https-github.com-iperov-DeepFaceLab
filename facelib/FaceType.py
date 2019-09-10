@@ -1,5 +1,6 @@
 from enum import IntEnum
 
+
 class FaceType(IntEnum):
     HALF = 0,
     FULL = 1,
@@ -20,15 +21,18 @@ class FaceType(IntEnum):
     def toString (face_type):
         return to_string_dict[face_type]
 
+
 from_string_dict = {'half_face': FaceType.HALF,
                     'full_face': FaceType.FULL,
                     'head' : FaceType.HEAD,
                     'mark_only' : FaceType.MARK_ONLY,
                     'full_face_no_align' : FaceType.FULL_NO_ALIGN,
+                    'head_no_align': FaceType.HEAD_NO_ALIGN,
                     }
 to_string_dict = { FaceType.HALF : 'half_face',
                    FaceType.FULL : 'full_face',
                    FaceType.HEAD : 'head',
                    FaceType.MARK_ONLY :'mark_only',
-                   FaceType.FULL_NO_ALIGN : 'full_face_no_align'
+                   FaceType.FULL_NO_ALIGN : 'full_face_no_align',
+                   FaceType.HEAD_NO_ALIGN : 'head_no_align'
                  }
