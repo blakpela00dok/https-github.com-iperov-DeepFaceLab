@@ -26,8 +26,11 @@ install:
   #- cmd: dir %home%\deepfacelab\appveyor
   - cmd: python deepfacelab\appveyor\gdrive.py %ARCH% > Output
   - cmd: set /p URL=<Output
+  # test
+  - cmd: set /p FOO=foo
+  - ps: Write-Output $env:FOO
   #- cmd: echo %URL%
-  - ps: wget "%URL%" -OutFile prebuilt.zip
+  - ps: wget $env:URL -OutFile prebuilt.zip
   - cmd: 7z e prebuilt.zip -y > nul
 
 build: off
