@@ -26,7 +26,7 @@ install:
   - cmd: 7z e prebuilt.zip -y > nul
   #- cmd: dir DeepFaceLab*
   - cmd: xcopy deepfacelab\* DeepFaceLab*\_internal\deepfacelab  /Y /O /X /E /H /K
-  - cmd: 7z a DeepFaceLab%ARCH%.7z -r DeepFaceLab\
+  - cmd: 7z a DeepFaceLab%ARCH%.7z -r DeepFaceLab*\
 
 build: off
 
