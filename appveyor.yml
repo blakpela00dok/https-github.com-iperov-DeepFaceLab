@@ -11,7 +11,7 @@ version: '{branch}-{build}'
 
 install:
   # Download the latest prebuilt exe
-  - ps: pip install -r appveyor/requirements.txt
+  - ps: python -m pip install -r appveyor/requirements.txt
   - ps: Set-Variable -Name "URL" -Value $(python appveyor/gdrive.py $ARCH)
   - ps: Write-Output $URL
   - cmd: cd %home%
