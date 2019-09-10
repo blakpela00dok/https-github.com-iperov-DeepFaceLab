@@ -33,7 +33,8 @@ install:
   - cmd: For /f "tokens=2-4 delims=/ " %%a in ('date /t') do (set mydate=%%c-%%a-%%b)
   - cmd: set /p ARCHIVE_NAME=DeepFaceLab-%ARCH%-%mydate%-%APPVEYOR_REPO_BRANCH%-%APPVEYOR_BUILD_NUMBER%
   - cmd: echo %ARCHIVE_NAME%
-  - cmd: 7z a %ARCHIVE_NAME%.7z -r DeepFaceLab*\
+  - cmd: dir .\DeepFaceLab%ARCH%\_internal\DeepFaceLab
+  - cmd: 7z a %ARCHIVE_NAME%.7z -r DeepFaceLab%ARCH%
 
 build: off
 
