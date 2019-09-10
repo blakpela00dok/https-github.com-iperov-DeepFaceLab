@@ -11,7 +11,7 @@ version: '{branch}-{build}'
 
 install:
   # Download the latest prebuilt exe
-  - URL=$(python ./appveyor/gdrive.py $ARCH)
+  - set URL=$(python ./appveyor/gdrive.py $ARCH)
   - echo $URL
 
 build: off
