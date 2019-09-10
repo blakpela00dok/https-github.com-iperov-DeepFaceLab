@@ -19,19 +19,14 @@ install:
   - ps: python -m pip install --upgrade pip
   - ps: python -m pip install -r appveyor/requirements.txt
   - cmd: cd ..
-  #- cmd: echo %cd%
-  #- cmd: dir
-  #- cmd: dir %home%
-  #- cmd: dir %home%\deepfacelab
-  #- cmd: dir %home%\deepfacelab\appveyor
   - cmd: python deepfacelab\appveyor\gdrive.py %ARCH% > Output
   - cmd: set /p URL=<Output
-  # test
-  - cmd: set /p FOO=foo
-  - ps: Write-Output $env:FOO
-  #- cmd: echo %URL%
-  - ps: wget $env:URL -OutFile prebuilt.zip
+  - ps: wget "$env:URL" -OutFile prebuilt.zip
+  - cmd: 7z l prebuilt.zip
   - cmd: 7z e prebuilt.zip -y > nul
+  - cmd: dir DeepFaceLab*
+  - cmd: xcopy deepfacelab DeepFaceLab*\_internal\deepfacelab  /O /X /E /H /K
+  - cmd: 7z a DeepFaceLab%ARCH%.zip DeepFaceLab\
 
 build: off
 
@@ -52,9 +47,8 @@ build: off
 #  # interpreter
 #  - '%PYTHON%\python.exe setup.py bdist_wheel'
 
-#artifacts:
-#  # bdist_wheel puts your built wheel in the dist directory
-#  - path: dist\*
+artifacts:
+  - path: DeepFaceLab%ARCH%.zip
 
 #on_success:
 #  You can use this step to upload your artifacts to a public website.
