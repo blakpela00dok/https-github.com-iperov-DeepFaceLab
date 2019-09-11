@@ -33,7 +33,7 @@ install:
   - cmd: xcopy .\deepfacelab .\DeepFaceLab%ARCH%\_internal\DeepFaceLab\ /Y /O /X /E /H /K
   - cmd: dir .\DeepFaceLab%ARCH%\_internal
   - cmd: dir .\DeepFaceLab%ARCH%\_internal\DeepFaceLab
-  - cmd: 7z a %ARCHIVE_NAME%.zip -tzip -mx=1 -r DeepFaceLab%ARCH%\
+  - cmd: 7z a %ARCHIVE_NAME%.7z -tzip -mx=1 -r DeepFaceLab%ARCH%\
 
 build: off
 
@@ -55,7 +55,7 @@ build: off
 #  - '%PYTHON%\python.exe setup.py bdist_wheel'
 
 artifacts:
-  - path: %ARCHIVE_NAME%.zip
+  - path: "%ARCHIVE_NAME%.7z"
 
 #on_success:
 #  You can use this step to upload your artifacts to a public website.
