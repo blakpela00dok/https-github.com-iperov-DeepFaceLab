@@ -382,9 +382,9 @@ class ModelBase(object):
         return []
 
     #overridable
-    def get_converter(self):
+    def get_ConverterConfig(self):
+        #return predictor_func, predictor_input_shape, ConverterConfig() for the model
         raise NotImplementedError
-        #return existing or your own converter which derived from base
 
     def get_target_iter(self):
         return self.target_iter

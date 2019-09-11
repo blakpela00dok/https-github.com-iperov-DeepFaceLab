@@ -1,4 +1,4 @@
-﻿import traceback
+import traceback
 import os
 import sys
 import time
@@ -48,9 +48,6 @@ class ExtractSubprocessor(Subprocessor):
             self.final_output_path  = Path(client_dict['final_output_dir']) if 'final_output_dir' in client_dict.keys() else None
             self.debug_dir    = client_dict['debug_dir']
             self.image_size = client_dict['image_size']
-            self.log_info(f'on_initialize: {client_dict}')
-
-
 
             #transfer and set stdin in order to work code.interact in debug subprocess
             stdin_fd         = client_dict['stdin_fd']
@@ -68,8 +65,6 @@ class ExtractSubprocessor(Subprocessor):
                 intro_str += " Recommended to close all programs using this device."
 
             self.log_info (intro_str)
-
-
 
             if 'rects' in self.type:
                 if self.type == 'rects-mt':
@@ -112,7 +107,7 @@ class ExtractSubprocessor(Subprocessor):
 
         #override
         def process_data(self, data):
-            filename_path = Path(data.filename)
+            filename_path = Path( data.filename )
 
             filename_path_str = str(filename_path)
             if self.cached_image[0] == filename_path_str:
@@ -124,20 +119,8 @@ class ExtractSubprocessor(Subprocessor):
                     self.log_err ( 'Failed to extract %s, reason: cv2_imread() fail.' % ( str(filename_path) ) )
                     return data
 
-                image_shape = image.shape
-                if len(image_shape) == 2:
-                    h, w = image.shape
-                    image = image[:,:,np.newaxis]
-                    ch = 1
-                else:
-                    h, w, ch = image.shape
-
-                #self.image_size = h
-
-                if ch == 1:
-                    image = np.repeat (image, 3, -1)
-                elif ch == 4:
-                    image = image[:,:,0:3]
+                image = imagelib.normalize_channels(image, 3)
+                h, w, ch = image.shape
 
                 wm, hm = w % 2, h % 2
                 if wm + hm != 0: #fix odd image
@@ -169,7 +152,7 @@ class ExtractSubprocessor(Subprocessor):
                         elif rot == 270:
                             rotated_image = image.swapaxes( 0,1 )[::-1,:,:]
 
-                        rects = data.rects = self.e.extract(rotated_image, is_bgr=True)
+                        rects = data.rects = self.e.extract (rotated_image, is_bgr=True)
                         if len(rects) != 0:
                             break
 
@@ -186,7 +169,7 @@ class ExtractSubprocessor(Subprocessor):
                 elif data.rects_rotation == 270:
                     rotated_image = image.swapaxes( 0,1 )[::-1,:,:]
 
-                data.landmarks = self.e.extract(rotated_image, data.rects, self.second_pass_e if (src_dflimg is None and data.landmarks_accurate) else None, is_bgr=True)
+                data.landmarks = self.e.extract (rotated_image, data.rects, self.second_pass_e if (src_dflimg is None and data.landmarks_accurate) else None, is_bgr=True)
                 if data.rects_rotation != 0:
                     for i, (rect, lmrks) in enumerate(zip(data.rects, data.landmarks)):
                         new_rect, new_lmrks = rect, lmrks
@@ -232,7 +215,7 @@ class ExtractSubprocessor(Subprocessor):
                     face_idx = 0
                     for rect, image_landmarks in zip( rects, landmarks ):
                         if src_dflimg is not None and face_idx > 1:
-                            # cannot extract more than 1 face from dflimg
+                            #cannot extract more than 1 face from dflimg
                             break
 
                         if image_landmarks is None:
@@ -254,7 +237,7 @@ class ExtractSubprocessor(Subprocessor):
                         else:
                             image_to_face_mat = LandmarksProcessor.get_transform_mat(image_landmarks, face_image_size, self.face_type)
                             face_image = cv2.warpAffine(image, image_to_face_mat, (face_image_size, face_image_size), cv2.INTER_LANCZOS4)
-                            face_image_landmarks = LandmarksProcessor.transform_points(image_landmarks, image_to_face_mat)
+                            face_image_landmarks = LandmarksProcessor.transform_points (image_landmarks, image_to_face_mat)
                             landmarks_bbox = LandmarksProcessor.transform_points([(0,0), (0, face_image_size-1), (face_image_size-1, face_image_size-1), (face_image_size-1,0) ], image_to_face_mat, True)
                             landmarks_area = mathlib.polygon_area(landmarks_bbox[:,0], landmarks_bbox[:,1] )
 
@@ -266,23 +249,21 @@ class ExtractSubprocessor(Subprocessor):
                                 LandmarksProcessor.draw_rect_landmarks(debug_image, rect, image_landmarks, face_image_size, self.face_type, transparent_mask=True)
 
                         if filename_path.suffix == '.jpg':
-
-                            # if extracting from dflimg and jpg copy it in order not to lose quality
+                            #if extracting from dflimg and jpg copy it in order not to lose quality
                             output_file = '{}_{}{}'.format(str(self.final_output_path / filename_path.stem),
                                                            str(face_idx), '.jpg')
                             if str(filename_path) != str(output_file):
-                                shutil.copy(str(filename_path), str(output_file))
+                                shutil.copy ( str(filename_path), str(output_file) )
                             cv2_imwrite(output_file, face_image, [int(cv2.IMWRITE_JPEG_QUALITY), 95])
-                            DFLJPG.embed_data(output_file, face_type=FaceType.toString(self.face_type),
+                            DFLJPG.embed_data(output_file,
+                                              face_type=FaceType.toString(self.face_type),
                                               landmarks=face_image_landmarks.tolist(),
                                               source_filename=filename_path.name,
                                               source_rect=rect,
                                               source_landmarks=image_landmarks.tolist(),
                                               image_to_face_mat=image_to_face_mat,
-                                              pitch_yaw_roll=data.pitch_yaw_roll
-                                              )
+                                              pitch_yaw_roll=data.pitch_yaw_roll)
                         else:
-
                             output_file = '{}_{}{}'.format(str(self.final_output_path / filename_path.stem),
                                                            str(face_idx), '.png')
                             cv2_imwrite(output_file, face_image, [int(cv2.IMWRITE_PNG_COMPRESSION), 3])
@@ -374,7 +355,7 @@ class ExtractSubprocessor(Subprocessor):
     #override
     def process_info_generator(self):
         base_dict = {'type' : self.type,
-                     'image_size':self.image_size,
+                     'image_size': self.image_size,
                      'face_type': self.face_type,
                      'debug_dir': self.debug_dir,
                      'final_output_dir': str(self.final_output_path),
@@ -418,7 +399,8 @@ class ExtractSubprocessor(Subprocessor):
                     if self.cache_original_image[0] == filename:
                         self.original_image = self.cache_original_image[1]
                     else:
-                        self.original_image = cv2_imread( filename )
+                        self.original_image = imagelib.normalize_channels( cv2_imread( filename ), 3 )
+
                         self.cache_original_image = (filename, self.original_image )
 
                     (h,w,c) = self.original_image.shape
@@ -437,13 +419,13 @@ class ExtractSubprocessor(Subprocessor):
                         self.text_lines_img = self.cache_text_lines_img[1]
                     else:
                         self.text_lines_img = (imagelib.get_draw_text_lines ( self.image, sh,
-                                                                              [   '[Mouse click] - lock/unlock selection',
-                                                                                  '[Mouse wheel] - change rect',
-                                                                                  '[Enter] / [Space] - confirm / skip frame',
-                                                                                  '[,] [.]- prev frame, next frame. [Q] - skip remaining frames',
-                                                                                  '[a] - accuracy on/off (more fps)',
-                                                                                  '[h] - hide this help'
-                                                                                  ], (1, 1, 1) )*255).astype(np.uint8)
+                                                        [   '[Mouse click] - lock/unlock selection',
+                                                            '[Mouse wheel] - change rect',
+                                                            '[Enter] / [Space] - confirm / skip frame',
+                                                            '[,] [.]- prev frame, next frame. [Q] - skip remaining frames',
+                                                            '[a] - accuracy on/off (more fps)',
+                                                            '[h] - hide this help'
+                                                        ], (1, 1, 1) )*255).astype(np.uint8)
 
                         self.cache_text_lines_img = (sh, self.text_lines_img)
 
@@ -530,10 +512,10 @@ class ExtractSubprocessor(Subprocessor):
                             break
 
                         if self.x != new_x or \
-                                self.y != new_y or \
-                                self.rect_size != new_rect_size or \
-                                self.extract_needed or \
-                                redraw_needed:
+                           self.y != new_y or \
+                           self.rect_size != new_rect_size or \
+                           self.extract_needed or \
+                           redraw_needed:
                             self.x = new_x
                             self.y = new_y
                             self.rect_size = new_rect_size

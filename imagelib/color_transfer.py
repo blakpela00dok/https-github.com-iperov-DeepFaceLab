@@ -1,5 +1,148 @@
-import numpy as np
+from enum import IntEnum
+
 import cv2
+import numpy as np
+
+import scipy as sp
+import scipy.sparse
+from scipy.sparse.linalg import spsolve
+
+class ColorTransferMode(IntEnum):
+    NONE = 0
+    LCT = 1
+    RCT = 2
+    RCT_CLIP = 3
+    RCT_PAPER = 4
+    RCT_PAPER_CLIP = 5
+    MASKED_RCT = 6
+    MASKED_RCT_CLIP = 7
+    MASKED_RCT_PAPER = 8
+    MASKED_RCT_PAPER_CLIP = 9
+    MKL = 10
+    MASKED_MKL = 11
+    IDT = 12
+    MASKED_IDT = 13
+    EBS = 14
+
+
+def color_transfer_mkl(x0, x1):
+    eps = np.finfo(float).eps
+
+    h,w,c = x0.shape
+    h1,w1,c1 = x1.shape
+
+    x0 = x0.reshape ( (h*w,c) )
+    x1 = x1.reshape ( (h1*w1,c1) )
+
+    a = np.cov(x0.T)
+    b = np.cov(x1.T)
+
+    Da2, Ua = np.linalg.eig(a)
+    Da = np.diag(np.sqrt(Da2.clip(eps, None)))
+
+    C = np.dot(np.dot(np.dot(np.dot(Da, Ua.T), b), Ua), Da)
+
+    Dc2, Uc = np.linalg.eig(C)
+    Dc = np.diag(np.sqrt(Dc2.clip(eps, None)))
+
+    Da_inv = np.diag(1./(np.diag(Da)))
+
+    t = np.dot(np.dot(np.dot(np.dot(np.dot(np.dot(Ua, Da_inv), Uc), Dc), Uc.T), Da_inv), Ua.T)
+
+    mx0 = np.mean(x0, axis=0)
+    mx1 = np.mean(x1, axis=0)
+
+    result = np.dot(x0-mx0, t) + mx1
+    return np.clip ( result.reshape ( (h,w,c) ), 0, 1)
+
+def color_transfer_idt(i0, i1, bins=256, n_rot=20):
+    relaxation = 1 / n_rot
+    h,w,c = i0.shape
+    h1,w1,c1 = i1.shape
+
+    i0 = i0.reshape ( (h*w,c) )
+    i1 = i1.reshape ( (h1*w1,c1) )
+
+    n_dims = c
+
+    d0 = i0.T
+    d1 = i1.T
+
+    for i in range(n_rot):
+
+        r = sp.stats.special_ortho_group.rvs(n_dims).astype(np.float32)
+
+        d0r = np.dot(r, d0)
+        d1r = np.dot(r, d1)
+        d_r = np.empty_like(d0)
+
+        for j in range(n_dims):
+
+            lo = min(d0r[j].min(), d1r[j].min())
+            hi = max(d0r[j].max(), d1r[j].max())
+
+            p0r, edges = np.histogram(d0r[j], bins=bins, range=[lo, hi])
+            p1r, _     = np.histogram(d1r[j], bins=bins, range=[lo, hi])
+
+            cp0r = p0r.cumsum().astype(np.float32)
+            cp0r /= cp0r[-1]
+
+            cp1r = p1r.cumsum().astype(np.float32)
+            cp1r /= cp1r[-1]
+
+            f = np.interp(cp0r, cp1r, edges[1:])
+
+            d_r[j] = np.interp(d0r[j], edges[1:], f, left=0, right=bins)
+
+        d0 = relaxation * np.linalg.solve(r, (d_r - d0r)) + d0
+
+    return np.clip ( d0.T.reshape ( (h,w,c) ), 0, 1)
+
+def laplacian_matrix(n, m):
+    mat_D = scipy.sparse.lil_matrix((m, m))
+    mat_D.setdiag(-1, -1)
+    mat_D.setdiag(4)
+    mat_D.setdiag(-1, 1)
+    mat_A = scipy.sparse.block_diag([mat_D] * n).tolil()
+    mat_A.setdiag(-1, 1*m)
+    mat_A.setdiag(-1, -1*m)
+    return mat_A
+
+def seamless_clone(source, target, mask):
+    h, w,c = target.shape
+    result = []
+
+    mat_A = laplacian_matrix(h, w)
+    laplacian = mat_A.tocsc()
+
+    mask[0,:] = 1
+    mask[-1,:] = 1
+    mask[:,0] = 1
+    mask[:,-1] = 1
+    q = np.argwhere(mask==0)
+
+    k = q[:,1]+q[:,0]*w
+    mat_A[k, k] = 1
+    mat_A[k, k + 1] = 0
+    mat_A[k, k - 1] = 0
+    mat_A[k, k + w] = 0
+    mat_A[k, k - w] = 0
+
+    mat_A = mat_A.tocsc()
+    mask_flat = mask.flatten()
+    for channel in range(c):
+
+        source_flat = source[:, :, channel].flatten()
+        target_flat = target[:, :, channel].flatten()
+
+        mat_b = laplacian.dot(source_flat)*0.75
+        mat_b[mask_flat==0] = target_flat[mask_flat==0]
+
+        x = spsolve(mat_A, mat_b).reshape((h, w))
+        result.append (x)
+
+
+    return np.clip( np.dstack(result), 0, 1 )
 
 
 def reinhard_color_transfer(source, target, clip=False, preserve_paper=False, source_mask=None, target_mask=None):
@@ -106,11 +249,11 @@ def linear_color_transfer(target_img, source_img, mode='sym', eps=1e-3):
     """
     mu_t = target_img.mean(0).mean(0)
     t = target_img - mu_t
-    t = t.transpose(2, 0, 1).reshape(3, -1)
+    t = t.transpose(2,0,1).reshape(3,-1)
     Ct = t.dot(t.T) / t.shape[1] + eps * np.eye(t.shape[0])
     mu_s = source_img.mean(0).mean(0)
     s = source_img - mu_s
-    s = s.transpose(2, 0, 1).reshape(3, -1)
+    s = s.transpose(2,0,1).reshape(3,-1)
     Cs = s.dot(s.T) / s.shape[1] + eps * np.eye(s.shape[0])
     if mode == 'chol':
         chol_t = np.linalg.cholesky(Ct)
@@ -129,7 +272,7 @@ def linear_color_transfer(target_img, source_img, mode='sym', eps=1e-3):
         eva_QtCsQt, eve_QtCsQt = np.linalg.eigh(Qt_Cs_Qt)
         QtCsQt = eve_QtCsQt.dot(np.sqrt(np.diag(eva_QtCsQt))).dot(eve_QtCsQt.T)
         ts = np.linalg.pinv(Qt).dot(QtCsQt).dot(np.linalg.pinv(Qt)).dot(t)
-    matched_img = ts.reshape(*target_img.transpose(2, 0, 1).shape).transpose(1, 2, 0)
+    matched_img = ts.reshape(*target_img.transpose(2,0,1).shape).transpose(1,2,0)
     matched_img += mu_s
     np.clip(matched_img, 0, 1, out=matched_img)
     return matched_img
@@ -224,7 +367,7 @@ def channel_hist_match(source, template, hist_match_threshold=255, mask=None):
                                             return_counts=True)
     t_values, t_counts = np.unique(template, return_counts=True)
     ms_values, mbin_idx, ms_counts = np.unique(source, return_inverse=True,
-                                               return_counts=True)
+                                            return_counts=True)
     mt_values, mt_counts = np.unique(template, return_counts=True)
 
     s_quantiles = np.cumsum(s_counts).astype(np.float64)
@@ -237,14 +380,14 @@ def channel_hist_match(source, template, hist_match_threshold=255, mask=None):
 
 
 def color_hist_match(src_im, tar_im, hist_match_threshold=255):
-    h, w, c = src_im.shape
-    matched_R = channel_hist_match(src_im[:, :, 0], tar_im[:, :, 0], hist_match_threshold, None)
-    matched_G = channel_hist_match(src_im[:, :, 1], tar_im[:, :, 1], hist_match_threshold, None)
-    matched_B = channel_hist_match(src_im[:, :, 2], tar_im[:, :, 2], hist_match_threshold, None)
+    h,w,c = src_im.shape
+    matched_R = channel_hist_match(src_im[:,:,0], tar_im[:,:,0], hist_match_threshold, None)
+    matched_G = channel_hist_match(src_im[:,:,1], tar_im[:,:,1], hist_match_threshold, None)
+    matched_B = channel_hist_match(src_im[:,:,2], tar_im[:,:,2], hist_match_threshold, None)
 
     to_stack = (matched_R, matched_G, matched_B)
     for i in range(3, c):
-        to_stack += (src_im[:, :, i],)
+        to_stack += ( src_im[:,:,i],)
 
     matched = np.stack(to_stack, axis=-1).astype(src_im.dtype)
     return matched
