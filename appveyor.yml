@@ -1,0 +1,77 @@
+environment:
+  global:
+    PYTHON: "C:\\Python36-x64"
+  matrix:
+    - ARCH: "OpenCLSSE"
+    - ARCH: "CUDA9.2SSE"
+    - ARCH: "CUDA10.1SSE"
+    - ARCH: "CUDA10.1AVX"
+
+
+version: '{branch}-{build}'
+
+#os: Visual Studio 2015
+
+## build cache to preserve files/folders between builds
+#cache:
+#  - packages -> **\packages.config  # preserve "packages" directory in the root of build folder but will reset it if packages.config is modified
+#  - projectA\libs
+#  - node_modules                    # local npm modules
+#  - '%LocalAppData%\NuGet\Cache'    # NuGet < v3
+#  - '%LocalAppData%\NuGet\v3-cache' # NuGet v3
+
+install:
+  - cmd: SET PATH=%PYTHON%;%PYTHON%\Scripts;%PATH%"
+  - cmd: For /f "tokens=2-4 delims=/ " %%a in ('date /t') do (set mydate=%%c-%%a-%%b)
+  - cmd: set ARCHIVE_NAME=DeepFaceLab-%ARCH%-%mydate%-BUILD-%APPVEYOR_BUILD_NUMBER%
+  - cmd: echo %ARCHIVE_NAME%
+  - ps: python --version
+  - ps: python -m pip install --upgrade pip
+  - ps: python -m pip install -r appveyor/requirements.txt
+  - cmd: cd ..
+  - cmd: python deepfacelab\appveyor\gdrive.py %ARCH% > Output
+  - cmd: set /p URL=<Output
+  - ps: wget "$env:URL" -OutFile prebuilt.zip
+  - cmd: 7z x prebuilt.zip -y > nul
+  - cmd: dir
+  - cmd: dir .\deepfacelab
+  - cmd: dir .\DeepFaceLab%ARCH%\_internal\DeepFaceLab
+  - cmd: rmdir /q/ s .\DeepFaceLab%ARCH%\_internal\DeepFaceLab
+  - cmd: xcopy .\deepfacelab .\DeepFaceLab%ARCH%\_internal\DeepFaceLab\ /Y /O /X /E /H /K
+  - cmd: dir .\DeepFaceLab%ARCH%\_internal
+  - cmd: dir .\DeepFaceLab%ARCH%\_internal\DeepFaceLab
+  - cmd: 7z a .\deepfacelab\%ARCHIVE_NAME%.7z -tzip -mx=1 -r DeepFaceLab%ARCH%\
+  - cmd: dir
+
+build: false
+
+#test_script:
+#  # Put your test command here.
+#  - test
+
+#after_test:
+#  after test
+
+artifacts:
+  - path: .\%ARCHIVE_NAME%.7z
+
+#on_success:
+#  You can use this step to upload your artifacts to a public website.
+#  See Appveyor's documentation for more details. Or you can simply
+#  access your wheels from the Appveyor "artifacts" tab for your build.
+
+#---------------------------------#
+#     deployment configuration    #
+#---------------------------------#
+
+# providers: Local, FTP, WebDeploy, AzureCS, AzureBlob, S3, NuGet, Environment
+# provider names are case-sensitive!
+#deploy:
+#  # Deploy to GitHub Releases
+#  - provider: GitHub
+#    artifact: /.*\.nupkg/           # upload all NuGet packages to release assets
+#    draft: false
+#    prerelease: false
+#    on:
+#      branch: master                # release from master branch only
+#      APPVEYOR_REPO_TAG: true       # deploy on tag push only
