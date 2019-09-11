@@ -33,7 +33,7 @@ install:
   - cmd: xcopy .\deepfacelab .\DeepFaceLab%ARCH%\_internal\DeepFaceLab\ /Y /O /X /E /H /K
   - cmd: dir .\DeepFaceLab%ARCH%\_internal
   - cmd: dir .\DeepFaceLab%ARCH%\_internal\DeepFaceLab
-  - cmd: 7z a %ARCHIVE_NAME%.7z -r DeepFaceLab%ARCH%
+  - cmd: 7z a %ARCHIVE_NAME%.7z -r DeepFaceLab%ARCH%\
 
 build: off
 
