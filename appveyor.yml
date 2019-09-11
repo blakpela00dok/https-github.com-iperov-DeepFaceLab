@@ -36,13 +36,13 @@ install:
   - cmd: set /p URL=<Output
   - ps: wget "$env:URL" -OutFile prebuilt.zip
   - cmd: 7z x prebuilt.zip -y > nul
-  - cmd: dir
-  - cmd: dir .\deepfacelab
-  - cmd: dir .\DeepFaceLab%ARCH%\_internal\DeepFaceLab
+  #- cmd: dir
+  #- cmd: dir .\deepfacelab
+  #- cmd: dir .\DeepFaceLab%ARCH%\_internal\DeepFaceLab
   - cmd: rmdir /q/ s .\DeepFaceLab%ARCH%\_internal\DeepFaceLab
   - cmd: xcopy .\deepfacelab .\DeepFaceLab%ARCH%\_internal\DeepFaceLab\ /Y /O /X /E /H /K
-  - cmd: dir .\DeepFaceLab%ARCH%\_internal
-  - cmd: dir .\DeepFaceLab%ARCH%\_internal\DeepFaceLab
+  #- cmd: dir .\DeepFaceLab%ARCH%\_internal
+  #- cmd: dir .\DeepFaceLab%ARCH%\_internal\DeepFaceLab
   - cmd: 7z a .\deepfacelab\%ARCHIVE_NAME%.7z -tzip -mx=1 -r DeepFaceLab%ARCH%\
   - cmd: dir
 
