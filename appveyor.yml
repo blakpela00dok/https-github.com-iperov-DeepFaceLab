@@ -75,7 +75,9 @@ deploy:
     release: $(APPVEYOR_REPO_TAG_NAME)
     artifact: /DeepFakeLab*\.7z/    # upload all 7z packages to release assets
     draft: true
-    prerelease: false
+    prerelease: true
+    auth_token:
+      secure: oH1rf7ZUCbvcYC3UaeGekJbGThHNOcmSX0yqcpInEdFwfLMvENSlv0+t3vGkR4P2
     on:
       branch: master                # release from master branch only
       APPVEYOR_REPO_TAG: true       # deploy on tag push only
