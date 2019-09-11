@@ -67,20 +67,12 @@ class InteractBase(object):
 
     def log_info(self, msg, end='\n'):
         if self.pg_bar is not None:
-            try: # Attempt print before the pb
-                tqdm.write(msg)
-                return
-            except: 
-                pass #Fallback to normal print upon failure
+            print ("\n")
         print (msg, end=end)
 
     def log_err(self, msg, end='\n'):
         if self.pg_bar is not None:
-            try: # Attempt print before the pb
-                tqdm.write(f'{self.error_log_line_prefix}{msg}')
-                return
-            except: 
-                pass #Fallback to normal print upon failure
+            print ("\n")
         print (f'{self.error_log_line_prefix}{msg}', end=end)
 
     def named_window(self, wnd_name):
@@ -145,9 +137,9 @@ class InteractBase(object):
             else: print("capture_keys: already set for window ", wnd_name)
         else: print("capture_keys: named_window ", wnd_name, " not found.")
 
-    def progress_bar(self, desc, total, leave=True):
+    def progress_bar(self, desc, total, leave=True, initial=0):
         if self.pg_bar is None:
-            self.pg_bar = tqdm( total=total, desc=desc, leave=leave, ascii=True )
+            self.pg_bar = tqdm( total=total, desc=desc, leave=leave, ascii=True, initial=initial )
         else: print("progress_bar: already set.")
 
     def progress_bar_inc(self, c):
@@ -162,13 +154,13 @@ class InteractBase(object):
             self.pg_bar = None
         else: print("progress_bar not set.")
 
-    def progress_bar_generator(self, data, desc, leave=True):
-        self.pg_bar = tqdm( data, desc=desc, leave=leave, ascii=True )
+    def progress_bar_generator(self, data, desc, leave=True, initial=0):
+        self.pg_bar = tqdm( data, desc=desc, leave=leave, ascii=True, initial=initial )
         for x in self.pg_bar:
             yield x
-        self.pg_bar.close()   
+        self.pg_bar.close()
         self.pg_bar = None
-        
+
     def process_messages(self, sleep_time=0):
         self.on_process_messages(sleep_time)
 
