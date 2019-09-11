@@ -15,8 +15,8 @@ version: '{branch}-{build}'
 install:
   - cmd: SET PATH=%PYTHON%;%PYTHON%\Scripts;%PATH%"
   #- cmd: For /f "tokens=2-4 delims=/ " %%a in ('date /t') do (set mydate=%%c-%%a-%%b)
-  - cmd: set /p mydate=2019-09-11
-  - cmd: set /p ARCHIVE_NAME=DeepFaceLab-%ARCH%-%mydate%-%APPVEYOR_REPO_BRANCH%-%APPVEYOR_BUILD_NUMBER%
+  - cmd: set mydate=2019-09-11
+  - cmd: set ARCHIVE_NAME=DeepFaceLab-%ARCH%-%mydate%-%APPVEYOR_REPO_BRANCH%-%APPVEYOR_BUILD_NUMBER%
   - cmd: echo %ARCHIVE_NAME%
   - ps: python --version
   - ps: python -m pip install --upgrade pip
