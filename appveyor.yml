@@ -1,6 +1,9 @@
 environment:
   global:
     PYTHON: "C:\\Python36-x64"
+    API_KEY:
+      secure: 8U1B5tGEhLct8ToXWw3mPFD7OP4WcqurPcxZYfWdRud0VIH/n32RauGG5p7ncTdH
+
   matrix:
     - ARCH: "OpenCLSSE"
     - ARCH: "CUDA9.2SSE"
@@ -66,12 +69,13 @@ artifacts:
 
 # providers: Local, FTP, WebDeploy, AzureCS, AzureBlob, S3, NuGet, Environment
 # provider names are case-sensitive!
-#deploy:
-#  # Deploy to GitHub Releases
-#  - provider: GitHub
-#    artifact: /.*\.nupkg/           # upload all NuGet packages to release assets
-#    draft: false
-#    prerelease: false
-#    on:
-#      branch: master                # release from master branch only
-#      APPVEYOR_REPO_TAG: true       # deploy on tag push only
+deploy:
+  # Deploy to GitHub Releases
+  - provider: GitHub
+    release: $(APPVEYOR_REPO_TAG_NAME)
+    artifact: /DeepFakeLab*\.7z/    # upload all 7z packages to release assets
+    draft: true
+    prerelease: false
+    on:
+      branch: master                # release from master branch only
+      APPVEYOR_REPO_TAG: true       # deploy on tag push only
