@@ -55,7 +55,7 @@ build: off
 #  - '%PYTHON%\python.exe setup.py bdist_wheel'
 
 artifacts:
-  - path: DeepFaceLab%ARCH%.zip
+  - path: %ARCHIVE_NAME%.7z
 
 #on_success:
 #  You can use this step to upload your artifacts to a public website.
