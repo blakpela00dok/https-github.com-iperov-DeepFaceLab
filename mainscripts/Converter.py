@@ -411,6 +411,7 @@ class ConvertSubprocessor(Subprocessor):
                                     cfg.set_mode( key - ord('0') )
                                 elif chr_key == '0':
                                     self.main_screen.toggle_checkerboard()
+                                    self.screen_manager.get_current()
                                 elif chr_key == 'q':
                                     cfg.add_hist_match_threshold(1 if not shift_pressed else 5)
                                 elif chr_key == 'a':
