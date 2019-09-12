@@ -229,6 +229,10 @@ class ExtractSubprocessor(Subprocessor):
                         face_image_size = self.image_size
                         if face_image_size == 0 and self.face_type != FaceType.MARK_ONLY:
                             face_image_size = LandmarksProcessor.calc_image_size_for_unscaled(image_landmarks, self.face_type)
+                            # if landmarks are bad, could get HUGE scale...
+                            # ...so set a max size, same as input image biggest
+                            # dimension
+                            face_image_size = min(face_image_size, max(w,h))
 
                         if self.face_type == FaceType.MARK_ONLY:
                             image_to_face_mat = None
