@@ -1,3 +1,88 @@
+# Notes:
+#   - Minimal appveyor.yml file is an empty file. All sections are optional.
+#   - Indent each level of configuration with 2 spaces. Do not use tabs!
+#   - All section names are case-sensitive.
+#   - Section names should be unique on each level.
+
+#---------------------------------#
+#      general configuration      #
+#---------------------------------#
+
+# version format
+version: '{branch}-{build}'
+
+# you can use {branch} name in version format too
+# version: 1.0.{build}-{branch}
+
+# branches to build
+branches:
+  # whitelist
+  only:
+    - master
+
+  # blacklist
+#  except:
+#    - gh-pages
+
+# Do not build on tags (GitHub, Bitbucket, GitLab, Gitea)
+#skip_tags: true
+
+# Start builds on tags only (GitHub, BitBucket, GitLab, Gitea)
+skip_non_tags: true
+
+# Skipping commits with particular message or from specific user
+#skip_commits:
+#  message: /Created.*\.(png|jpg|jpeg|bmp|gif)/      # Regex for matching commit message
+#  author: John                                      # Commit author's username, name, email or regexp maching one of these.
+
+# Including commits with particular message or from specific user
+#only_commits:
+#  message: /build/                # Start a new build if message contains 'build'
+#  author: jack@company.com        # Start a new build for commit of user with email jack@company.com
+
+# Skipping commits affecting specific files (GitHub only). More details here: /docs/appveyor-yml
+#skip_commits:
+#  files:
+#    - docs/*
+#    - '**/*.html'
+
+# Including commits affecting specific files (GitHub only). More details here: /docs/appveyor-yml
+#only_commits:
+#  files:
+#    - Project-A/
+#    - Project-B/
+
+# Do not build feature branch with open Pull Requests
+#skip_branch_with_pr: true
+
+# Maximum number of concurrent jobs for the project
+#max_jobs: 1
+
+#---------------------------------#
+#    environment configuration    #
+#---------------------------------#
+
+# Build worker image (VM template)
+#image: Visual Studio 2015
+
+# scripts that are called at very beginning, before repo cloning
+#init:
+#  - git config --global core.autocrlf input
+
+# clone directory
+#clone_folder: c:\projects\myproject
+
+# fetch repository as zip archive
+#shallow_clone: true                 # default is "false"
+
+# set clone depth
+#clone_depth: 5                      # clone entire repository history if not defined
+
+# setting up etc\hosts file
+#hosts:
+#  queue-server: 127.0.0.1
+#  db.server.com: 127.0.0.2
+
 environment:
   global:
     PYTHON: "C:\\Python36-x64"
@@ -9,11 +94,6 @@ environment:
     - ARCH: "CUDA9.2SSE"
     - ARCH: "CUDA10.1SSE"
     - ARCH: "CUDA10.1AVX"
-
-
-version: '{branch}-{build}'
-
-#os: Visual Studio 2015
 
 ## build cache to preserve files/folders between builds
 #cache:
@@ -46,7 +126,15 @@ install:
   - cmd: 7z a .\deepfacelab\%ARCHIVE_NAME%.7z -tzip -mx=1 -r DeepFaceLab%ARCH%\
   - cmd: dir
 
+#---------------------------------#
+#       build configuration       #
+#---------------------------------#
+
 build: false
+
+#---------------------------------#
+#       tests configuration       #
+#---------------------------------#
 
 #test_script:
 #  # Put your test command here.
@@ -54,6 +142,10 @@ build: false
 
 #after_test:
 #  after test
+
+#---------------------------------#
+#      artifacts configuration    #
+#---------------------------------#
 
 artifacts:
   - path: .\%ARCHIVE_NAME%.7z
