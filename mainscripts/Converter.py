@@ -483,7 +483,6 @@ class ConvertSubprocessor(Subprocessor):
                         elif chr_key == '=':
                             self.screen_manager.get_current().diff_scale(0.1)
                         elif chr_key == '\\':
-                            print('toggle key: ', key, 'char:', chr_key)
                             self.main_screen.toggle_checkerboard()
                             self.main_screen.show(True)
 
