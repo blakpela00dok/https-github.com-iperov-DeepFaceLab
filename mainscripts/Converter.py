@@ -409,7 +409,7 @@ class ConvertSubprocessor(Subprocessor):
                                     cfg.set_mode(0)
                                 elif key >= ord('1') and key <= ord('9'):
                                     cfg.set_mode( key - ord('0') )
-                                elif key == ord('0'):
+                                elif chr_key == 'p':
                                     self.main_screen.toggle_checkerboard()
                                     self.main_screen.show(True)
                                 elif chr_key == 'q':
