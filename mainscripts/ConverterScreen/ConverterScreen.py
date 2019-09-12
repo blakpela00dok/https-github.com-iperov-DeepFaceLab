@@ -34,7 +34,7 @@ class Screen(object):
         self.last_screen_shape = (480,640,3)
         self.checkerboard_image = None
         self.set_image (image)
-        self.scrn_manager = None\
+        self.scrn_manager = None
 
 
     def draw_checkerboard(self, screen):
