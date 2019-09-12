@@ -641,11 +641,11 @@ class ModelBase(object):
                     self.batch_size = d[ keys[-1] ]
 
     @staticmethod
-    def get_loss_history_preview(loss_history, iter,batch_size, w, c):
+    def get_loss_history_preview(loss_history, iter, batch_size, w, c, lh_height=100):
         loss_history = np.array (loss_history.copy())
 
         lh_height = 100
-        lh_img = np.ones ( (lh_height,w,c) ) * 0.1
+        lh_img = np.ones((lh_height, w, c)) * 0.1
 
         if len(loss_history) != 0:
             loss_count = len(loss_history[0])
