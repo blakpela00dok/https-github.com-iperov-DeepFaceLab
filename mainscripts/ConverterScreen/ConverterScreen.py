@@ -47,6 +47,7 @@ class Screen(object):
 
     def toggle_checkerboard(self):
         self.show_checkerboard = not self.show_checkerboard
+        print('toggle_checkerboard:', self.show_checkerboard)
 
     def set_waiting_icon(self, b):
         self.waiting_icon = b
@@ -81,6 +82,7 @@ class Screen(object):
         new_state = 0 | self.waiting_icon
 
         if self.state != new_state or self.force_update or force:
+            print('show')
             self.state = new_state
             self.force_update = False
 
@@ -98,6 +100,7 @@ class Screen(object):
 
             if c == 4 and self.show_checkerboard:
                 screen = self.draw_checkerboard(screen)
+                print('draw_checkerboard')
 
             io.show_image(self.scrn_manager.wnd_name, screen)
 
