@@ -35,7 +35,7 @@ class Screen(object):
         self.checkerboard_image = None
         self.set_image (image)
         self.scrn_manager = None
-
+        self.show_checkerboard = True
 
     def draw_checkerboard(self, screen):
         if self.checkerboard_image is None or self.checkerboard_image.shape[0:2] != screen.shape[0:2]:
@@ -43,6 +43,10 @@ class Screen(object):
 
         screen = screen[...,0:3]*0.75 + 64*self.checkerboard_image*(1- (screen[...,3:4].astype(np.float32)/255.0) )
         screen = screen.astype(np.uint8)
+        return screen
+
+    def toggle_checkerboard(self):
+        self.show_checkerboard = not self.show_checkerboard
 
     def set_waiting_icon(self, b):
         self.waiting_icon = b
@@ -92,9 +96,8 @@ class Screen(object):
             if self.scale != 1.0:
                 screen = cv2.resize ( screen, ( int(w*self.scale), int(h*self.scale) ) )
 
-            if c == 4:
-                # self.draw_checkerboard()
-                pass
+            if c == 4 and self.show_checkerboard:
+                screen = self.draw_checkerboard(screen)
 
             io.show_image(self.scrn_manager.wnd_name, screen)
 
