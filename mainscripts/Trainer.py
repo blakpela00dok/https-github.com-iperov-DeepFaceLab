@@ -380,7 +380,7 @@ def main(args, device_args):
             elif key == ord('-'):
                 zoom = zoom.prev()
                 pass
-            elif key == ord('+'):
+            elif key == ord('=') or key == ord('+'):
                 zoom = zoom.next()
             try:
                 io.process_messages(0.1)
