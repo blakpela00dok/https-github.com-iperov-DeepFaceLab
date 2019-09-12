@@ -224,29 +224,27 @@ class Zoom(Enum):
 
 
 def scale_previews(previews, zoom=Zoom.ZOOM_100):
-    # Zoom previews
-    for preview in previews[:]:
+    scaled = []
+    for preview in previews:
         preview_name, preview_rgb = preview
-        h, w, c = preview_rgb.shape
-        scale_factor = zoom.scale * float(h)
+        scale_factor = zoom.scale
         if scale_factor < 1:
-            previews.remove(preview)
-            previews.append((preview_name, cv2.resize(preview_rgb, (0, 0),
-                                                      fx=scale_factor,
-                                                      fy=scale_factor,
-                                                      interpolation=cv2.INTER_AREA)))
+            scaled.append((preview_name, cv2.resize(preview_rgb, (0, 0),
+                                                    fx=scale_factor,
+                                                    fy=scale_factor,
+                                                    interpolation=cv2.INTER_AREA)))
         elif scale_factor > 1:
-            previews.remove(preview)
-            previews.append((preview_name, cv2.resize(preview_rgb, (0, 0),
-                                                      fx=scale_factor,
-                                                      fy=scale_factor,
-                                                      interpolation=cv2.INTER_AREA)))
-    return previews
+            scaled.append((preview_name, cv2.resize(preview_rgb, (0, 0),
+                                                    fx=scale_factor,
+                                                    fy=scale_factor,
+                                                    interpolation=cv2.INTER_LANCZOS4)))
+        else:
+            scaled.append((preview_name, preview_rgb))
+    return scaled
 
 
 def create_preview_pane_image(previews, selected_preview, loss_history,
                               show_last_history_iters_count, iteration, batch_size, zoom=Zoom.ZOOM_100):
-    previews = scale_previews(previews, zoom)
     selected_preview_name = previews[selected_preview][0]
     selected_preview_rgb = previews[selected_preview][1]
     h, w, c = selected_preview_rgb.shape
@@ -255,7 +253,7 @@ def create_preview_pane_image(previews, selected_preview, loss_history,
     head_lines = [
         '[s]:save [enter]:exit [-/+]:zoom: %s' % zoom.label,
         '[p]:update [space]:next preview [l]:change history range',
-        'Preview: "%s" [%d/%d]' % (selected_preview_name,selected_preview+1, len(previews) )
+        'Preview: "%s" [%d/%d]' % (selected_preview_name,selected_preview+1, len(previews))
     ]
     head_line_height = int(15 * zoom.scale)
     head_height = len(head_lines) * head_line_height
@@ -335,6 +333,7 @@ def main(args, device_args):
                     iteration = input['iter'] if 'iter' in input.keys() else 0
                     #batch_size = input['batch_size'] if 'iter' in input.keys() else 1
                     if previews is not None:
+                        previews = scale_previews(previews, zoom)
                         update_preview = True
                 elif op == 'close':
                     break
