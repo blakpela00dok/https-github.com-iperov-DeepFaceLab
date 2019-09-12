@@ -409,10 +409,6 @@ class ConvertSubprocessor(Subprocessor):
                                     cfg.set_mode(0)
                                 elif key >= ord('1') and key <= ord('9'):
                                     cfg.set_mode( key - ord('0') )
-                                elif chr_key == 'p':
-                                    print('toggle key: ', key, 'char:', chr_key)
-                                    self.main_screen.toggle_checkerboard()
-                                    self.main_screen.show(True)
                                 elif chr_key == 'q':
                                     cfg.add_hist_match_threshold(1 if not shift_pressed else 5)
                                 elif chr_key == 'a':
@@ -486,6 +482,10 @@ class ConvertSubprocessor(Subprocessor):
                             self.screen_manager.get_current().diff_scale(-0.1)
                         elif chr_key == '=':
                             self.screen_manager.get_current().diff_scale(0.1)
+                        elif chr_key == '\\':
+                            print('toggle key: ', key, 'char:', chr_key)
+                            self.main_screen.toggle_checkerboard()
+                            self.main_screen.show(True)
 
 
         if go_prev_frame:
