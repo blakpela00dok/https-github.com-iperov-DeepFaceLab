@@ -240,7 +240,7 @@ def scale_previews(previews, zoom=Zoom.ZOOM_100):
             previews.append((preview_name, cv2.resize(preview_rgb, (0, 0),
                                                       fx=scale_factor,
                                                       fy=scale_factor,
-                                                      interpolation=cv2.INTER_LANCZOS4)))
+                                                      interpolation=cv2.INTER_AREA)))
     return previews
 
 
