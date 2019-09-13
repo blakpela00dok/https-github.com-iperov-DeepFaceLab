@@ -379,9 +379,10 @@ def main(args, device_args):
                 update_preview = True
             elif key == ord('-'):
                 zoom = zoom.prev()
-                pass
+                update_preview = True
             elif key == ord('=') or key == ord('+'):
                 zoom = zoom.next()
+                update_preview = True
             try:
                 io.process_messages(0.1)
             except KeyboardInterrupt:
