@@ -284,7 +284,7 @@ def create_preview_pane_image(previews, selected_preview, loss_history,
     return (final*255).astype(np.uint8)
 
 
-def flask_thread(s2c, c2s, s2flask, args):
+def create_flask_app(s2c, c2s, s2flask, args):
     app = Flask(__name__)
     template = """<html>
 <head>
@@ -361,7 +361,7 @@ def flask_thread(s2c, c2s, s2flask, args):
         preview_file = str(model_path / filename)
         return send_file(preview_file, mimetype='image/jpeg', cache_timeout=-1)
 
-    app.run(debug=False, use_reloader=False)
+    return app
 
 
 def main(args, device_args):
@@ -380,7 +380,8 @@ def main(args, device_args):
 
     e.wait() #Wait for inital load to occur.
 
-    flask_t = threading.Thread(target=flask_thread, args=(s2c, c2s, s2flask, args))
+    flask_app = create_flask_app(s2c, c2s, s2flask, args)
+    flask_t = threading.Thread(target=flask_app.run, kwargs={'debug': True, 'use_reloader': False})
     flask_t.start()
 
     wnd_name = "Training preview"
