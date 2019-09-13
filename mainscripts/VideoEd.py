@@ -167,10 +167,8 @@ def video_from_sequence( input_dir, output_file, reference_file=None, ext=None, 
     if not lossless and bitrate is None:
         bitrate = max (1, io.input_int ("Bitrate of output file in MB/s ? (default:16) : ", 16) )
 
-    input_image_paths = Path_utils.get_image_paths(input_path)
+    i_in = ffmpeg.input(str (input_path / ('%5d.'+ext)), r=fps)
 
-    i_in = ffmpeg.input('pipe:', format='image2pipe', r=fps)
-    
     output_args = [i_in]
 
     if ref_in_a is not None:
@@ -195,16 +193,7 @@ def video_from_sequence( input_dir, output_file, reference_file=None, ext=None, 
                           })
 
     job = ( ffmpeg.output(*output_args, **output_kwargs).overwrite_output() )
-
-    try:        
-        job_run = job.run_async(pipe_stdin=True)
-        
-        for image_path in input_image_paths:
-            with open (image_path, "rb") as f:
-                image_bytes = f.read()            
-                job_run.stdin.write (image_bytes)
-        
-        job_run.stdin.close()
-        job_run.wait()
+    try:
+        job = job.run()
     except:
         io.log_err ("ffmpeg fail, job commandline:" + str(job.compile()) )

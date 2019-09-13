@@ -168,8 +168,7 @@ class DFLJPG(object):
                              source_landmarks=None,
                              image_to_face_mat=None,
                              fanseg_mask=None,
-                             pitch_yaw_roll=None,
-                             eyebrows_expand_mod=None,
+                             pitch_yaw_roll=None,                             
                              **kwargs
                    ):
 
@@ -194,8 +193,7 @@ class DFLJPG(object):
                                 'source_landmarks': source_landmarks,
                                 'image_to_face_mat': image_to_face_mat,
                                 'fanseg_mask' : fanseg_mask,
-                                'pitch_yaw_roll' : pitch_yaw_roll,
-                                'eyebrows_expand_mod' : eyebrows_expand_mod
+                                'pitch_yaw_roll' : pitch_yaw_roll
                              })
 
         try:
@@ -213,7 +211,6 @@ class DFLJPG(object):
                                 image_to_face_mat=None,
                                 fanseg_mask=None,
                                 pitch_yaw_roll=None,
-                                eyebrows_expand_mod=None,
                                 **kwargs
                     ):
         if face_type is None: face_type = self.get_face_type()
@@ -225,8 +222,6 @@ class DFLJPG(object):
         if image_to_face_mat is None: image_to_face_mat = self.get_image_to_face_mat()
         if fanseg_mask is None: fanseg_mask = self.get_fanseg_mask()
         if pitch_yaw_roll is None: pitch_yaw_roll = self.get_pitch_yaw_roll()
-        if eyebrows_expand_mod is None: eyebrows_expand_mod = self.get_eyebrows_expand_mod()
-
         DFLJPG.embed_data (filename, face_type=face_type,
                                      landmarks=landmarks,
                                      ie_polys=ie_polys,
@@ -235,12 +230,7 @@ class DFLJPG(object):
                                      source_landmarks=source_landmarks,
                                      image_to_face_mat=image_to_face_mat,
                                      fanseg_mask=fanseg_mask,
-                                     pitch_yaw_roll=pitch_yaw_roll,
-                                     eyebrows_expand_mod=eyebrows_expand_mod)
-
-    def remove_ie_polys(self):
-        self.dfl_dict['ie_polys'] = None
-
+                                     pitch_yaw_roll=pitch_yaw_roll)
     def remove_fanseg_mask(self):
         self.dfl_dict['fanseg_mask'] = None
 
@@ -310,6 +300,4 @@ class DFLJPG(object):
         return None
     def get_pitch_yaw_roll(self):
         return self.dfl_dict.get ('pitch_yaw_roll', None)
-    def get_eyebrows_expand_mod(self):
-        return self.dfl_dict.get ('eyebrows_expand_mod', None)
-
+    

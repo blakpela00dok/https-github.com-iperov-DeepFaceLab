@@ -53,17 +53,12 @@ Input = KL.Input
 Dense = KL.Dense
 Conv2D = nnlib.Conv2D
 Conv2DTranspose = nnlib.Conv2DTranspose
-EqualConv2D = nnlib.EqualConv2D
 SeparableConv2D = KL.SeparableConv2D
 MaxPooling2D = KL.MaxPooling2D
-AveragePooling2D = KL.AveragePooling2D
-GlobalAveragePooling2D = KL.GlobalAveragePooling2D
 UpSampling2D = KL.UpSampling2D
 BatchNormalization = KL.BatchNormalization
-PixelNormalization = nnlib.PixelNormalization
 
 LeakyReLU = KL.LeakyReLU
-ELU = KL.ELU
 ReLU = KL.ReLU
 PReLU = KL.PReLU
 tanh = KL.Activation('tanh')
@@ -73,7 +68,6 @@ Softmax = KL.Softmax
 
 Lambda = KL.Lambda
 Add = KL.Add
-Multiply = KL.Multiply
 Concatenate = KL.Concatenate
 
 
@@ -95,8 +89,6 @@ dssim = nnlib.dssim
 PixelShuffler = nnlib.PixelShuffler
 SubpixelUpscaler = nnlib.SubpixelUpscaler
 Scale = nnlib.Scale
-BlurPool = nnlib.BlurPool
-SelfAttention = nnlib.SelfAttention
 
 CAInitializerMP = nnlib.CAInitializerMP
 
@@ -139,10 +131,6 @@ NLayerDiscriminator = nnlib.NLayerDiscriminator
 
         os.environ['TF_MIN_GPU_MULTIPROCESSOR_COUNT'] = '2'
         os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2' #tf log errors only
-
-        import warnings
-        warnings.simplefilter(action='ignore', category=FutureWarning)
-
         import tensorflow as tf
         nnlib.tf = tf
 
@@ -173,6 +161,7 @@ NLayerDiscriminator = nnlib.NLayerDiscriminator
             return nnlib.code_import_keras
 
         nnlib.backend = device_config.backend
+
         if "tensorflow" in nnlib.backend:
             nnlib._import_tf(device_config)
         elif nnlib.backend == "plaidML":
@@ -184,9 +173,6 @@ NLayerDiscriminator = nnlib.NLayerDiscriminator
         #else:
         import keras as keras_
         nnlib.keras = keras_
-
-        if 'KERAS_BACKEND' in os.environ:
-            os.environ.pop('KERAS_BACKEND')
 
         if nnlib.backend == "plaidML":
             import plaidml
@@ -468,51 +454,6 @@ NLayerDiscriminator = nnlib.NLayerDiscriminator
         nnlib.PixelShuffler = PixelShuffler
         nnlib.SubpixelUpscaler = PixelShuffler
 
-        class BlurPool(KL.Layer):
-            """
-            https://arxiv.org/abs/1904.11486 https://github.com/adobe/antialiased-cnns
-            """
-            def __init__(self, filt_size=3, stride=2, **kwargs):
-                self.strides = (stride,stride)
-                self.filt_size = filt_size
-                self.padding = ( (int(1.*(filt_size-1)/2), int(np.ceil(1.*(filt_size-1)/2)) ), (int(1.*(filt_size-1)/2), int(np.ceil(1.*(filt_size-1)/2)) ) )
-                if(self.filt_size==1):
-                    self.a = np.array([1.,])
-                elif(self.filt_size==2):
-                    self.a = np.array([1., 1.])
-                elif(self.filt_size==3):
-                    self.a = np.array([1., 2., 1.])
-                elif(self.filt_size==4):
-                    self.a = np.array([1., 3., 3., 1.])
-                elif(self.filt_size==5):
-                    self.a = np.array([1., 4., 6., 4., 1.])
-                elif(self.filt_size==6):
-                    self.a = np.array([1., 5., 10., 10., 5., 1.])
-                elif(self.filt_size==7):
-                    self.a = np.array([1., 6., 15., 20., 15., 6., 1.])
-
-                super(BlurPool, self).__init__(**kwargs)
-
-            def compute_output_shape(self, input_shape):
-                height = input_shape[1] // self.strides[0]
-                width = input_shape[2] // self.strides[1]
-                channels = input_shape[3]
-                return (input_shape[0], height, width, channels)
-
-            def call(self, x):
-                k = self.a
-                k = k[:,None]*k[None,:]
-                k = k / np.sum(k)
-                k = np.tile (k[:,:,None,None], (1,1,K.int_shape(x)[-1],1) )
-                k = K.constant (k, dtype=K.floatx() )
-
-                x = K.spatial_2d_padding(x, padding=self.padding)
-                x = K.depthwise_conv2d(x, k, strides=self.strides, padding='valid')
-                return x
-
-        nnlib.BlurPool = BlurPool
-
-
         class Scale(KL.Layer):
             """
             GAN Custom Scal Layer
@@ -543,43 +484,6 @@ NLayerDiscriminator = nnlib.NLayerDiscriminator
                 base_config = super(Scale, self).get_config()
                 return dict(list(base_config.items()) + list(config.items()))
         nnlib.Scale = Scale
-
-        class SelfAttention(KL.Layer):
-            def __init__(self, nc, squeeze_factor=8, **kwargs):
-                assert nc//squeeze_factor > 0, f"Input channels must be >= {squeeze_factor}, recieved nc={nc}"
-
-                self.nc = nc
-                self.squeeze_factor = squeeze_factor
-                super(SelfAttention, self).__init__(**kwargs)
-
-            def compute_output_shape(self, input_shape):
-                return (input_shape[0], input_shape[1], input_shape[2], self.nc)
-
-            def call(self, inp):
-                x = inp
-                shape_x = x.get_shape().as_list()
-
-                f = Conv2D(self.nc//self.squeeze_factor, 1, kernel_regularizer=keras.regularizers.l2(1e-4))(x)
-                g = Conv2D(self.nc//self.squeeze_factor, 1, kernel_regularizer=keras.regularizers.l2(1e-4))(x)
-                h = Conv2D(self.nc, 1, kernel_regularizer=keras.regularizers.l2(1e-4))(x)
-
-                shape_f = f.get_shape().as_list()
-                shape_g = g.get_shape().as_list()
-                shape_h = h.get_shape().as_list()
-                flat_f = Reshape( (-1, shape_f[-1]) )(f)
-                flat_g = Reshape( (-1, shape_g[-1]) )(g)
-                flat_h = Reshape( (-1, shape_h[-1]) )(h)
-
-                s = Lambda(lambda x: K.batch_dot(x[0], keras.layers.Permute((2,1))(x[1]) ))([flat_g, flat_f])
-                beta = keras.layers.Softmax(axis=-1)(s)
-                o = Lambda(lambda x: K.batch_dot(x[0], x[1]))([beta, flat_h])
-
-                o = Reshape(shape_x[1:])(o)
-                o = Scale()(o)
-
-                out = Add()([o, inp])
-                return out
-        nnlib.SelfAttention = SelfAttention
 
         class Adam(keras.optimizers.Optimizer):
             """Adam optimizer.
@@ -688,9 +592,7 @@ NLayerDiscriminator = nnlib.NLayerDiscriminator
 
         def CAInitializerMP( conv_weights_list ):
             #Convolution Aware Initialization https://arxiv.org/abs/1702.06295            
-            data = [ (i, K.int_shape(conv_weights)) for i, conv_weights in enumerate(conv_weights_list) ]
-            data = sorted(data, key=lambda data: np.prod(data[1]) )
-            result = CAInitializerMPSubprocessor (data, K.floatx(), K.image_data_format() ).run()
+            result = CAInitializerMPSubprocessor ( [ (i, K.int_shape(conv_weights)) for i, conv_weights in enumerate(conv_weights_list) ], K.floatx(), K.image_data_format() ).run()
             for idx, weights in result:
                 K.set_value ( conv_weights_list[idx], weights )
         nnlib.CAInitializerMP = CAInitializerMP
@@ -794,7 +696,7 @@ NLayerDiscriminator = nnlib.NLayerDiscriminator
                     x = ReflectionPadding2D( self.pad ) (x)
                 return self.func(x)
         nnlib.Conv2D = Conv2D
-
+        
         class Conv2DTranspose():
             def __init__ (self, *args, **kwargs):
                 self.reflect_pad = False
@@ -814,89 +716,7 @@ NLayerDiscriminator = nnlib.NLayerDiscriminator
                     x = ReflectionPadding2D( self.pad ) (x)
                 return self.func(x)
         nnlib.Conv2DTranspose = Conv2DTranspose
-        
-        class EqualConv2D(KL.Conv2D):            
-            def __init__(self, filters,
-                        kernel_size,
-                        strides=(1, 1),
-                        padding='valid',
-                        data_format=None,
-                        dilation_rate=(1, 1),
-                        activation=None,
-                        use_bias=True,
-                        gain=np.sqrt(2),
-                        **kwargs):
-                super().__init__(
-                    filters=filters,
-                    kernel_size=kernel_size,
-                    strides=strides,
-                    padding=padding,
-                    data_format=data_format,
-                    dilation_rate=dilation_rate,
-                    activation=activation,
-                    use_bias=use_bias,
-                    kernel_initializer=keras.initializers.RandomNormal(mean=0.0, stddev=1.0),
-                    bias_initializer='zeros',
-                    kernel_regularizer=None,
-                    bias_regularizer=None,
-                    activity_regularizer=None,
-                    kernel_constraint=None,
-                    bias_constraint=None,
-                    **kwargs)
-                self.gain = gain
-                
-            def build(self, input_shape):
-                super().build(input_shape)
-                
-                self.wscale = self.gain / np.sqrt( np.prod( K.int_shape(self.kernel)[:-1]) )
-                self.wscale_t = K.constant (self.wscale, dtype=K.floatx() )
-       
-            def call(self, inputs):
-                k = self.kernel * self.wscale_t
-                
-                outputs = K.conv2d(
-                        inputs,
-                        k,
-                        strides=self.strides,
-                        padding=self.padding,
-                        data_format=self.data_format,
-                        dilation_rate=self.dilation_rate)
 
-                if self.use_bias:
-                    outputs = K.bias_add(
-                        outputs,
-                        self.bias,
-                        data_format=self.data_format)
-
-                if self.activation is not None:
-                    return self.activation(outputs)
-                return outputs
-        nnlib.EqualConv2D = EqualConv2D
-        
-        class PixelNormalization(KL.Layer):
-            # initialize the layer
-            def __init__(self, **kwargs):
-                super(PixelNormalization, self).__init__(**kwargs)
-        
-            # perform the operation
-            def call(self, inputs):
-                # calculate square pixel values
-                values = inputs**2.0
-                # calculate the mean pixel values
-                mean_values = K.mean(values, axis=-1, keepdims=True)
-                # ensure the mean is not zero
-                mean_values += 1.0e-8
-                # calculate the sqrt of the mean squared value (L2 norm)
-                l2 = K.sqrt(mean_values)
-                # normalize values by the l2 norm
-                normalized = inputs / l2
-                return normalized
-        
-            # define the output shape of the layer
-            def compute_output_shape(self, input_shape):
-                return input_shape                
-        nnlib.PixelNormalization = PixelNormalization
-        
     @staticmethod
     def import_keras_contrib(device_config):
         if nnlib.keras_contrib is not None:
@@ -1180,6 +1000,7 @@ class CAInitializerMPSubprocessor(Subprocessor):
 
     #override
     def __init__(self, idx_shapes_list, floatx, data_format ):
+
         self.idx_shapes_list = idx_shapes_list
         self.floatx = floatx
         self.data_format = data_format

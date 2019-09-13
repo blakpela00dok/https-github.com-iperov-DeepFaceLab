@@ -33,7 +33,6 @@ class InteractBase(object):
         self.key_events = {}
         self.pg_bar = None
         self.focus_wnd_name = None
-        self.error_log_line_prefix = '/!\\ '
 
     def is_support_windows(self):
         return False
@@ -66,14 +65,10 @@ class InteractBase(object):
         raise NotImplemented
 
     def log_info(self, msg, end='\n'):
-        if self.pg_bar is not None:
-            print ("\n")
         print (msg, end=end)
 
     def log_err(self, msg, end='\n'):
-        if self.pg_bar is not None:
-            print ("\n")
-        print (f'{self.error_log_line_prefix}{msg}', end=end)
+        print (msg, end=end)
 
     def named_window(self, wnd_name):
         if wnd_name not in self.named_windows:
@@ -137,9 +132,9 @@ class InteractBase(object):
             else: print("capture_keys: already set for window ", wnd_name)
         else: print("capture_keys: named_window ", wnd_name, " not found.")
 
-    def progress_bar(self, desc, total, leave=True, initial=0):
+    def progress_bar(self, desc, total, leave=True):
         if self.pg_bar is None:
-            self.pg_bar = tqdm( total=total, desc=desc, leave=leave, ascii=True, initial=initial )
+            self.pg_bar = tqdm( total=total, desc=desc, leave=leave, ascii=True )
         else: print("progress_bar: already set.")
 
     def progress_bar_inc(self, c):
@@ -154,12 +149,9 @@ class InteractBase(object):
             self.pg_bar = None
         else: print("progress_bar not set.")
 
-    def progress_bar_generator(self, data, desc, leave=True, initial=0):
-        self.pg_bar = tqdm( data, desc=desc, leave=leave, ascii=True, initial=initial )
-        for x in self.pg_bar:
+    def progress_bar_generator(self, data, desc, leave=True):
+        for x in tqdm( data, desc=desc, leave=leave, ascii=True ):
             yield x
-        self.pg_bar.close()
-        self.pg_bar = None
 
     def process_messages(self, sleep_time=0):
         self.on_process_messages(sleep_time)
@@ -252,15 +244,9 @@ class InteractBase(object):
                     print (help_message)
                     continue
 
-                if valid_list is not None:
-                    if inp.lower() in valid_list:
-                        return inp.lower()
-                    if inp in valid_list:
-                        return inp
+                if (valid_list is not None) and (inp.lower() not in valid_list):
                     return default_value
-
                 return inp
-
             except:
                 print (default_value)
                 return default_value

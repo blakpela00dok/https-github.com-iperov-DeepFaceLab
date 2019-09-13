@@ -291,7 +291,7 @@ def nms(boxes, threshold, method):
         w = np.maximum(0.0, xx2-xx1+1)
         h = np.maximum(0.0, yy2-yy1+1)
         inter = w * h
-        if method == 'Min':
+        if method is 'Min':
             o = inter / np.minimum(area[i], area[idx])
         else:
             o = inter / (area[i] + area[idx] - inter)
