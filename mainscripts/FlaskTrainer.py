@@ -285,20 +285,13 @@ def create_preview_pane_image(previews, selected_preview, loss_history,
 
 
 def flask_thread(s2c, c2s, s2flask, args):
-    # config = {
-    #     "DEBUG": True,          # some Flask specific configs
-    #     "CACHE_TYPE": "simple", # Flask-Caching related configs
-    #     "CACHE_DEFAULT_TIMEOUT": 300
-    # }
     app = Flask(__name__)
-    # app.config.from_mapping(config)
-    # cache = Cache(app)
     template = """<html>
 <head>
     <title>Flask Server Demonstration</title>
 </head>
 <body>
-<h1>Video Streaming Demonstration</h1>
+<h1>Flask Server Demonstration</h1>
 <form action="/" method="post">
     <button name="save" value="save">Save</button>
     <button name="exit" value="exit">Exit</button>
