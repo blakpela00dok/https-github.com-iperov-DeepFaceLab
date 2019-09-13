@@ -245,8 +245,9 @@ def scale_previews(previews, zoom=Zoom.ZOOM_100):
 
 def create_preview_pane_image(previews, selected_preview, loss_history,
                               show_last_history_iters_count, iteration, batch_size, zoom=Zoom.ZOOM_100):
-    selected_preview_name = previews[selected_preview][0]
-    selected_preview_rgb = previews[selected_preview][1]
+    scaled_previews = scale_previews(previews, zoom)
+    selected_preview_name = scaled_previews[selected_preview][0]
+    selected_preview_rgb = scaled_previews[selected_preview][1]
     h, w, c = selected_preview_rgb.shape
 
     # HEAD
@@ -333,7 +334,6 @@ def main(args, device_args):
                     iteration = input['iter'] if 'iter' in input.keys() else 0
                     #batch_size = input['batch_size'] if 'iter' in input.keys() else 1
                     if previews is not None:
-                        previews = scale_previews(previews, zoom)
                         update_preview = True
                 elif op == 'close':
                     break
