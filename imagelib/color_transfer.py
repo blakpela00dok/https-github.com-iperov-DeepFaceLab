@@ -6,6 +6,8 @@ import numpy as np
 import scipy as sp
 import scipy.sparse
 from scipy.sparse.linalg import spsolve
+from scipy.stats import special_ortho_group
+
 
 class ColorTransferMode(IntEnum):
     NONE = 0
@@ -144,6 +146,19 @@ def seamless_clone(source, target, mask):
 
     return np.clip( np.dstack(result), 0, 1 )
 
+
+def random_color_transform(image, seed=None):
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
+    M = special_ortho_group.rvs(3, 1, seed)
+    image = image.dot(M)
+    l, a, b = cv2.split(image)
+    l = np.clip(l, 0, 100)
+    a = np.clip(a, 0, 100)
+    b = np.clip(b, 0, 100)
+    image = cv2.merge([l, a, b])
+    image = cv2.cvtColor(image, cv2.COLOR_LAB2BGR)
+    np.clip(image, 0, 1, out=image)
+    return image
 
 def reinhard_color_transfer(source, target, clip=False, preserve_paper=False, source_mask=None, target_mask=None):
     """

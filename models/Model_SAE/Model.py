@@ -142,6 +142,11 @@ class SAEModel(ModelBase):
                              "but the training time may be longer, due to the src faceset is becoming more diverse."),
                 ColorTransferMode.NONE, ColorTransferMode.MASKED_RCT_PAPER_CLIP)
 
+            default_random_color_change = False if is_first_run else self.options.get('random_color_change', False)
+            self.options['random_color_change'] = io.input_bool(
+                "Enable random color change? (y/n, ?:help skip:%s) : " % (yn_str[default_random_color_change]), default_random_color_change,
+                help_message="")
+
             if nnlib.device.backend != 'plaidML': # todo https://github.com/plaidml/plaidml/issues/301
                 default_clipgrad = False if is_first_run else self.options.get('clipgrad', False)
                 self.options['clipgrad'] = io.input_bool(
@@ -464,6 +469,8 @@ class SAEModel(ModelBase):
 
             global t_mode_bgr
             t_mode_bgr = t.MODE_BGR if not self.pretrain else t.MODE_BGR_SHUFFLE
+            if self.options['random_color_change']:
+                t_mode_bgr = t.MODE_LAB_RAND_TRANSFORM
 
             global training_data_src_path
             training_data_src_path = self.training_data_src_path

@@ -6,7 +6,7 @@ import numpy as np
 
 import imagelib
 from facelib import FaceType, LandmarksProcessor
-from imagelib.color_transfer import ColorTransferMode
+from imagelib.color_transfer import ColorTransferMode, random_color_transform
 
 """
 output_sample_types = [
@@ -72,6 +72,7 @@ class SampleProcessor(object):
         MODE_GGG                   = 42  #3xGrayscale
         MODE_M                     = 43  #mask only
         MODE_BGR_SHUFFLE           = 44  #BGR shuffle
+        MODE_LAB_RAND_TRANSFORM    = 45  #Random transform in LAB space
         MODE_END = 50
 
     class Options(object):
@@ -281,6 +282,9 @@ class SampleProcessor(object):
                 elif mode_type == SPTF.MODE_BGR_SHUFFLE:
                     rnd_state = np.random.RandomState (sample_rnd_seed)
                     img = np.take (img_bgr, rnd_state.permutation(img_bgr.shape[-1]), axis=-1)
+                elif mode_type == SPTF.MODE_LAB_RAND_TRANSFORM:
+                    rnd_state = np.random.RandomState (sample_rnd_seed)
+                    img = random_color_transform(img_bgr, rnd_state)
                 elif mode_type == SPTF.MODE_G:
                     img = np.concatenate ( (np.expand_dims(cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY),-1),img_mask) , -1 )
                 elif mode_type == SPTF.MODE_GGG:
