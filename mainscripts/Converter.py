@@ -116,13 +116,13 @@ class ConvertSubprocessor(Subprocessor):
                 return fanseg.extract(*args, **kwargs)
 
             self.fanseg_extract_func = fanseg_extract
-            
+
             import ebsynth
-            def ebs_ct(*args, **kwargs):                    
+            def ebs_ct(*args, **kwargs):
                 return ebsynth.color_transfer(*args, **kwargs)
-                
+
             self.ebs_ct_func = ebs_ct
-            
+
             return None
 
         #override
@@ -168,7 +168,7 @@ class ConvertSubprocessor(Subprocessor):
                             raise Exception( 'Error while converting file [%s]: %s' % (filename, e_str) )
 
                 elif cfg.type == ConverterConfig.TYPE_FACE_AVATAR:
-                    final_img = ConvertFaceAvatar (self.predictor_func, self.predictor_input_shape, 
+                    final_img = ConvertFaceAvatar (self.predictor_func, self.predictor_input_shape,
                                                    cfg, pf.prev_temporal_frame_infos,
                                                         pf.frame_info,
                                                         pf.next_temporal_frame_infos )
@@ -266,7 +266,7 @@ class ConvertSubprocessor(Subprocessor):
                 if self.model_iter != s_model_iter or \
                     len(self.frames_idxs) == 0:
                     #rewind to begin if model is more trained or all frames are done
-                   
+
                     while len(self.frames_done_idxs) > 0:
                         prev_frame = self.frames[self.frames_done_idxs.pop()]
                         self.frames_idxs.insert(0, prev_frame.idx)
@@ -482,6 +482,9 @@ class ConvertSubprocessor(Subprocessor):
                             self.screen_manager.get_current().diff_scale(-0.1)
                         elif chr_key == '=':
                             self.screen_manager.get_current().diff_scale(0.1)
+                        elif chr_key == '\\':
+                            self.main_screen.toggle_checkerboard()
+                            self.main_screen.show(True)
 
 
         if go_prev_frame:
@@ -557,7 +560,7 @@ class ConvertSubprocessor(Subprocessor):
         for i in range ( min(len(self.frames_idxs), self.prefetch_frame_count) ):
             frame = self.frames[ self.frames_idxs[i] ]
 
-            if not frame.is_done and not frame.is_processing and frame.cfg is not None:                
+            if not frame.is_done and not frame.is_processing and frame.cfg is not None:
                 frame.is_processing = True
                 return ConvertSubprocessor.ProcessingFrame(idx=frame.idx,
                                                            cfg=frame.cfg.copy(),
@@ -599,7 +602,7 @@ def main (args, device_args):
 
         import models
         model = models.import_model( args['model_name'] )(model_path, device_args=device_args)
-        converter_session_filepath = model.get_strpath_storage_for_file('converter_session.dat')        
+        converter_session_filepath = model.get_strpath_storage_for_file('converter_session.dat')
         predictor_func, predictor_input_shape, cfg = model.get_ConverterConfig()
 
         if not is_interactive:
@@ -726,8 +729,8 @@ def main (args, device_args):
                         is_interactive         = is_interactive,
                         converter_session_filepath = converter_session_filepath,
                         predictor_func         = predictor_func,
-                        predictor_input_shape  = predictor_input_shape,                      
-                        converter_config       = cfg,                        
+                        predictor_input_shape  = predictor_input_shape,
+                        converter_config       = cfg,
                         frames                 = frames,
                         output_path            = output_path,
                         model_iter             = model.get_iter()
