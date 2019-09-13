@@ -469,7 +469,7 @@ class SAEModel(ModelBase):
             face_type = t.FACE_TYPE_FULL if self.options['face_type'] == 'f' else t.FACE_TYPE_HALF
 
             global t_mode_bgr
-            t_mode_bgr = t.MODE_BGR if not self.pretrain else t.MODE_BGR_SHUFFLE
+            t_mode_bgr = t.MODE_BGR if not self.pretrain else t.MODE_LAB_RAND_TRANSFORM
             if self.options['random_color_change']:
                 t_mode_bgr = t.MODE_LAB_RAND_TRANSFORM
 
