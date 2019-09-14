@@ -1,21 +1,19 @@
-﻿import sys
-import traceback
+﻿import traceback
 import queue
 import threading
 import time
 from enum import Enum
-from os.path import getmtime
 
 import numpy as np
 import itertools
 from pathlib import Path
-from utils import Path_utils
+
+from flaskr.app import create_flask_app
 import imagelib
 import cv2
 import models
 from interact import interact as io
-from flask import Flask, send_file, Response, render_template, render_template_string, request, g
-# from flask_socketio import SocketIO
+
 
 def trainerThread (s2c, c2s, e, args, device_args):
     while True:
@@ -284,90 +282,9 @@ def create_preview_pane_image(previews, selected_preview, loss_history,
     return (final*255).astype(np.uint8)
 
 
-def create_flask_app(s2c, c2s, s2flask, args):
-    app = Flask(__name__)
-    template = """<html>
-<head>
-    <title>Flask Server Demonstration</title>
-</head>
-<body>
-<h1>Flask Server Demonstration</h1>
-<form action="/" method="post">
-    <button name="save" value="save">Save</button>
-    <button name="exit" value="exit">Exit</button>
-    <button name="update" value="update">Update</button>
-    <button name="next_preview" value="next_preview">Next preview</button>
-    <button name="change_history_range" value="change_history_range">Change History Range</button>
-</form>
-<img src="{{ url_for('preview_image') }}">
-</body>
-</html>"""
-
-    def gen():
-        model_path = Path(args.get('model_path', ''))
-        print('[MainThread]', 'model_path:', model_path)
-        filename = 'preview.jpg'
-        preview_file = str(model_path / filename)
-        print('[MainThread]', 'preview_file:', preview_file)
-        frame = open(preview_file, 'rb').read()
-        while True:
-            try:
-                frame = open(preview_file, 'rb').read()
-            except:
-                pass
-            yield b'--frame\r\nContent-Type: image/jpeg\r\n\r\n'
-            yield frame
-            yield b'\r\n\r\n'
-
-    def send(queue, op):
-        queue.put({'op': op})
-
-    def send_and_wait(queue, op):
-        while not s2flask.empty():
-            s2flask.get()
-        queue.put({'op': op})
-        while s2flask.empty():
-            pass
-        s2flask.get()
-
-    @app.route('/', methods=['GET', 'POST'])
-    def index():
-        if request.method == 'POST':
-            if 'save' in request.form:
-                send(s2c, 'save')
-                return '', 204
-            elif 'exit' in request.form:
-                send(c2s, 'close')
-                request.environ.get('werkzeug.server.shutdown')()
-                return '', 204
-            elif 'update' in request.form:
-                send_and_wait(c2s, 'update')
-            elif 'next_preview' in request.form:
-                send_and_wait(c2s, 'next_preview')
-            elif 'change_history_range' in request.form:
-                send_and_wait(c2s, 'change_history_range')
-            # return '', 204
-        return render_template_string(template)
-
-    # @app.route('/preview_image')
-    # def preview_image():
-    #     return Response(gen(), mimetype='multipart/x-mixed-replace;boundary=frame')
-
-    @app.route('/preview_image')
-    def preview_image():
-        model_path = Path(args.get('model_path', ''))
-        filename = 'preview.jpg'
-        preview_file = str(model_path / filename)
-        return send_file(preview_file, mimetype='image/jpeg', cache_timeout=-1)
-
-    return app
-
-
 def main(args, device_args):
     io.log_info ("Running trainer.\r\n")
-
     no_preview = args.get('no_preview', False)
-
 
     s2c = queue.Queue()
     c2s = queue.Queue()
@@ -457,6 +374,3 @@ def main(args, device_args):
             io.process_messages(0.01)
         except KeyboardInterrupt:
             s2c.put({'op': 'close'})
-
-
-

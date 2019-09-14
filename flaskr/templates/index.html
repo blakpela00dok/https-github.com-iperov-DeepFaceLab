@@ -1,0 +1,15 @@
+<head>
+    <title>Flask Server Demonstration</title>
+</head>
+<body>
+<h1>Flask Server Demonstration</h1>
+<form action="/" method="post">
+    <button name="save" value="save">Save</button>
+    <button name="exit" value="exit">Exit</button>
+    <button name="update" value="update">Update</button>
+    <button name="next_preview" value="next_preview">Next preview</button>
+    <button name="change_history_range" value="change_history_range">Change History Range</button>
+</form>
+<img src="{{ url_for('preview_image') }}">
+</body>
+</html>
