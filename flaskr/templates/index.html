@@ -1,43 +1,40 @@
 <head>
-<!--    <link rel="stylesheet"-->
-<!--          href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"-->
-<!--          integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"-->
-<!--          crossorigin="anonymous">-->
-    <script src="https://code.jquery.com/jquery-3.4.1.min.js"
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"
             integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
             crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js"
             integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I="
             crossorigin="anonymous"></script>
     <title>Flask Server Demonstration</title>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
     <script type="text/javascript">
-        $(function() {
-          $('button#save').click(function() {
-            $.post("{{ url_for('save') }}");
-          });
-
-          $('button#exit').click(function() {
-            $.post("{{ url_for('exit') }}");
-          });
-
-          $('button#update').click(function() {
-            $.post("{{ url_for('update') }}");
-          });
-
-          $('button#next_preview').click(function() {
-            $.post("{{ url_for('next_preview') }}");
-          });
-
-          $('button#change_history_range').click(function() {
-            $.post("{{ url_for('change_history_range') }}");
-          });
-
-          const socket = io.connect('http://' + document.domain + ':' + location.port);
-          socket.on('preview', function(msg) {
-            console.log(new Date(), '- new preview -', msg);
-            $('img#preview').attr("src", "{{ url_for('preview_image') }}?q=" + new Date().getTime());
-          });
+      $(function() {
+        $('button#save').click(function() {
+          $.post("{{ url_for('save') }}");
         });
+
+        $('button#exit').click(function() {
+          $.post("{{ url_for('exit') }}");
+        });
+
+        $('button#update').click(function() {
+          $.post("{{ url_for('update') }}");
+        });
+
+        $('button#next_preview').click(function() {
+          $.post("{{ url_for('next_preview') }}");
+        });
+
+        $('button#change_history_range').click(function() {
+          $.post("{{ url_for('change_history_range') }}");
+        });
+
+        const socket = io.connect('http://' + document.domain + ':' + location.port);
+        socket.on('preview', function(msg) {
+          console.log(new Date(), '- new preview -', msg);
+          $('img#preview').attr("src", "{{ url_for('preview_image') }}?q=" + new Date().getTime());
+        });
+      });
     </script>
 </head>
 <body>
