@@ -1,10 +1,11 @@
 from pathlib import Path
+
 from flask import Flask, send_file, Response, render_template, render_template_string, request, g
-# from flask_socketio import SocketIO
+from flask_socketio import SocketIO, emit
 
 
 def create_flask_app(s2c, c2s, s2flask, args):
-    app = Flask(__name__, template_folder="templates")
+    app = Flask(__name__, template_folder="templates", static_folder="static")
     model_path = Path(args.get('model_path', ''))
     filename = 'preview.jpg'
     preview_file = str(model_path / filename)
@@ -42,16 +43,23 @@ def create_flask_app(s2c, c2s, s2flask, args):
         request.environ.get('werkzeug.server.shutdown')()
         return '', 204
 
-    @app.route('/', methods=['GET', 'POST'])
+    @app.route('/update', methods=['POST'])
+    def update():
+        send(c2s, 'update')
+        return '', 204
+
+    @app.route('/next_preview', methods=['POST'])
+    def next_preview():
+        send(c2s, 'next_preview')
+        return '', 204
+
+    @app.route('/change_history_range', methods=['POST'])
+    def change_history_range():
+        send(c2s, 'change_history_range')
+        return '', 204
+
+    @app.route('/')
     def index():
-        if request.method == 'POST':
-            if 'update' in request.form:
-                send_and_wait(c2s, 'update')
-            elif 'next_preview' in request.form:
-                send_and_wait(c2s, 'next_preview')
-            elif 'change_history_range' in request.form:
-                send_and_wait(c2s, 'change_history_range')
-            # return '', 204
         return render_template('index.html')
 
     # @app.route('/preview_image')
@@ -62,7 +70,17 @@ def create_flask_app(s2c, c2s, s2flask, args):
     def preview_image():
         return send_file(preview_file, mimetype='image/jpeg', cache_timeout=-1)
 
-    return app
+    socketio = SocketIO(app)
+
+    @socketio.on('connect', namespace='/')
+    def test_connect():
+        emit('my response', {'data': 'Connected'})
+
+    @socketio.on('disconnect', namespace='/test')
+    def test_disconnect():
+        print('Client disconnected')
+
+    return socketio, app
 
 
 
