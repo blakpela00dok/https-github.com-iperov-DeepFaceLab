@@ -296,8 +296,8 @@ def main(args, device_args):
 
     e.wait() #Wait for inital load to occur.
 
-    flask_app = create_flask_app(s2c, c2s, s2flask, args)
-    flask_t = threading.Thread(target=flask_app.run, kwargs={'debug': True, 'use_reloader': False})
+    socketio, flask_app = create_flask_app(s2c, c2s, s2flask, args)
+    flask_t = threading.Thread(target=socketio.run, args=(flask_app,), kwargs={'debug': True, 'use_reloader': False})
     flask_t.start()
 
     wnd_name = "Training preview"
@@ -366,7 +366,7 @@ def main(args, device_args):
             preview_file = str(model_path / filename)
             cv2.imwrite(preview_file, preview_pane_image)
             s2flask.put({'op': 'show'})
-            # socketio.emit('some event', {'data': 42})
+            socketio.emit('preview', {})
 
             # cv2.imshow(wnd_name, preview_pane_image)
             is_showing = True

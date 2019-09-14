@@ -6,40 +6,49 @@
     <script src="https://code.jquery.com/jquery-3.4.1.min.js"
             integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
             crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js"
+            integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I="
+            crossorigin="anonymous"></script>
     <title>Flask Server Demonstration</title>
     <script type="text/javascript">
         $(function() {
           $('button#save').click(function() {
-            $.post('/save');
+            $.post("{{ url_for('save') }}");
           });
 
           $('button#exit').click(function() {
-            $.post('/exit');
+            $.post("{{ url_for('exit') }}");
           });
 
-          // $('button#update').click(function() {
-          //   $.post('/update');
-          // });
-          //
-          // $('button#next_preview').click(function() {
-          //   $.post('/next_preview');
-          // });
-          //
-          // $('button#change_history_range').click(function() {
-          //   $.post('/change_history_range');
-          // });
+          $('button#update').click(function() {
+            $.post("{{ url_for('update') }}");
+          });
+
+          $('button#next_preview').click(function() {
+            $.post("{{ url_for('next_preview') }}");
+          });
+
+          $('button#change_history_range').click(function() {
+            $.post("{{ url_for('change_history_range') }}");
+          });
+
+          const socket = io.connect('127.0.0.1:5000');
+          socket.on('preview', function() {
+            console.log('new preview!');
+            $('img#preview').src = "{{ url_for('preview_image') }}?random="+new Date().getTime();
+          });
         });
     </script>
 </head>
 <body>
 <h1>Flask Server Demonstration</h1>
-<form action="/" method="post">
+<div>
     <button class='btn btn-default' id='save'>Save</button>
     <button class='btn btn-default' id='exit'>Exit</button>
-    <button class='btn btn-default' id='update' name="update" value="update">Update</button>
-    <button class='btn btn-default' id='next_preview' name="next_preview" value="next_preview">Next preview</button>
-    <button class='btn btn-default' id='change_history_range' name="change_history_range" value="change_history_range">Change History Range</button>
-</form>
-<img src="{{ url_for('preview_image') }}">
+    <button class='btn btn-default' id='update'>Update</button>
+    <button class='btn btn-default' id='next_preview'>Next preview</button>
+    <button class='btn btn-default' id='change_history_range'>Change History Range</button>
+</div>
+<img id='preview' src="{{ url_for('preview_image') }}">
 </body>
 </html>
