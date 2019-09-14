@@ -31,17 +31,21 @@ def create_flask_app(s2c, c2s, s2flask, args):
             pass
         s2flask.get()
 
+    @app.route('/save', methods=['POST'])
+    def save():
+        send(s2c, 'save')
+        return '', 204
+
+    @app.route('/exit', methods=['POST'])
+    def exit():
+        send(c2s, 'close')
+        request.environ.get('werkzeug.server.shutdown')()
+        return '', 204
+
     @app.route('/', methods=['GET', 'POST'])
     def index():
         if request.method == 'POST':
-            if 'save' in request.form:
-                send(s2c, 'save')
-                return '', 204
-            elif 'exit' in request.form:
-                send(c2s, 'close')
-                request.environ.get('werkzeug.server.shutdown')()
-                return '', 204
-            elif 'update' in request.form:
+            if 'update' in request.form:
                 send_and_wait(c2s, 'update')
             elif 'next_preview' in request.form:
                 send_and_wait(c2s, 'next_preview')
