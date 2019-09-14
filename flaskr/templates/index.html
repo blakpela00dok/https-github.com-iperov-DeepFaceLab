@@ -34,11 +34,16 @@
           console.log(new Date(), '- new preview -', msg);
           $('img#preview').attr("src", "{{ url_for('preview_image') }}?q=" + new Date().getTime());
         });
+
+        socket.on('loss', function(loss_string) {
+          console.log(new Date(), '- loss string -', loss_string);
+          $('h1#loss').html(loss_string);
+        });
       });
     </script>
 </head>
 <body>
-<h1>Flask Server Demonstration</h1>
+<h1 id="loss"></h1>
 <div>
     <button class='btn btn-default' id='save'>Save</button>
     <button class='btn btn-default' id='exit'>Exit</button>

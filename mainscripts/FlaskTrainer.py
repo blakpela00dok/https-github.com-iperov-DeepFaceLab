@@ -15,7 +15,7 @@ import models
 from interact import interact as io
 
 
-def trainerThread (s2c, c2s, e, args, device_args):
+def trainerThread (s2c, c2s, e, args, device_args, socketio=None):
     while True:
         try:
             start_time = time.time()
@@ -137,6 +137,9 @@ def trainerThread (s2c, c2s, e, args, device_args):
                                 io.log_info ('\r' + loss_string, end='')
                             else:
                                 io.log_info (loss_string, end='\r')
+
+                        if socketio is not None:
+                            socketio.emit('loss', loss_string)
 
                         if model.get_target_iter() != 0 and model.is_reached_iter_goal():
                             io.log_info ('Reached target iteration.')
@@ -289,14 +292,14 @@ def main(args, device_args):
     s2c = queue.Queue()
     c2s = queue.Queue()
     s2flask = queue.Queue()
+    socketio, flask_app = create_flask_app(s2c, c2s, s2flask, args)
 
     e = threading.Event()
-    thread = threading.Thread(target=trainerThread, args=(s2c, c2s, e, args, device_args) )
+    thread = threading.Thread(target=trainerThread, args=(s2c, c2s, e, args, device_args, socketio))
     thread.start()
 
     e.wait() #Wait for inital load to occur.
 
-    socketio, flask_app = create_flask_app(s2c, c2s, s2flask, args)
     flask_t = threading.Thread(target=socketio.run, args=(flask_app,), kwargs={'debug': True, 'use_reloader': False})
     flask_t.start()
 

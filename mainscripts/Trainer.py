@@ -285,6 +285,7 @@ def main(args, device_args):
     io.log_info ("Running trainer.\r\n")
 
     no_preview = args.get('no_preview', False)
+    flask_preview = args.get('flask_preview', False)
 
 
     s2c = queue.Queue()
