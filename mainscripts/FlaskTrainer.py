@@ -319,34 +319,33 @@ def create_flask_app(s2c, c2s, s2flask, args):
             yield frame
             yield b'\r\n\r\n'
 
+    def send(queue, op):
+        queue.put({'op': op})
+
+    def send_and_wait(queue, op):
+        while not s2flask.empty():
+            s2flask.get()
+        queue.put({'op': op})
+        while s2flask.empty():
+            pass
+        s2flask.get()
+
     @app.route('/', methods=['GET', 'POST'])
     def index():
         if request.method == 'POST':
             if 'save' in request.form:
-                s2c.put({'op': 'save'})
+                send(s2c, 'save')
+                return '', 204
             elif 'exit' in request.form:
-                s2c.put({'op': 'close'})
+                send(c2s, 'close')
+                request.environ.get('werkzeug.server.shutdown')()
+                return '', 204
             elif 'update' in request.form:
-                while not s2flask.empty():
-                    input = s2flask.get()
-                c2s.put({'op': 'update'})
-                while s2flask.empty():
-                    pass
-                input = s2flask.get()
+                send_and_wait(c2s, 'update')
             elif 'next_preview' in request.form:
-                while not s2flask.empty():
-                    input = s2flask.get()
-                c2s.put({'op': 'next_preview'})
-                while s2flask.empty():
-                    pass
-                input = s2flask.get()
+                send_and_wait(c2s, 'next_preview')
             elif 'change_history_range' in request.form:
-                while not s2flask.empty():
-                    input = s2flask.get()
-                c2s.put({'op': 'change_history_range'})
-                while s2flask.empty():
-                    pass
-                input = s2flask.get()
+                send_and_wait(c2s, 'change_history_range')
             # return '', 204
         return render_template_string(template)
 
@@ -430,6 +429,9 @@ def main(args, device_args):
                 elif show_last_history_iters_count == 100000:
                     show_last_history_iters_count = 0
                 update_preview = True
+            elif op == 'close':
+                s2c.put({'op': 'close'})
+                break
 
         if update_preview:
             update_preview = False
@@ -455,8 +457,6 @@ def main(args, device_args):
             io.process_messages(0.01)
         except KeyboardInterrupt:
             s2c.put({'op': 'close'})
-
-        io.destroy_all_windows()
 
 
 
