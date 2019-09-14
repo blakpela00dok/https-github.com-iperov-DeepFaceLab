@@ -366,7 +366,7 @@ def main(args, device_args):
             preview_file = str(model_path / filename)
             cv2.imwrite(preview_file, preview_pane_image)
             s2flask.put({'op': 'show'})
-            socketio.emit('preview', {})
+            socketio.emit('preview', {'iter': iteration, 'loss': loss_history[-1]})
 
             # cv2.imshow(wnd_name, preview_pane_image)
             is_showing = True

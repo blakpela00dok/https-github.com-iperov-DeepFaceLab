@@ -32,9 +32,9 @@
             $.post("{{ url_for('change_history_range') }}");
           });
 
-          const socket = io.connect('127.0.0.1:5000');
-          socket.on('preview', function() {
-            console.log('new preview!');
+          const socket = io.connect('http://' + document.domain + ':' + location.port);
+          socket.on('preview', function(msg) {
+            console.log(new Date(), '- new preview -', msg);
             $('img#preview').attr("src", "{{ url_for('preview_image') }}?q=" + new Date().getTime());
           });
         });

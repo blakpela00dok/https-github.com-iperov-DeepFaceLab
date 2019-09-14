@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from flask import Flask, send_file, Response, render_template, render_template_string, request, g
-from flask_socketio import SocketIO
+from flask_socketio import SocketIO, emit
 
 
 def create_flask_app(s2c, c2s, s2flask, args):
@@ -71,9 +71,15 @@ def create_flask_app(s2c, c2s, s2flask, args):
         return send_file(preview_file, mimetype='image/jpeg', cache_timeout=-1)
 
     socketio = SocketIO(app)
-    @socketio.on('connect')
-    def connect():
-        pass
+
+    @socketio.on('connect', namespace='/')
+    def test_connect():
+        emit('my response', {'data': 'Connected'})
+
+    @socketio.on('disconnect', namespace='/test')
+    def test_disconnect():
+        print('Client disconnected')
+
     return socketio, app
 
 
