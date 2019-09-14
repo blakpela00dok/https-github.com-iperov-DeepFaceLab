@@ -35,7 +35,7 @@
           const socket = io.connect('127.0.0.1:5000');
           socket.on('preview', function() {
             console.log('new preview!');
-            $('img#preview').src = "{{ url_for('preview_image') }}?random="+new Date().getTime();
+            $('img#preview').attr("src", "{{ url_for('preview_image') }}?q=" + new Date().getTime());
           });
         });
     </script>
