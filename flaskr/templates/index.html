@@ -5,7 +5,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js"
             integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I="
             crossorigin="anonymous"></script>
-    <title>Flask Server Demonstration</title>
+    <title>Training Preview</title>
     <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
     <script type="text/javascript">
       $(function() {
@@ -37,13 +37,14 @@
 
         socket.on('loss', function(loss_string) {
           console.log(new Date(), '- loss string -', loss_string);
-          $('h1#loss').html(loss_string);
+          $('h2#loss').html(loss_string);
         });
       });
     </script>
 </head>
 <body>
-<h1 id="loss"></h1>
+<h1>Training Preview</h1>
+<h2 id="loss"></h2>
 <div>
     <button class='btn btn-default' id='save'>Save</button>
     <button class='btn btn-default' id='exit'>Exit</button>
