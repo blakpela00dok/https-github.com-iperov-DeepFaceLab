@@ -1,20 +1,21 @@
-﻿import sys
-import traceback
+﻿import traceback
 import queue
 import threading
 import time
 from enum import Enum
+import itertools
 
 import numpy as np
-import itertools
+
 from pathlib import Path
-from utils import Path_utils
+from flaskr.app import create_flask_app
 import imagelib
 import cv2
 import models
 from interact import interact as io
 
-def trainerThread (s2c, c2s, e, args, device_args):
+
+def trainer_thread (s2c, c2s, e, args, device_args, socketio=None):
     while True:
         try:
             start_time = time.time()
@@ -136,6 +137,9 @@ def trainerThread (s2c, c2s, e, args, device_args):
                                 io.log_info ('\r' + loss_string, end='')
                             else:
                                 io.log_info (loss_string, end='\r')
+
+                        if socketio is not None:
+                            socketio.emit('loss', loss_string)
 
                         if model.get_target_iter() != 0 and model.is_reached_iter_goal():
                             io.log_info ('Reached target iteration.')
@@ -287,28 +291,23 @@ def main(args, device_args):
     no_preview = args.get('no_preview', False)
     flask_preview = args.get('flask_preview', False)
 
-
     s2c = queue.Queue()
     c2s = queue.Queue()
-
     e = threading.Event()
-    thread = threading.Thread(target=trainerThread, args=(s2c, c2s, e, args, device_args) )
-    thread.start()
 
-    e.wait() #Wait for inital load to occur.
+    if flask_preview:
+        s2flask = queue.Queue()
+        socketio, flask_app = create_flask_app(s2c, c2s, s2flask, args)
 
-    if no_preview:
-        while True:
-            if not c2s.empty():
-                input = c2s.get()
-                op = input.get('op','')
-                if op == 'close':
-                    break
-            try:
-                io.process_messages(0.1)
-            except KeyboardInterrupt:
-                s2c.put ( {'op': 'close'} )
-    else:
+        e = threading.Event()
+        thread = threading.Thread(target=trainer_thread, args=(s2c, c2s, e, args, device_args, socketio))
+        thread.start()
+
+        e.wait() #Wait for inital load to occur.
+
+        flask_t = threading.Thread(target=socketio.run, args=(flask_app,), kwargs={'debug': True, 'use_reloader': False})
+        flask_t.start()
+
         wnd_name = "Training preview"
         io.named_window(wnd_name)
         io.capture_keys(wnd_name)
@@ -336,7 +335,27 @@ def main(args, device_args):
                     #batch_size = input['batch_size'] if 'iter' in input.keys() else 1
                     if previews is not None:
                         update_preview = True
+                elif op == 'update':
+                    if not is_waiting_preview:
+                        is_waiting_preview = True
+                    s2c.put({'op': 'preview'})
+                elif op == 'next_preview':
+                    selected_preview = (selected_preview + 1) % len(previews)
+                    update_preview = True
+                elif op == 'change_history_range':
+                    if show_last_history_iters_count == 0:
+                        show_last_history_iters_count = 5000
+                    elif show_last_history_iters_count == 5000:
+                        show_last_history_iters_count = 10000
+                    elif show_last_history_iters_count == 10000:
+                        show_last_history_iters_count = 50000
+                    elif show_last_history_iters_count == 50000:
+                        show_last_history_iters_count = 100000
+                    elif show_last_history_iters_count == 100000:
+                        show_last_history_iters_count = 0
+                    update_preview = True
                 elif op == 'close':
+                    s2c.put({'op': 'close'})
                     break
 
             if update_preview:
@@ -349,44 +368,114 @@ def main(args, device_args):
                                                                iteration,
                                                                batch_size,
                                                                zoom)
-                io.show_image(wnd_name, preview_pane_image)
+                # io.show_image(wnd_name, preview_pane_image)
+                model_path = Path(args.get('model_path', ''))
+                filename = 'preview.jpg'
+                preview_file = str(model_path / filename)
+                cv2.imwrite(preview_file, preview_pane_image)
+                s2flask.put({'op': 'show'})
+                socketio.emit('preview', {'iter': iteration, 'loss': loss_history[-1]})
                 is_showing = True
-
-            key_events = io.get_key_events(wnd_name)
-            key, chr_key, ctrl_pressed, alt_pressed, shift_pressed = key_events[-1] if len(key_events) > 0 else (0,0,False,False,False)
-
-            if key == ord('\n') or key == ord('\r'):
-                s2c.put ( {'op': 'close'} )
-            elif key == ord('s'):
-                s2c.put ( {'op': 'save'} )
-            elif key == ord('p'):
-                if not is_waiting_preview:
-                    is_waiting_preview = True
-                    s2c.put ( {'op': 'preview'} )
-            elif key == ord('l'):
-                if show_last_history_iters_count == 0:
-                    show_last_history_iters_count = 5000
-                elif show_last_history_iters_count == 5000:
-                    show_last_history_iters_count = 10000
-                elif show_last_history_iters_count == 10000:
-                    show_last_history_iters_count = 50000
-                elif show_last_history_iters_count == 50000:
-                    show_last_history_iters_count = 100000
-                elif show_last_history_iters_count == 100000:
-                    show_last_history_iters_count = 0
-                update_preview = True
-            elif key == ord(' '):
-                selected_preview = (selected_preview + 1) % len(previews)
-                update_preview = True
-            elif key == ord('-'):
-                zoom = zoom.prev()
-                update_preview = True
-            elif key == ord('=') or key == ord('+'):
-                zoom = zoom.next()
-                update_preview = True
             try:
-                io.process_messages(0.1)
+                io.process_messages(0.01)
             except KeyboardInterrupt:
-                s2c.put ( {'op': 'close'} )
+                s2c.put({'op': 'close'})
+    else:
+        thread = threading.Thread(target=trainer_thread, args=(s2c, c2s, e, args, device_args))
+        thread.start()
 
-        io.destroy_all_windows()
+        e.wait() #Wait for inital load to occur.
+
+        if no_preview:
+            while True:
+                if not c2s.empty():
+                    input = c2s.get()
+                    op = input.get('op','')
+                    if op == 'close':
+                        break
+                try:
+                    io.process_messages(0.1)
+                except KeyboardInterrupt:
+                    s2c.put ( {'op': 'close'} )
+        else:
+            wnd_name = "Training preview"
+            io.named_window(wnd_name)
+            io.capture_keys(wnd_name)
+
+            previews = None
+            loss_history = None
+            selected_preview = 0
+            update_preview = False
+            is_showing = False
+            is_waiting_preview = False
+            show_last_history_iters_count = 0
+            iteration = 0
+            batch_size = 1
+            zoom = Zoom.ZOOM_100
+
+            while True:
+                if not c2s.empty():
+                    input = c2s.get()
+                    op = input['op']
+                    if op == 'show':
+                        is_waiting_preview = False
+                        loss_history = input['loss_history'] if 'loss_history' in input.keys() else None
+                        previews = input['previews'] if 'previews' in input.keys() else None
+                        iteration = input['iter'] if 'iter' in input.keys() else 0
+                        #batch_size = input['batch_size'] if 'iter' in input.keys() else 1
+                        if previews is not None:
+                            update_preview = True
+                    elif op == 'close':
+                        break
+
+                if update_preview:
+                    update_preview = False
+                    selected_preview = selected_preview % len(previews)
+                    preview_pane_image = create_preview_pane_image(previews,
+                                                                   selected_preview,
+                                                                   loss_history,
+                                                                   show_last_history_iters_count,
+                                                                   iteration,
+                                                                   batch_size,
+                                                                   zoom)
+                    io.show_image(wnd_name, preview_pane_image)
+                    is_showing = True
+
+                key_events = io.get_key_events(wnd_name)
+                key, chr_key, ctrl_pressed, alt_pressed, shift_pressed = key_events[-1] if len(key_events) > 0 else (0,0,False,False,False)
+
+                if key == ord('\n') or key == ord('\r'):
+                    s2c.put ( {'op': 'close'} )
+                elif key == ord('s'):
+                    s2c.put ( {'op': 'save'} )
+                elif key == ord('p'):
+                    if not is_waiting_preview:
+                        is_waiting_preview = True
+                        s2c.put ( {'op': 'preview'} )
+                elif key == ord('l'):
+                    if show_last_history_iters_count == 0:
+                        show_last_history_iters_count = 5000
+                    elif show_last_history_iters_count == 5000:
+                        show_last_history_iters_count = 10000
+                    elif show_last_history_iters_count == 10000:
+                        show_last_history_iters_count = 50000
+                    elif show_last_history_iters_count == 50000:
+                        show_last_history_iters_count = 100000
+                    elif show_last_history_iters_count == 100000:
+                        show_last_history_iters_count = 0
+                    update_preview = True
+                elif key == ord(' '):
+                    selected_preview = (selected_preview + 1) % len(previews)
+                    update_preview = True
+                elif key == ord('-'):
+                    zoom = zoom.prev()
+                    update_preview = True
+                elif key == ord('=') or key == ord('+'):
+                    zoom = zoom.next()
+                    update_preview = True
+                try:
+                    io.process_messages(0.1)
+                except KeyboardInterrupt:
+                    s2c.put ( {'op': 'close'} )
+
+            io.destroy_all_windows()

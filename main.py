@@ -135,7 +135,7 @@ if __name__ == "__main__":
         device_args = {'cpu_only'  : arguments.cpu_only,
                        'force_gpu_idx' : arguments.force_gpu_idx,
                        }
-        from mainscripts import FlaskTrainer as Trainer
+        from mainscripts import Trainer
         Trainer.main(args, device_args)
 
     p = subparsers.add_parser( "train", help="Trainer")
