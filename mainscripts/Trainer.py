@@ -357,6 +357,12 @@ def main(args, device_args):
                 elif op == 'close':
                     s2c.put({'op': 'close'})
                     break
+                elif op == 'zoom_prev':
+                    zoom = zoom.prev()
+                    update_preview = True
+                elif op == 'zoom_next':
+                    zoom = zoom.next()
+                    update_preview = True
 
             if update_preview:
                 update_preview = False

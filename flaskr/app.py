@@ -58,6 +58,16 @@ def create_flask_app(s2c, c2s, s2flask, args):
         send(c2s, 'change_history_range')
         return '', 204
 
+    @app.route('/zoom_prev', methods=['POST'])
+    def zoom_prev():
+        send(c2s, 'zoom_prev')
+        return '', 204
+
+    @app.route('/zoom_next', methods=['POST'])
+    def zoom_next():
+        send(c2s, 'zoom_next')
+        return '', 204
+
     @app.route('/')
     def index():
         return render_template('index.html')
