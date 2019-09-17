@@ -161,6 +161,7 @@ class SAEModel(ModelBase):
             self.options['bg_style_power'] = self.options.get('bg_style_power', default_bg_style_power)
             self.options['apply_random_ct'] = self.options.get('apply_random_ct', ColorTransferMode.NONE)
             self.options['clipgrad'] = self.options.get('clipgrad', False)
+            self.options['random_color_change'] = self.options.get('random_color_change', False)
 
         if is_first_run:
             self.options['pretrain'] = io.input_bool("Pretrain the model? (y/n, ?:help skip:n) : ", False,
