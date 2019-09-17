@@ -121,8 +121,10 @@ install:
   #- cmd: dir .\DeepFaceLab%ARCH%\_internal\DeepFaceLab
   - cmd: rmdir /q/ s .\DeepFaceLab%ARCH%\_internal\DeepFaceLab
   - cmd: xcopy .\deepfacelab .\DeepFaceLab%ARCH%\_internal\DeepFaceLab\ /Y /O /X /E /H /K
+  - cmd: call .\DeepFaceLab%ARCH%\_internal\DeepFaceLab\update-prebuilt-dependecies.bat
   #- cmd: dir .\DeepFaceLab%ARCH%\_internal
   #- cmd: dir .\DeepFaceLab%ARCH%\_internal\DeepFaceLab
+  - cmd: dir .\DeepFaceLab%ARCH%\_internal\python-3.6.8\Lib\site-packages
   - cmd: 7z a .\deepfacelab\%ARCHIVE_NAME%.7z -tzip -mx=1 -r DeepFaceLab%ARCH%\
   - cmd: dir
 
