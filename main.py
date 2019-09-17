@@ -106,10 +106,10 @@ if __name__ == "__main__":
 
         #if arguments.remove_fanseg:
         #    Util.remove_fanseg_folder (input_path=arguments.input_dir)
-        
+
         if arguments.remove_ie_polys:
             Util.remove_ie_polys_folder (input_path=arguments.input_dir)
-        
+
     p = subparsers.add_parser( "util", help="Utilities.")
     p.add_argument('--input-dir', required=True, action=fixPathAction, dest="input_dir", help="Input directory. A directory containing the files you wish to process.")
     p.add_argument('--convert-png-to-jpg', action="store_true", dest="convert_png_to_jpg", default=False, help="Convert DeepFaceLAB PNG files to JPEG.")
@@ -129,11 +129,13 @@ if __name__ == "__main__":
                 'model_name'             : arguments.model_name,
                 'no_preview'             : arguments.no_preview,
                 'debug'                  : arguments.debug,
+                'flask_preview'          : arguments.flask_preview,
                 'execute_programs'       : [ [int(x[0]), x[1] ] for x in arguments.execute_program ]
                 }
         device_args = {'cpu_only'  : arguments.cpu_only,
                        'force_gpu_idx' : arguments.force_gpu_idx,
                        }
+
         from mainscripts import Trainer
         Trainer.main(args, device_args)
 
@@ -155,6 +157,8 @@ if __name__ == "__main__":
     p.add_argument('--execute-program', dest="execute_program", default=[], action='append', nargs='+')
     p.add_argument('--pingpong', dest="ping_pong", default=False,
                    help="Cycle between a batch size of 1 and the chosen batch size")
+    p.add_argument('--flask-preview', action="store_true", dest="flask_preview", default=False,
+                   help="Launches a flask server to view the previews in a web browser")
     p.set_defaults (func=process_train)
 
     def process_convert(arguments):
@@ -251,7 +255,7 @@ if __name__ == "__main__":
     p.add_argument('--confirmed-dir', required=True, action=fixPathAction, dest="confirmed_dir", help="This is where the labeled faces will be stored.")
     p.add_argument('--skipped-dir', required=True, action=fixPathAction, dest="skipped_dir", help="This is where the labeled faces will be stored.")
     p.add_argument('--no-default-mask', action="store_true", dest="no_default_mask", default=False, help="Don't use default mask.")
-    
+
     p.set_defaults(func=process_labelingtool_edit_mask)
 
     def bad_args(arguments):
