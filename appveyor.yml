@@ -125,6 +125,7 @@ install:
   - cmd: call .\DeepFaceLab%ARCH%\_internal\setenv.bat
   - cmd: python -m pip install Flask==1.1.1
   - cmd: python -m pip install flask-socketio==4.2.1
+  - cmd: python -m pip install eos-py==1.1.2
   #- cmd: dir .\DeepFaceLab%ARCH%\_internal
   #- cmd: dir .\DeepFaceLab%ARCH%\_internal\DeepFaceLab
   - cmd: dir .\DeepFaceLab%ARCH%\_internal\python-3.6.8\Lib\site-packages
