@@ -148,7 +148,7 @@ def seamless_clone(source, target, mask):
 
 
 def random_color_transform(image, seed=None):
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
+    image = cv2.cvtColor(image.astype(np.float32), cv2.COLOR_BGR2LAB)
     M = np.eye(3)
     M[1:, 1:] = special_ortho_group.rvs(2, 1, seed)
     image = image.dot(M)
