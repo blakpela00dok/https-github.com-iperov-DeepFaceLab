@@ -40,7 +40,7 @@ if __name__ == "__main__":
     p.add_argument('--input-dir', required=True, action=fixPathAction, dest="input_dir", help="Input directory. A directory containing the files you wish to process.")
     p.add_argument('--output-dir', required=True, action=fixPathAction, dest="output_dir", help="Output directory. This is where the extracted files will be stored.")
     p.add_argument('--debug-dir', action=fixPathAction, dest="debug_dir", help="Writes debug images to this directory.")
-    p.add_argument('--face-type', dest="face_type", choices=['half_face', 'full_face', 'head', 'full_face_no_align', 'mark_only'], default='full_face', help="Default 'full_face'. Don't change this option, currently all models uses 'full_face'")
+    p.add_argument('--face-type', dest="face_type", choices=['half_face', 'full_face', 'full_face_no_align', 'head', 'head_no_align', 'mark_only'], default='full_face', help="Default 'full_face'. Don't change this option, currently all models uses 'full_face'")
     p.add_argument('--detector', dest="detector", choices=['dlib','mt','s3fd','manual'], default='dlib', help="Type of detector. Default 'dlib'. 'mt' (MTCNNv1) - faster, better, almost no jitter, perfect for gathering thousands faces for src-set. It is also good for dst-set, but can generate false faces in frames where main face not recognized! In this case for dst-set use either 'dlib' with '--manual-fix' or '--detector manual'. Manual detector suitable only for dst-set.")
     p.add_argument('--multi-gpu', action="store_true", dest="multi_gpu", default=False, help="Enables multi GPU.")
     p.add_argument('--manual-fix', action="store_true", dest="manual_fix", default=False, help="Enables manual extract only frames where faces were not recognized.")
