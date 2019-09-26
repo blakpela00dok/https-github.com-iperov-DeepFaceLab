@@ -29,7 +29,8 @@ class MaskEditor:
         #     self.img = cv2.resize(img, (256,256))
         #     raise Exception ("MaskEditor does not support image size != 256x256")
 
-        ph, pw = h // 4, w // 4 #pad wh
+        # ph, pw = h // 4, w // 4 #pad wh
+        ph, pw = 64, 64
 
         self.prev_images = prev_images
         self.next_images = next_images
@@ -267,7 +268,7 @@ class MaskEditor:
             preview_images = np.concatenate ( preview_images, axis=1  )
 
             left_pad = sw // 2 - len(prev_images) * prw - prw // 2
-            right_pad = sw // 2 - len(next_images) * prw - prw // 2
+            right_pad = (sw + 1) // 2 - len(next_images) * prw - prw // 2
 
             preview_images = np.concatenate ([np.zeros ( (preview_images.shape[0], left_pad, preview_images.shape[2]) ),
                                               preview_images,
