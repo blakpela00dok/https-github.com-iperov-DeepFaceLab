@@ -58,7 +58,7 @@
         $('button#zoom_prev').click(zoom_prev);
         $('button#zoom_next').click(zoom_next);
 
-        const socket = io.connect('http://' + document.domain + ':' + location.port);
+        const socket = io.connect();
         socket.on('preview', function(msg) {
           console.log(msg);
           $('img#preview').attr("src", "{{ url_for('preview_image') }}?q=" + new Date().getTime());
