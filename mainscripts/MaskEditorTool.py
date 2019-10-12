@@ -351,7 +351,7 @@ def mask_editor_main(input_dir, confirmed_dir=None, skipped_dir=None, no_default
     done_paths = []
     done_images_types = {}
     image_paths_total = len(image_paths)
-
+    saved_ie_polys = IEPolys()
     zoom_factor = 1.0
     preview_images_count = 9
     target_wh = 256
@@ -361,6 +361,7 @@ def mask_editor_main(input_dir, confirmed_dir=None, skipped_dir=None, no_default
     do_save_count = 0
     do_skip_move_count = 0
     do_skip_count = 0
+    do_redo_count = 0
 
     def jobs_count():
         return do_prev_count + do_save_move_count + do_save_count + do_skip_move_count + do_skip_count
@@ -486,11 +487,17 @@ def mask_editor_main(input_dir, confirmed_dir=None, skipped_dir=None, no_default
                         if chr_key == 'e':
                             do_save_move_count = 1 if not shift_pressed else 10
                         elif chr_key == 'c':
+                            saved_ie_polys = ed.ie_polys
                             do_save_count = 1 if not shift_pressed else 10
                         elif chr_key == 'w':
                             do_skip_move_count = 1 if not shift_pressed else 10
                         elif chr_key == 'x':
                             do_skip_count = 1 if not shift_pressed else 10
+                        elif chr_key == 'r' and saved_ie_polys != None:
+                            ed.state = 0
+                            ed.ie_polys = saved_ie_polys
+                            ed.redo_to_end_point()
+                            ed.mask_finish()
 
             if do_prev_count > 0:
                 do_prev_count -= 1
