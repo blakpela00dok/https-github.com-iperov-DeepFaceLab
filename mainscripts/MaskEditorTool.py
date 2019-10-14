@@ -361,8 +361,7 @@ def mask_editor_main(input_dir, confirmed_dir=None, skipped_dir=None, no_default
     do_save_count = 0
     do_skip_move_count = 0
     do_skip_count = 0
-    do_redo_count = 0
-
+    
     def jobs_count():
         return do_prev_count + do_save_move_count + do_save_count + do_skip_move_count + do_skip_count
 
@@ -428,6 +427,7 @@ def mask_editor_main(input_dir, confirmed_dir=None, skipped_dir=None, no_default
                     '[Right mouse button] - mark exclude mask.',
                     '[Middle mouse button] - finish current poly.',
                     '[Mouse wheel] - undo/redo poly or point. [+ctrl] - undo to begin/redo to end',
+                    '[r] - applies edits made to last saved image.',
                     '[q] - prev image. [w] - skip and move to %s. [e] - save and move to %s. ' % (skipped_path.name, confirmed_path.name),
                     '[z] - prev image. [x] - skip. [c] - save. ',
                     'hold [shift] - speed up the frame counter by 10.',
