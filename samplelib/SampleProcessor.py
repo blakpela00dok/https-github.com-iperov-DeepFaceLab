@@ -73,7 +73,7 @@ class SampleProcessor(object):
         MODE_GGG                   = 42  #3xGrayscale
         MODE_M                     = 43  #mask only
         MODE_BGR_SHUFFLE           = 44  #BGR shuffle
-        MODE_BGR_RANDOM_LAB_RAND_TRANSFORM  = 45
+        MODE_LAB_RAND_TRANSFORM    = 45
         MODE_END = 50
 
     class Options(object):
