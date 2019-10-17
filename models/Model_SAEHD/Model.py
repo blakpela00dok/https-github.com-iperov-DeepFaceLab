@@ -20,7 +20,7 @@ class SAEHDModel(ModelBase):
         default_resolution = 128
         default_archi = 'df'
         default_face_type = 'f'
-        
+
 
         if is_first_run:
             resolution = io.input_int("Resolution ( 64-256 ?:help skip:128) : ", default_resolution, help_message="More resolution requires more VRAM and time to train. Value will be adjusted to multiple of 16.")
@@ -38,7 +38,7 @@ class SAEHDModel(ModelBase):
             self.options['learn_mask'] = io.input_bool ( f"Learn mask? (y/n, ?:help skip:{yn_str[default_learn_mask]} ) : " , default_learn_mask, help_message="Learning mask can help model to recognize face directions. Learn without mask can reduce model size, in this case converter forced to use 'not predicted mask' that is not smooth as predicted.")
         else:
             self.options['learn_mask'] = self.options.get('learn_mask', default_learn_mask)
-        
+
         if (is_first_run or ask_override) and 'tensorflow' in self.device_config.backend:
             def_optimizer_mode = self.options.get('optimizer_mode', 1)
             self.options['optimizer_mode'] = io.input_int ("Optimizer mode? ( 1,2,3 ?:help skip:%d) : " % (def_optimizer_mode), def_optimizer_mode, help_message="1 - no changes. 2 - allows you to train x2 bigger network consuming RAM. 3 - allows you to train x3 bigger network consuming huge amount of RAM and slower, depends on CPU power.")
@@ -63,7 +63,7 @@ class SAEHDModel(ModelBase):
         default_true_face_training = self.options.get('true_face_training', False)
         default_face_style_power = self.options.get('face_style_power', 0.0)
         default_bg_style_power = self.options.get('bg_style_power', 0.0)
-        
+
         if is_first_run or ask_override:
             default_random_warp = self.options.get('random_warp', True)
             self.options['random_warp'] = io.input_bool (f"Enable random warp of samples? ( y/n, ?:help skip:{yn_str[default_random_warp]}) : ", default_random_warp, help_message="Random warp is required to generalize facial expressions of both faces. When the face is trained enough, you can disable it to get extra sharpness for less amount of iterations.")
@@ -78,7 +78,12 @@ class SAEHDModel(ModelBase):
 
             default_ct_mode = self.options.get('ct_mode', 'none')
             self.options['ct_mode'] = io.input_str (f"Color transfer mode apply to src faceset. ( none/rct/lct/mkl/idt, ?:help skip:{default_ct_mode}) : ", default_ct_mode, ['none','rct','lct','mkl','idt'], help_message="Change color distribution of src samples close to dst samples. Try all modes to find the best.")
-            
+
+            default_random_color_change = False if is_first_run else self.options.get('random_color_change', False)
+            self.options['random_color_change'] = io.input_bool(
+                "Enable random color change? (y/n, ?:help skip:%s) : " % (yn_str[default_random_color_change]), default_random_color_change,
+                help_message="")
+
             if nnlib.device.backend != 'plaidML': # todo https://github.com/plaidml/plaidml/issues/301
                 default_clipgrad = False if is_first_run else self.options.get('clipgrad', False)
                 self.options['clipgrad'] = io.input_bool (f"Enable gradient clipping? (y/n, ?:help skip:{yn_str[default_clipgrad]}) : ", default_clipgrad, help_message="Gradient clipping reduces chance of model collapse, sacrificing speed of training.")
@@ -91,6 +96,7 @@ class SAEHDModel(ModelBase):
             self.options['face_style_power'] = self.options.get('face_style_power', default_face_style_power)
             self.options['bg_style_power'] = self.options.get('bg_style_power', default_bg_style_power)
             self.options['ct_mode'] = self.options.get('ct_mode', 'none')
+            self.options['random_color_change'] = self.options.get('random_color_change', False)
             self.options['clipgrad'] = self.options.get('clipgrad', False)
 
         if is_first_run:
@@ -455,7 +461,7 @@ class SAEHDModel(ModelBase):
             self.src_dst_opt      = RMSprop(lr=5e-5, clipnorm=1.0 if self.options['clipgrad'] else 0.0, tf_cpu_mode=self.options['optimizer_mode']-1)
             self.src_dst_mask_opt = RMSprop(lr=5e-5, clipnorm=1.0 if self.options['clipgrad'] else 0.0, tf_cpu_mode=self.options['optimizer_mode']-1)
             self.D_opt            = RMSprop(lr=5e-5, clipnorm=1.0 if self.options['clipgrad'] else 0.0, tf_cpu_mode=self.options['optimizer_mode']-1)
-        
+
             src_loss =  K.mean ( 10*dssim(kernel_size=int(resolution/11.6),max_value=1.0)( target_src_masked_opt, pred_src_src_masked_opt) )
             src_loss += K.mean ( 10*K.square( target_src_masked_opt - pred_src_src_masked_opt ) )
 
@@ -520,8 +526,10 @@ class SAEHDModel(ModelBase):
                 face_type = t.FACE_TYPE_MID_FULL
             elif self.options['face_type'] == 'f':
                 face_type = t.FACE_TYPE_FULL
-            
-            t_mode_bgr = t.MODE_BGR if not self.pretrain else t.MODE_BGR_SHUFFLE
+
+            t_mode_bgr = t.MODE_BGR if not self.pretrain else t.MODE_LAB_RAND_TRANSFORM
+            if self.options['random_color_change']:
+                t_mode_bgr = t.MODE_LAB_RAND_TRANSFORM
 
             training_data_src_path = self.training_data_src_path
             training_data_dst_path = self.training_data_dst_path
@@ -531,8 +539,8 @@ class SAEHDModel(ModelBase):
                 training_data_src_path = self.pretraining_data_path
                 training_data_dst_path = self.pretraining_data_path
                 sort_by_yaw = False
-                
-            t_img_warped = t.IMG_WARPED_TRANSFORMED if self.options['random_warp'] else t.IMG_TRANSFORMED 
+
+            t_img_warped = t.IMG_WARPED_TRANSFORMED if self.options['random_warp'] else t.IMG_TRANSFORMED
 
             self.set_training_data_generators ([
                     SampleGeneratorFace(training_data_src_path, sort_by_yaw_target_samples_path=training_data_dst_path if sort_by_yaw else None,
