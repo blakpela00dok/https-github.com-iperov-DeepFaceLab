@@ -21,14 +21,24 @@ output_sample_types = [
 
 
 class SampleGeneratorFace(SampleGeneratorPingPong):
-    def __init__(self, samples_path, debug, batch_size, sort_by_yaw=False, sort_by_yaw_target_samples_path=None,
-                 random_ct_samples_path=None, sample_process_options=SampleProcessor.Options(),
-                 output_sample_types=[], add_sample_idx=False, generators_count=2, generators_random_seed=None,
-                 ping_pong=PingPongOptions(), **kwargs):
+    def __init__ (self, samples_path, debug=False, batch_size=1, 
+                        sort_by_yaw=False, 
+                        sort_by_yaw_target_samples_path=None, 
+                        random_ct_samples_path=None, 
+                        sample_process_options=SampleProcessor.Options(), 
+                        output_sample_types=[], 
+                        person_id_mode=False,
+                        add_sample_idx=False, 
+                        generators_count=2, 
+                        generators_random_seed=None,
+                        ping_pong=PingPongOptions(),
+                        **kwargs):
+                        
         super().__init__(samples_path, debug, batch_size=batch_size, ping_pong=ping_pong)
         self.sample_process_options = sample_process_options
         self.output_sample_types = output_sample_types
         self.add_sample_idx = add_sample_idx
+        self.person_id_mode = person_id_mode
 
         if sort_by_yaw_target_samples_path is not None:
             self.sample_type = SampleType.FACE_YAW_SORTED_AS_TARGET
@@ -41,11 +51,11 @@ class SampleGeneratorFace(SampleGeneratorPingPong):
             raise ValueError("len(generators_random_seed) != generators_count")
 
         self.generators_random_seed = generators_random_seed
-
-        samples = SampleLoader.load(self.sample_type, self.samples_path, sort_by_yaw_target_samples_path)
-
-        ct_samples = SampleLoader.load(SampleType.FACE,
-                                       random_ct_samples_path) if random_ct_samples_path is not None else None
+        
+        samples = SampleLoader.load (self.sample_type, self.samples_path, sort_by_yaw_target_samples_path, person_id_mode=person_id_mode)
+        self.total_samples_count = len(samples)
+        
+        ct_samples = SampleLoader.load (SampleType.FACE, random_ct_samples_path) if random_ct_samples_path is not None else None
         self.random_ct_sample_chance = 100
 
         if self.debug:
@@ -58,7 +68,11 @@ class SampleGeneratorFace(SampleGeneratorPingPong):
                 i in range(self.generators_count)]
 
         self.generator_counter = -1
-
+    
+    #overridable
+    def get_total_sample_count(self):
+        return self.total_samples_count
+        
     def __iter__(self):
         return self
 
@@ -92,7 +106,7 @@ class SampleGeneratorFace(SampleGeneratorPingPong):
             shuffle_idxs = []
             shuffle_idxs_2D = [[]] * samples_len
 
-        while True:
+        while True:            
             batches = None
             for n_batch in range(self.batch_size):
                 while True:
@@ -141,18 +155,28 @@ class SampleGeneratorFace(SampleGeneratorPingPong):
                         if batches is None:
                             batches = [[] for _ in range(len(x))]
                             if self.add_sample_idx:
-                                batches += [[]]
-                                i_sample_idx = len(batches) - 1
+                                batches += [ [] ]
+                                i_sample_idx = len(batches)-1
+                                
+                            if self.person_id_mode:
+                                batches += [ [] ]
+                                i_person_id = len(batches)-1
 
                         for i in range(len(x)):
                             batches[i].append(x[i])
 
                         if self.add_sample_idx:
-                            batches[i_sample_idx].append(idx)
+                            batches[i_sample_idx].append (idx)
+                            
+                        if self.person_id_mode:
+                            batches[i_person_id].append ( np.array([sample.person_id]) )
 
                         break
             yield [np.array(batch) for batch in batches]
 
     def update_batch(self, batch_size):
         self.batch_size = batch_size
-
+    
+    @staticmethod
+    def get_person_id_max_count(samples_path):
+        return SampleLoader.get_person_id_max_count(samples_path)
