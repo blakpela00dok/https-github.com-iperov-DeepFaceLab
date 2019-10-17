@@ -73,7 +73,7 @@ class SampleProcessor(object):
         MODE_GGG                   = 42  #3xGrayscale
         MODE_M                     = 43  #mask only
         MODE_BGR_SHUFFLE           = 44  #BGR shuffle
-        MODE_BGR_RANDOM_HSV_SHIFT  = 45
+        MODE_BGR_RANDOM_LAB_RAND_TRANSFORM  = 45
         MODE_END = 50
 
     class Options(object):
@@ -128,7 +128,7 @@ class SampleProcessor(object):
             normalize_vgg = opts.get('normalize_vgg', False)
             motion_blur = opts.get('motion_blur', None)
             gaussian_blur = opts.get('gaussian_blur', None)
-            
+
             random_hsv_shift = opts.get('random_hsv_shift', None)
             ct_mode = opts.get('ct_mode', 'None')
             normalize_tanh = opts.get('normalize_tanh', False)
@@ -214,7 +214,7 @@ class SampleProcessor(object):
                 if gaussian_blur is not None:
                     chance, kernel_max_size = gaussian_blur
                     chance = np.clip(chance, 0, 100)
-                    
+
                     if np.random.randint(100) < chance:
                         img = cv2.GaussianBlur(img, ( np.random.randint( kernel_max_size )*2+1 ,) *2 , 0)
 
@@ -262,21 +262,21 @@ class SampleProcessor(object):
                         img_bgr = imagelib.reinhard_color_transfer ( np.clip( (img_bgr*255).astype(np.uint8), 0, 255),
                                                                      np.clip( (ct_sample_bgr_resized*255).astype(np.uint8), 0, 255) )
                         img_bgr = np.clip( img_bgr.astype(np.float32) / 255.0, 0.0, 1.0)
-                    elif ct_mode == 'mkl':                    
+                    elif ct_mode == 'mkl':
                         img_bgr = imagelib.color_transfer_mkl (img_bgr, ct_sample_bgr_resized)
                     elif ct_mode == 'idt':
                         img_bgr = imagelib.color_transfer_idt (img_bgr, ct_sample_bgr_resized)
-                    
+
                 if random_hsv_shift:
                     rnd_state = np.random.RandomState (sample_rnd_seed)
                     hsv = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2HSV)
                     h, s, v = cv2.split(hsv)
-                    
+
                     h = (h + rnd_state.randint(360) ) % 360
                     s = np.clip ( s + rnd_state.random()-0.5, 0, 1 )
                     v = np.clip ( v + rnd_state.random()-0.5, 0, 1 )
                     hsv = cv2.merge([h, s, v])
-                    
+
                     img_bgr = np.clip( cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR) , 0, 1 )
 
                 if normalize_std_dev:
@@ -286,7 +286,7 @@ class SampleProcessor(object):
                     img_bgr[:,:,0] -= 103.939
                     img_bgr[:,:,1] -= 116.779
                     img_bgr[:,:,2] -= 123.68
-                    
+
                 if mode_type == SPTF.MODE_BGR:
                     img = img_bgr
                 elif mode_type == SPTF.MODE_BGR_SHUFFLE:
