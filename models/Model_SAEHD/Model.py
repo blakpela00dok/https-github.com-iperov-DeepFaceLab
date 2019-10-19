@@ -65,6 +65,18 @@ class SAEHDModel(ModelBase):
         default_bg_style_power = self.options.get('bg_style_power', 0.0)
 
         if is_first_run or ask_override:
+            default_multiscale_loss = self.options.get('multiscale_loss', True)
+            self.options['ms_ssim_loss'] = io.input_bool(
+                "Use multiscale loss? (y/n, ?:help skip: %s ) : " % (yn_str[default_multiscale_loss]),
+                default_multiscale_loss,
+                help_message="")
+
+            def_absolute_loss = self.options.get('abs_loss', False)
+            self.options['absolute_loss'] = io.input_bool(
+                "Use absolute loss (L1 norm)? (y/n, ?:help skip: %s ) : " % (yn_str[def_absolute_loss]),
+                def_absolute_loss,
+                help_message="")
+
             default_random_warp = self.options.get('random_warp', True)
             self.options['random_warp'] = io.input_bool (f"Enable random warp of samples? ( y/n, ?:help skip:{yn_str[default_random_warp]}) : ", default_random_warp, help_message="Random warp is required to generalize facial expressions of both faces. When the face is trained enough, you can disable it to get extra sharpness for less amount of iterations.")
 
@@ -91,6 +103,8 @@ class SAEHDModel(ModelBase):
                 self.options['clipgrad'] = False
 
         else:
+            self.options['ms_ssim_loss'] = self.options.get('ms_ssim_loss', True)
+            self.options['absolute_loss'] = self.options.get('absolute_loss', False)
             self.options['random_warp'] = self.options.get('random_warp', True)
             self.options['true_face_training'] = self.options.get('true_face_training', default_true_face_training)
             self.options['face_style_power'] = self.options.get('face_style_power', default_face_style_power)
@@ -462,20 +476,32 @@ class SAEHDModel(ModelBase):
             self.src_dst_mask_opt = RMSprop(lr=5e-5, clipnorm=1.0 if self.options['clipgrad'] else 0.0, tf_cpu_mode=self.options['optimizer_mode']-1)
             self.D_opt            = RMSprop(lr=5e-5, clipnorm=1.0 if self.options['clipgrad'] else 0.0, tf_cpu_mode=self.options['optimizer_mode']-1)
 
-            src_loss =  K.mean ( 10*dssim(kernel_size=int(resolution/11.6),max_value=1.0)( target_src_masked_opt, pred_src_src_masked_opt) )
-            src_loss += K.mean ( 10*K.square( target_src_masked_opt - pred_src_src_masked_opt ) )
+            if self.options['ms_ssim_loss']:
+                pass  # TODO
+            else:
+                src_loss =  K.mean ( 10*dssim(kernel_size=int(resolution/11.6),max_value=1.0)( target_src_masked_opt, pred_src_src_masked_opt) )
+                src_loss += K.mean ( 10*K.square( target_src_masked_opt - pred_src_src_masked_opt ) )
 
             face_style_power = self.options['face_style_power'] / 100.0
             if face_style_power != 0:
-                src_loss += style_loss(gaussian_blur_radius=resolution//16, loss_weight=face_style_power, wnd_size=0)( psd_target_dst_masked, target_dst_masked )
+                if self.options['ms_ssim_loss']:
+                    pass  # TODO
+                else:
+                    src_loss += style_loss(gaussian_blur_radius=resolution//16, loss_weight=face_style_power, wnd_size=0)( psd_target_dst_masked, target_dst_masked )
 
             bg_style_power = self.options['bg_style_power'] / 100.0
             if bg_style_power != 0:
-                src_loss += K.mean( (10*bg_style_power)*dssim(kernel_size=int(resolution/11.6),max_value=1.0)( psd_target_dst_anti_masked, target_dst_anti_masked ))
-                src_loss += K.mean( (10*bg_style_power)*K.square( psd_target_dst_anti_masked - target_dst_anti_masked ))
+                if self.options['ms_ssim_loss']:
+                    pass  # TODO
+                else:
+                    src_loss += K.mean( (10*bg_style_power)*dssim(kernel_size=int(resolution/11.6),max_value=1.0)( psd_target_dst_anti_masked, target_dst_anti_masked ))
+                    src_loss += K.mean( (10*bg_style_power)*K.square( psd_target_dst_anti_masked - target_dst_anti_masked ))
 
-            dst_loss =  K.mean( 10*dssim(kernel_size=int(resolution/11.6),max_value=1.0)(target_dst_masked_opt, pred_dst_dst_masked_opt) )
-            dst_loss += K.mean( 10*K.square( target_dst_masked_opt - pred_dst_dst_masked_opt ) )
+            if self.options['ms_ssim_loss']:
+                pass  # TODO
+            else:
+                dst_loss =  K.mean( 10*dssim(kernel_size=int(resolution/11.6),max_value=1.0)(target_dst_masked_opt, pred_dst_dst_masked_opt) )
+                dst_loss += K.mean( 10*K.square( target_dst_masked_opt - pred_dst_dst_masked_opt ) )
 
             G_loss = src_loss+dst_loss
 
@@ -501,8 +527,11 @@ class SAEHDModel(ModelBase):
                                              )
 
             if self.options['learn_mask']:
-                src_mask_loss = K.mean(K.square(self.model.target_srcm-self.model.pred_src_srcm))
-                dst_mask_loss = K.mean(K.square(self.model.target_dstm-self.model.pred_dst_dstm))
+                if self.options['ms_ssim_loss']:
+                    pass  # TODO
+                else:
+                    src_mask_loss = K.mean(K.square(self.model.target_srcm-self.model.pred_src_srcm))
+                    dst_mask_loss = K.mean(K.square(self.model.target_dstm-self.model.pred_dst_dstm))
                 self.src_dst_mask_train = K.function ([self.model.warped_src, self.model.warped_dst, self.model.target_srcm, self.model.target_dstm],[src_mask_loss, dst_mask_loss], self.src_dst_mask_opt.get_updates(src_mask_loss+dst_mask_loss, self.model.src_dst_mask_trainable_weights ) )
 
             if self.options['learn_mask']:
