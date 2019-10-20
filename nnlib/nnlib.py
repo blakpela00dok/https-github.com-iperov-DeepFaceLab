@@ -349,7 +349,7 @@ NLayerDiscriminator = nnlib.NLayerDiscriminator
         class MsSSIM(object):
             _MSSSIM_WEIGHTS = (0.0448, 0.2856, 0.3001, 0.2363, 0.1333)
 
-            def __init__(self, kernel_size=11, k1=0.01, k2=0.03, max_value=1.0, power_factors=_MSSSIM_WEIGHTS):
+            def __init__(self, kernel_size=7, k1=0.01, k2=0.03, max_value=1.0, power_factors=_MSSSIM_WEIGHTS):
                 self.kernel_size = kernel_size
                 self.k1 = k1
                 self.k2 = k2
