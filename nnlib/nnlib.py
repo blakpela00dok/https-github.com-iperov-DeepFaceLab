@@ -362,7 +362,7 @@ NLayerDiscriminator = nnlib.NLayerDiscriminator
                 power_factors = [power_factors[i] for i in range(len(power_factors)) if resolution//(2**i) >= kernel_size]
                 # normalize power factors
                 if sum(power_factors) < 1.0:
-                    power_factors *= 1.0/sum(power_factors)
+                    power_factors = [x/sum(power_factors) for x in power_factors]
                 self.power_factors = power_factors
                 print('power_factors', self.power_factors)
 
