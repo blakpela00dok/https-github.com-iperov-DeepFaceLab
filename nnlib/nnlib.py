@@ -360,11 +360,10 @@ NLayerDiscriminator = nnlib.NLayerDiscriminator
 
                 # restrict mssim factors to those greater/equal to kernel size
                 power_factors = [power_factors[i] for i in range(len(power_factors)) if resolution//(2**i) >= kernel_size]
-                # normalize power factors
+                # normalize power factors if reduced because of size
                 if sum(power_factors) < 1.0:
                     power_factors = [x/sum(power_factors) for x in power_factors]
                 self.power_factors = power_factors
-                print('power_factors', self.power_factors)
 
             def __call__(self, y_true, y_pred):
                 if nnlib.tf is not None:
