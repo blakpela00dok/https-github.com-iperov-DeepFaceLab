@@ -363,7 +363,10 @@ NLayerDiscriminator = nnlib.NLayerDiscriminator
                                                                power_factors=self.power_factors,
                                                                filter_size=self.kernel_size,
                                                                k1=self.k1, k2=self.k2)
-                    return (1.0 - mssim_val) / 2.0
+                    print('mssim_val', mssim_val)
+                    loss = (1.0 - mssim_val) / 2.0
+                    print('loss', loss)
+                    return loss
                 loss = 0.0
                 # im_size = K.shape(y_pred)[-2]
                 for i, weight in enumerate(self.power_factors):
