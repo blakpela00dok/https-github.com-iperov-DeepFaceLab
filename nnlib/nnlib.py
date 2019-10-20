@@ -366,14 +366,15 @@ NLayerDiscriminator = nnlib.NLayerDiscriminator
                     loss = (1.0 - mssim_val) / 2.0
                     return loss
                 else:
-                    loss = 0.0
-                    # im_size = K.shape(y_pred)[-2]
-                    for i, weight in enumerate(self.power_factors):
-                        size = 2**i
-                        dssim = self.dssim(K.pool2d(y_true, (size, size), strides=(size, size), pool_mode='avg'),
-                                           K.pool2d(y_pred, (size, size), strides=(size, size), pool_mode='avg'))
-                        loss += dssim**weight
-                    return loss/len(self.power_factors)
+                    raise Exception("Not supported in PlaidML")
+                    # loss = 0.0
+                    # # im_size = K.shape(y_pred)[-2]
+                    # for i, weight in enumerate(self.power_factors):
+                    #     size = 2**i
+                    #     dssim = self.dssim(K.pool2d(y_true, (size, size), strides=(size, size), pool_mode='avg'),
+                    #                        K.pool2d(y_pred, (size, size), strides=(size, size), pool_mode='avg'))
+                    #     loss += dssim**weight
+                    # return loss/len(self.power_factors)
 
         nnlib.MsSSIM = MsSSIM
 
