@@ -477,7 +477,8 @@ class SAEHDModel(ModelBase):
             self.D_opt            = RMSprop(lr=5e-5, clipnorm=1.0 if self.options['clipgrad'] else 0.0, tf_cpu_mode=self.options['optimizer_mode']-1)
 
             if self.options['ms_ssim_loss']:
-                pass  # TODO
+                # TODO - Done
+                src_loss = 10 * MsSSIM(max_value=1.0)(target_src_masked_opt, pred_src_src_masked_opt)
             else:
                 src_loss =  K.mean ( 10*dssim(kernel_size=int(resolution/11.6),max_value=1.0)( target_src_masked_opt, pred_src_src_masked_opt) )
                 src_loss += K.mean ( 10*K.square( target_src_masked_opt - pred_src_src_masked_opt ) )
@@ -485,20 +486,23 @@ class SAEHDModel(ModelBase):
             face_style_power = self.options['face_style_power'] / 100.0
             if face_style_power != 0:
                 if self.options['ms_ssim_loss']:
-                    pass  # TODO
+                    # TODO
+                    src_loss += style_loss(gaussian_blur_radius=resolution//16, loss_weight=face_style_power, wnd_size=0)( psd_target_dst_masked, target_dst_masked )
                 else:
                     src_loss += style_loss(gaussian_blur_radius=resolution//16, loss_weight=face_style_power, wnd_size=0)( psd_target_dst_masked, target_dst_masked )
 
             bg_style_power = self.options['bg_style_power'] / 100.0
             if bg_style_power != 0:
                 if self.options['ms_ssim_loss']:
-                    pass  # TODO
+                    # TODO - Done
+                    src_loss += MsSSIM(max_value=1.0)(psd_target_dst_anti_masked, target_dst_anti_masked)
                 else:
                     src_loss += K.mean( (10*bg_style_power)*dssim(kernel_size=int(resolution/11.6),max_value=1.0)( psd_target_dst_anti_masked, target_dst_anti_masked ))
                     src_loss += K.mean( (10*bg_style_power)*K.square( psd_target_dst_anti_masked - target_dst_anti_masked ))
 
             if self.options['ms_ssim_loss']:
-                pass  # TODO
+                # TODO - Done
+                dst_loss = 10 * MsSSIM(max_value=1.0)(target_dst_masked_opt, pred_dst_dst_masked_opt)
             else:
                 dst_loss =  K.mean( 10*dssim(kernel_size=int(resolution/11.6),max_value=1.0)(target_dst_masked_opt, pred_dst_dst_masked_opt) )
                 dst_loss += K.mean( 10*K.square( target_dst_masked_opt - pred_dst_dst_masked_opt ) )
@@ -528,7 +532,9 @@ class SAEHDModel(ModelBase):
 
             if self.options['learn_mask']:
                 if self.options['ms_ssim_loss']:
-                    pass  # TODO
+                    # TODO - Done
+                    src_mask_loss = MsSSIM(max_value=1.0)(self.model.target_srcm, self.model.pred_src_srcm)
+                    dst_mask_loss = MsSSIM(max_value=1.0)(self.model.target_dstm, self.model.pred_dst_dstm)
                 else:
                     src_mask_loss = K.mean(K.square(self.model.target_srcm-self.model.pred_src_srcm))
                     dst_mask_loss = K.mean(K.square(self.model.target_dstm-self.model.pred_dst_dstm))

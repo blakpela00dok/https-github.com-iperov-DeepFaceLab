@@ -93,6 +93,7 @@ modelify = nnlib.modelify
 gaussian_blur = nnlib.gaussian_blur
 style_loss = nnlib.style_loss
 dssim = nnlib.dssim
+MsSSIM = nnlib.MsSSIM   
 
 PixelShuffler = nnlib.PixelShuffler
 SubpixelUpscaler = nnlib.SubpixelUpscaler
@@ -344,6 +345,35 @@ NLayerDiscriminator = nnlib.NLayerDiscriminator
             return func
 
         nnlib.dssim = dssim
+
+        class MsSSIM(object):
+            _MSSSIM_WEIGHTS = (0.0448, 0.2856, 0.3001, 0.2363, 0.1333)
+
+            def __init__(self, kernel_size=11, k1=0.01, k2=0.03, max_value=1.0, power_factors=_MSSSIM_WEIGHTS):
+                self.kernel_size = kernel_size
+                self.k1 = k1
+                self.k2 = k2
+                self.max_value = max_value
+                self.dssim = dssim(kernel_size, k1, k2, max_value)
+                self.power_factors = power_factors
+
+            def __call__(self, y_true, y_pred):
+                if nnlib.tf is not None:
+                    mssim_val = nnlib.tf.image.ssim_multiscale(y_true, y_pred, self.max_value,
+                                                               power_factors=self.power_factors,
+                                                               filter_size=self.kernel_size,
+                                                               k1=self.k1, k2=self.k2)
+                    return (1.0 - mssim_val) / 2.0
+                loss = 0.0
+                # im_size = K.shape(y_pred)[-2]
+                for i, weight in enumerate(self.power_factors):
+                    size = 2**i
+                    dssim = self.dssim(K.pool2d(y_true, (size, size), strides=(size, size), pool_mode='avg'),
+                                       K.pool2d(y_pred, (size, size), strides=(size, size), pool_mode='avg'))
+                    loss += dssim**weight
+                return loss/len(self.power_factors)
+
+        nnlib.MsSSIM = MsSSIM
 
         if 'tensorflow' in backend:
             class PixelShuffler(keras.layers.Layer):
@@ -639,7 +669,7 @@ NLayerDiscriminator = nnlib.NLayerDiscriminator
                 reduction_axes = list(range(len(input_shape)))
                 del reduction_axes[self.axis]
                 del reduction_axes[0]
-                
+
                 broadcast_shape = [1] * len(input_shape)
                 broadcast_shape[self.axis] = input_shape[self.axis]
                 mean = K.mean(x, reduction_axes, keepdims=True)
