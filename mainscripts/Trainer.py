@@ -1,4 +1,4 @@
-﻿import traceback
+import traceback
 import queue
 import threading
 import time
@@ -43,12 +43,13 @@ def trainer_thread(s2c, c2s, e, args, device_args, socketio=None):
                 model_path.mkdir(exist_ok=True)
 
             model = models.import_model(model_name)(
-                model_path,
-                training_data_src_path=training_data_src_path,
-                training_data_dst_path=training_data_dst_path,
-                pretraining_data_path=pretraining_data_path,
-                debug=debug,
-                device_args=device_args)
+                        model_path,
+                        training_data_src_path=training_data_src_path,
+                        training_data_dst_path=training_data_dst_path,
+                        pretraining_data_path=pretraining_data_path,
+                        is_training=True,
+                        debug=debug,
+                        device_args=device_args)
 
             is_reached_goal = model.is_reached_iter_goal()
 

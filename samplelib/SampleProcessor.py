@@ -37,7 +37,7 @@ opts:
 
     'resolution' : N
     'motion_blur' : (chance_int, range) - chance 0..100 to apply to face (not mask), and max_size of motion blur
-    'apply_ct' : bool
+    'ct_mode' : 
     'normalize_tanh' : bool
 
 """
@@ -59,11 +59,12 @@ class SampleProcessor(object):
 
         FACE_TYPE_BEGIN = 10
         FACE_TYPE_HALF             = 10
-        FACE_TYPE_FULL             = 11
-        FACE_TYPE_HEAD             = 12  #currently unused
-        FACE_TYPE_AVATAR           = 13  #currently unused
-        FACE_TYPE_FULL_NO_ALIGN    = 14
-        FACE_TYPE_HEAD_NO_ALIGN    = 15
+        FACE_TYPE_MID_FULL         = 11
+        FACE_TYPE_FULL             = 12
+        FACE_TYPE_HEAD             = 13  #currently unused
+        FACE_TYPE_AVATAR           = 14  #currently unused
+        FACE_TYPE_FULL_NO_ALIGN    = 15
+        FACE_TYPE_HEAD_NO_ALIGN    = 16
         FACE_TYPE_END = 20
 
         MODE_BEGIN = 40
@@ -72,7 +73,7 @@ class SampleProcessor(object):
         MODE_GGG                   = 42  #3xGrayscale
         MODE_M                     = 43  #mask only
         MODE_BGR_SHUFFLE           = 44  #BGR shuffle
-        MODE_LAB_RAND_TRANSFORM    = 45  #Random transform in LAB space
+        MODE_LAB_RAND_TRANSFORM    = 45
         MODE_END = 50
 
     class Options(object):
@@ -84,6 +85,7 @@ class SampleProcessor(object):
             self.ty_range = ty_range
 
     SPTF_FACETYPE_TO_FACETYPE =  {  Types.FACE_TYPE_HALF : FaceType.HALF,
+                                    Types.FACE_TYPE_MID_FULL : FaceType.MID_FULL,
                                     Types.FACE_TYPE_FULL : FaceType.FULL,
                                     Types.FACE_TYPE_HEAD : FaceType.HEAD,
                                     Types.FACE_TYPE_FULL_NO_ALIGN : FaceType.FULL_NO_ALIGN,
@@ -114,8 +116,6 @@ class SampleProcessor(object):
 
         sample_rnd_seed = np.random.randint(0x80000000)
 
-
-
         outputs = []
         for opts in output_sample_types:
 
@@ -127,7 +127,10 @@ class SampleProcessor(object):
             normalize_std_dev = opts.get('normalize_std_dev', False)
             normalize_vgg = opts.get('normalize_vgg', False)
             motion_blur = opts.get('motion_blur', None)
-            apply_ct = opts.get('apply_ct', ColorTransferMode.NONE)
+            gaussian_blur = opts.get('gaussian_blur', None)
+
+            random_hsv_shift = opts.get('random_hsv_shift', None)
+            ct_mode = opts.get('ct_mode', 'None')
             normalize_tanh = opts.get('normalize_tanh', False)
 
             img_type = SPTF.NONE
@@ -208,6 +211,13 @@ class SampleProcessor(object):
                     if np.random.randint(100) < chance:
                         img = imagelib.LinearMotionBlur (img, np.random.randint( mb_max_size )+1, np.random.randint(360) )
 
+                if gaussian_blur is not None:
+                    chance, kernel_max_size = gaussian_blur
+                    chance = np.clip(chance, 0, 100)
+
+                    if np.random.randint(100) < chance:
+                        img = cv2.GaussianBlur(img, ( np.random.randint( kernel_max_size )*2+1 ,) *2 , 0)
+
                 if is_face_sample and target_face_type != SPTF.NONE:
                     target_ft = SampleProcessor.SPTF_FACETYPE_TO_FACETYPE[target_face_type]
                     if target_ft > sample.face_type:
@@ -235,39 +245,39 @@ class SampleProcessor(object):
                     start_y = rnd_state.randint(sub_size+1)
                     img = img[start_y:start_y+sub_size,start_x:start_x+sub_size,:]
 
-                img = np.clip(img, 0, 1)
+                img = np.clip(img, 0, 1).astype(np.float32)
                 img_bgr  = img[...,0:3]
                 img_mask = img[...,3:4]
 
-                if apply_ct and ct_sample is not None:
+                if ct_mode is not None and ct_sample is not None:
                     if ct_sample_bgr is None:
                         ct_sample_bgr = ct_sample.load_bgr()
 
-                    if apply_ct == ColorTransferMode.LCT:
-                        img_bgr = imagelib.linear_color_transfer(img_bgr, ct_sample_bgr)
+                    ct_sample_bgr_resized = cv2.resize( ct_sample_bgr, (resolution,resolution), cv2.INTER_LINEAR )
 
-                    elif ColorTransferMode.RCT <= apply_ct <= ColorTransferMode.MASKED_RCT_PAPER_CLIP:
-                        ct_options = {
-                                ColorTransferMode.RCT:                      (False, False, False),
-                                ColorTransferMode.RCT_CLIP:                 (False, False, True),
-                                ColorTransferMode.RCT_PAPER:                (False, True, False),
-                                ColorTransferMode.RCT_PAPER_CLIP:           (False, True, True),
-                                ColorTransferMode.MASKED_RCT:               (True, False, False),
-                                ColorTransferMode.MASKED_RCT_CLIP:          (True, False, True),
-                                ColorTransferMode.MASKED_RCT_PAPER:         (True, True, False),
-                                ColorTransferMode.MASKED_RCT_PAPER_CLIP:    (True, True, True),
-                        }
+                    if ct_mode == 'lct':
+                        img_bgr = imagelib.linear_color_transfer (img_bgr, ct_sample_bgr_resized)
+                        img_bgr = np.clip( img_bgr, 0.0, 1.0)
+                    elif ct_mode == 'rct':
+                        img_bgr = imagelib.reinhard_color_transfer ( np.clip( (img_bgr*255).astype(np.uint8), 0, 255),
+                                                                     np.clip( (ct_sample_bgr_resized*255).astype(np.uint8), 0, 255) )
+                        img_bgr = np.clip( img_bgr.astype(np.float32) / 255.0, 0.0, 1.0)
+                    elif ct_mode == 'mkl':
+                        img_bgr = imagelib.color_transfer_mkl (img_bgr, ct_sample_bgr_resized)
+                    elif ct_mode == 'idt':
+                        img_bgr = imagelib.color_transfer_idt (img_bgr, ct_sample_bgr_resized)
 
-                        use_masks, use_paper, use_clip = ct_options[apply_ct]
-                        if not use_masks:
-                            img_bgr = imagelib.reinhard_color_transfer(img_bgr, ct_sample_bgr, clip=use_clip,
-                                                                       preserve_paper=use_paper)
-                        else:
-                            if ct_sample_mask is None:
-                                ct_sample_mask = ct_sample.load_mask()
-                            img_bgr = imagelib.reinhard_color_transfer(img_bgr, ct_sample_bgr, clip=use_clip,
-                                                                       preserve_paper=use_paper, source_mask=img_mask,
-                                                                       target_mask=ct_sample_mask)
+                if random_hsv_shift:
+                    rnd_state = np.random.RandomState (sample_rnd_seed)
+                    hsv = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2HSV)
+                    h, s, v = cv2.split(hsv)
+
+                    h = (h + rnd_state.randint(360) ) % 360
+                    s = np.clip ( s + rnd_state.random()-0.5, 0, 1 )
+                    v = np.clip ( v + rnd_state.random()-0.5, 0, 1 )
+                    hsv = cv2.merge([h, s, v])
+
+                    img_bgr = np.clip( cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR) , 0, 1 )
 
                 if normalize_std_dev:
                     img_bgr = (img_bgr - img_bgr.mean( (0,1)) ) / img_bgr.std( (0,1) )
@@ -288,9 +298,7 @@ class SampleProcessor(object):
                 elif mode_type == SPTF.MODE_G:
                     img = np.concatenate ( (np.expand_dims(cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY),-1),img_mask) , -1 )
                 elif mode_type == SPTF.MODE_GGG:
-                    img = np.concatenate(
-                        (np.repeat(np.expand_dims(cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY), -1), (3,), -1), img_mask),
-                        -1)
+                    img = np.repeat ( np.expand_dims(cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY),-1), (3,), -1)
                 elif mode_type == SPTF.MODE_M and is_face_sample:
                     img = img_mask
 

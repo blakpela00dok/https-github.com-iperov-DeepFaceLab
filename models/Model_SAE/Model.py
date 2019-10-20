@@ -1,7 +1,7 @@
 from functools import partial
 import numpy as np
 
-from nnlib import nnlib
+from nnlib_legacy import nnlib
 from models import ModelBase
 from facelib import FaceType
 from samplelib import *
