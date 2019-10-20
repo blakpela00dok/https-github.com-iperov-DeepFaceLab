@@ -19,7 +19,9 @@ class S3FDExtractor(object):
         if not model_path.exists():
             raise Exception(f'Could not find S3DF model at path {model_path}')
 
-        self.model = nnlib.keras.models.load_model(str(model_path))
+        self.model = nnlib.keras.models.load_model ( str(model_path) )
+        
+        self.extract ( np.zeros( (1080,1920,3), dtype=np.uint8) )
 
     def __enter__(self):
         return self
