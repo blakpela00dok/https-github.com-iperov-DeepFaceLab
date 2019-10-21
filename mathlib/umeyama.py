@@ -31,9 +31,9 @@ def umeyama(src, dst, estimate_scale):
     # Subtract mean from src and dst.
     src_demean = src - src_mean
     dst_demean = dst - dst_mean
-
+    
     # Eq. (38).
-    A = np.dot(dst_demean.T, src_demean) / num
+    A = dst_demean.T @ src_demean / num
 
     # Eq. (39).
     d = np.ones((dim,), dtype=np.double)
@@ -50,22 +50,22 @@ def umeyama(src, dst, estimate_scale):
         return np.nan * T
     elif rank == dim - 1:
         if np.linalg.det(U) * np.linalg.det(V) > 0:
-            T[:dim, :dim] = np.dot(U, V)
+            T[:dim, :dim] = U @ V
         else:
             s = d[dim - 1]
             d[dim - 1] = -1
-            T[:dim, :dim] = np.dot(U, np.dot(np.diag(d), V))
+            T[:dim, :dim] = U @ np.diag(d) @ V
             d[dim - 1] = s
     else:
-        T[:dim, :dim] = np.dot(U, np.dot(np.diag(d), V.T))
+        T[:dim, :dim] = U @ np.diag(d) @ V
 
     if estimate_scale:
         # Eq. (41) and (42).
-        scale = 1.0 / src_demean.var(axis=0).sum() * np.dot(S, d)
+        scale = 1.0 / src_demean.var(axis=0).sum() * (S @ d)
     else:
         scale = 1.0
 
-    T[:dim, dim] = dst_mean - scale * np.dot(T[:dim, :dim], src_mean.T)
+    T[:dim, dim] = dst_mean - scale * (T[:dim, :dim] @ src_mean.T)
     T[:dim, :dim] *= scale
 
     return T
