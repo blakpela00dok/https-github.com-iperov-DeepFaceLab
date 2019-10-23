@@ -72,10 +72,10 @@ class SAEHDModel(ModelBase):
                 help_message="")
 
             def_absolute_loss = self.options.get('abs_loss', False)
-            self.options['absolute_loss'] = io.input_bool(
-                "Use absolute loss (L1 norm)? (y/n, ?:help skip: %s ) : " % (yn_str[def_absolute_loss]),
-                def_absolute_loss,
-                help_message="")
+            # self.options['absolute_loss'] = io.input_bool(
+            #     "Use absolute loss (L1 norm)? (y/n, ?:help skip: %s ) : " % (yn_str[def_absolute_loss]),
+            #     def_absolute_loss,
+            #     help_message="")
 
             default_random_warp = self.options.get('random_warp', True)
             self.options['random_warp'] = io.input_bool (f"Enable random warp of samples? ( y/n, ?:help skip:{yn_str[default_random_warp]}) : ", default_random_warp, help_message="Random warp is required to generalize facial expressions of both faces. When the face is trained enough, you can disable it to get extra sharpness for less amount of iterations.")
