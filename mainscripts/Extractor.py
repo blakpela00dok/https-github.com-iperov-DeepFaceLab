@@ -308,7 +308,7 @@ class ExtractSubprocessor(Subprocessor):
 
         self.devices = ExtractSubprocessor.get_devices_for_config(self.manual, self.type, multi_gpu, cpu_only)
 
-        no_response_time_sec = 60 if not self.manual and not DEBUG else 999999
+        no_response_time_sec = 600 if not self.manual and not DEBUG else 999999
         
         super().__init__('Extractor', ExtractSubprocessor.Cli, no_response_time_sec, initialize_subprocesses_in_serial=(type != 'final'))
 
