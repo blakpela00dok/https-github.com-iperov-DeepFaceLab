@@ -16,16 +16,14 @@ class Quick96Model(ModelBase):
         super().__init__(*args, **kwargs, 
                             ask_enable_autobackup=False,
                             ask_write_preview_history=False,
-                            ask_target_iter=False,
+                            ask_target_iter=True,
                             ask_batch_size=False,
-                            ask_sort_by_yaw=False,
-                            ask_random_flip=False,
-                            ask_src_scale_mod=False)                 
+                            ask_random_flip=False)                 
                  
     #override
     def onInitialize(self):
         exec(nnlib.import_all(), locals(), globals())
-        self.set_vram_batch_requirements({1.5:2,2:4})#,3:4,4:8})
+        self.set_vram_batch_requirements({1.5:2,2:4})
 
         resolution = self.resolution = 96
         
@@ -94,8 +92,8 @@ class Quick96Model(ModelBase):
                         y = self.upscale(d_dims//2)(y)
                         y = self.upscale(d_dims//4)(y)
                         
-                        return Conv2D(3, kernel_size=5, padding='same', activation='tanh')(x), \
-                               Conv2D(1, kernel_size=5, padding='same', activation='sigmoid')(y)
+                        return Conv2D(3, kernel_size=1, padding='same', activation='tanh')(x), \
+                               Conv2D(1, kernel_size=1, padding='same', activation='sigmoid')(y)
 
                     return func
 
@@ -143,8 +141,8 @@ class Quick96Model(ModelBase):
                     self.CA_conv_weights_list += [layer.weights[0]] #- is Conv2D kernel_weights
 
         if self.is_training_mode:
-            self.src_dst_opt      = RMSprop(lr=2e-4)
-            self.src_dst_mask_opt = RMSprop(lr=2e-4)
+            self.src_dst_opt      = RMSprop(lr=2e-4, lr_dropout=0.3)
+            self.src_dst_mask_opt = RMSprop(lr=2e-4, lr_dropout=0.3)
                 
             target_src_masked = self.model.target_src*self.model.target_srcm
             target_dst_masked = self.model.target_dst*self.model.target_dstm
@@ -171,7 +169,7 @@ class Quick96Model(ModelBase):
 
             self.set_training_data_generators ([
                     SampleGeneratorFace(self.training_data_src_path, debug=self.is_debug(), batch_size=self.batch_size,
-                        sample_process_options=SampleProcessor.Options(random_flip=False, scale_range=np.array([-0.05, 0.05])+self.src_scale_mod / 100.0 ),
+                        sample_process_options=SampleProcessor.Options(random_flip=False, scale_range=np.array([-0.05, 0.05]) ),
                         output_sample_types = [ {'types' : (t.IMG_WARPED_TRANSFORMED, t.FACE_TYPE_FULL, t.MODE_BGR), 'resolution': resolution, 'normalize_tanh':True },
                                                 {'types' : (t.IMG_TRANSFORMED, t.FACE_TYPE_FULL, t.MODE_BGR), 'resolution': resolution, 'normalize_tanh':True },
                                                 {'types' : (t.IMG_TRANSFORMED, t.FACE_TYPE_FULL, t.MODE_M), 'resolution': resolution } ]

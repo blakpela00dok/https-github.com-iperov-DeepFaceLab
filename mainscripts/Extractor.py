@@ -20,20 +20,19 @@ from joblib import Subprocessor
 from nnlib import TernausNet, nnlib
 from utils import Path_utils
 from utils.cv2_utils import *
-from utils.DFLJPG import DFLJPG
-from utils.DFLPNG import DFLPNG
+from DFLIMG import *
 
 DEBUG = False
 
 class ExtractSubprocessor(Subprocessor):
     class Data(object):
-        def __init__(self, filename=None, rects=None, landmarks = None, landmarks_accurate=True, pitch_yaw_roll=None, force_output_path=None, final_output_files = None):
+        def __init__(self, filename=None, rects=None, landmarks = None, landmarks_accurate=True, manual=False, force_output_path=None, final_output_files = None):
             self.filename = filename
             self.rects = rects or []
             self.rects_rotation = 0
             self.landmarks_accurate = landmarks_accurate
+            self.manual = manual
             self.landmarks = landmarks or []
-            self.pitch_yaw_roll = pitch_yaw_roll
             self.force_output_path = force_output_path
             self.final_output_files = final_output_files or []
             self.faces_detected = 0
@@ -110,8 +109,11 @@ class ExtractSubprocessor(Subprocessor):
         #override
         def process_data(self, data):
             filename_path = Path( data.filename )
-
             filename_path_str = str(filename_path)
+            
+            if self.type == 'landmarks' and len(data.rects) == 0:
+                return data            
+            
             if self.cached_image[0] == filename_path_str:
                 image = self.cached_image[1] #cached image for manual extractor
             else:
@@ -133,10 +135,7 @@ class ExtractSubprocessor(Subprocessor):
             h, w, ch = image.shape
             if h == w:
                 #extracting from already extracted jpg image?
-                if filename_path.suffix == '.png':
-                    src_dflimg = DFLPNG.load ( str(filename_path) )
-                if filename_path.suffix == '.jpg':
-                    src_dflimg = DFLJPG.load ( str(filename_path) )
+                src_dflimg = DFLIMG.load (filename_path)
 
             if 'rects' in self.type:
                 if min(w,h) < 128:
@@ -163,8 +162,7 @@ class ExtractSubprocessor(Subprocessor):
 
                 return data
 
-            elif self.type == 'landmarks':
-
+            elif self.type == 'landmarks':                    
                 if data.rects_rotation == 0:
                     rotated_image = image
                 elif data.rects_rotation == 90:
@@ -243,7 +241,7 @@ class ExtractSubprocessor(Subprocessor):
                             rect_area      = mathlib.polygon_area(np.array(rect[[0,2,2,0]]), np.array(rect[[1,1,3,3]]))
                             landmarks_area = mathlib.polygon_area(landmarks_bbox[:,0], landmarks_bbox[:,1] )
 
-                            if self.face_type <= FaceType.FULL_NO_ALIGN and landmarks_area > 4*rect_area: #get rid of faces which umeyama-landmark-area > 4*detector-rect-area
+                            if not data.manual and self.face_type <= FaceType.FULL_NO_ALIGN and landmarks_area > 4*rect_area: #get rid of faces which umeyama-landmark-area > 4*detector-rect-area
                                 continue
 
                             if self.debug_dir is not None:
@@ -268,8 +266,7 @@ class ExtractSubprocessor(Subprocessor):
                                                        source_filename=filename_path.name,
                                                        source_rect=rect,
                                                        source_landmarks=image_landmarks.tolist(),
-                                                       image_to_face_mat=image_to_face_mat,
-                                                       pitch_yaw_roll=data.pitch_yaw_roll
+                                                       image_to_face_mat=image_to_face_mat
                                             )
 
                         data.final_output_files.append (output_file)
@@ -315,7 +312,7 @@ class ExtractSubprocessor(Subprocessor):
         else:
             no_response_time_sec = 60
             
-        super().__init__('Extractor', ExtractSubprocessor.Cli, no_response_time_sec, initialize_subprocesses_in_serial=(type != 'final'))
+        super().__init__('Extractor', ExtractSubprocessor.Cli, no_response_time_sec)
 
     #override
     def on_check_run(self):
@@ -768,7 +765,7 @@ def main(input_dir,
     if images_found != 0:
         if detector == 'manual':
             io.log_info ('Performing manual extract...')
-            data = ExtractSubprocessor ([ ExtractSubprocessor.Data(filename) for filename in input_path_image_paths ], 'landmarks', image_size, face_type, debug_dir, cpu_only=cpu_only, manual=True, manual_window_size=manual_window_size).run()
+            data = ExtractSubprocessor ([ ExtractSubprocessor.Data(filename, manual=True) for filename in input_path_image_paths ], 'landmarks', image_size, face_type, debug_dir, cpu_only=cpu_only, manual=True, manual_window_size=manual_window_size).run()
         else:
             io.log_info ('Performing 1st pass...')
             data = ExtractSubprocessor ([ ExtractSubprocessor.Data(filename) for filename in input_path_image_paths ], 'rects-'+detector, image_size, face_type, debug_dir, multi_gpu=multi_gpu, cpu_only=cpu_only, manual=False, max_faces_from_image=max_faces_from_image).run()
@@ -784,118 +781,13 @@ def main(input_dir,
             if all ( np.array ( [ d.faces_detected > 0 for d in data] ) == True ):
                 io.log_info ('All faces are detected, manual fix not needed.')
             else:
-                fix_data = [ ExtractSubprocessor.Data(d.filename) for d in data if d.faces_detected == 0 ]
+                fix_data = [ ExtractSubprocessor.Data(d.filename, manual=True) for d in data if d.faces_detected == 0 ]
                 io.log_info ('Performing manual fix for %d images...' % (len(fix_data)) )
                 fix_data = ExtractSubprocessor (fix_data, 'landmarks', image_size, face_type, debug_dir, manual=True, manual_window_size=manual_window_size).run()
                 fix_data = ExtractSubprocessor (fix_data, 'final', image_size, face_type, debug_dir, multi_gpu=multi_gpu, cpu_only=cpu_only, manual=False, final_output_path=output_path).run()
                 faces_detected += sum([d.faces_detected for d in fix_data])
 
 
-    io.log_info ('-------------------------')
-    io.log_info ('Images found:        %d' % (images_found) )
-    io.log_info ('Faces detected:      %d' % (faces_detected) )
-    io.log_info ('-------------------------')
-         
-#unused in end user workflow
-def extract_fanseg(input_dir, device_args={} ):
-    multi_gpu = device_args.get('multi_gpu', False)
-    cpu_only = device_args.get('cpu_only', False)
-    
-    input_path = Path(input_dir)
-    if not input_path.exists():
-        raise ValueError('Input directory not found. Please ensure it exists.')
-    
-    paths_to_extract = []
-    for filename in Path_utils.get_image_paths(input_path) :
-        filepath = Path(filename)
-        if filepath.suffix == '.png':
-            dflimg = DFLPNG.load( str(filepath) )
-        elif filepath.suffix == '.jpg':
-            dflimg = DFLJPG.load ( str(filepath) )
-        else:
-            dflimg = None
-
-        if dflimg is not None:
-            paths_to_extract.append (filepath)
-    
-    paths_to_extract_len = len(paths_to_extract)
-    if paths_to_extract_len > 0:
-        io.log_info ("Performing extract fanseg for %d files..." % (paths_to_extract_len) )
-        data = ExtractSubprocessor ([ ExtractSubprocessor.Data(filename) for filename in paths_to_extract ], 'fanseg', multi_gpu=multi_gpu, cpu_only=cpu_only).run()
-
-#unused in end user workflow
-def extract_umd_csv(input_file_csv, 
-                    image_size=256,
-                    face_type='full_face',
-                    device_args={} ):
-                    
-    #extract faces from umdfaces.io dataset csv file with pitch,yaw,roll info.
-    multi_gpu = device_args.get('multi_gpu', False)
-    cpu_only = device_args.get('cpu_only', False)
-    face_type = FaceType.fromString(face_type)
-    
-    input_file_csv_path = Path(input_file_csv)
-    if not input_file_csv_path.exists():
-        raise ValueError('input_file_csv not found. Please ensure it exists.')
-    
-    input_file_csv_root_path = input_file_csv_path.parent
-    output_path = input_file_csv_path.parent / ('aligned_' + input_file_csv_path.name)
-    
-    io.log_info("Output dir is %s." % (str(output_path)) )
-    
-    if output_path.exists():
-        output_images_paths = Path_utils.get_image_paths(output_path)
-        if len(output_images_paths) > 0:
-            io.input_bool("WARNING !!! \n %s contains files! \n They will be deleted. \n Press enter to continue." % (str(output_path)), False )
-            for filename in output_images_paths:
-                Path(filename).unlink()
-    else:
-        output_path.mkdir(parents=True, exist_ok=True)
-        
-    try:
-        with open( str(input_file_csv_path), 'r') as f:
-            csv_file = f.read()
-    except Exception as e:
-        io.log_err("Unable to open or read file " + str(input_file_csv_path) + ": " + str(e) )
-        return
-        
-    strings = csv_file.split('\n')        
-    keys = strings[0].split(',')
-    keys_len = len(keys)
-    csv_data = []
-    for i in range(1, len(strings)):
-        values = strings[i].split(',')
-        if keys_len != len(values):
-            io.log_err("Wrong string in csv file, skipping.")
-            continue
-            
-        csv_data += [ { keys[n] : values[n] for n in range(keys_len) } ]
-    
-    data = []
-    for d in csv_data:
-        filename = input_file_csv_root_path / d['FILE']
-        
-        pitch, yaw, roll = float(d['PITCH']), float(d['YAW']), float(d['ROLL']) 
-        if pitch < -90 or pitch > 90 or yaw < -90 or yaw > 90 or roll < -90 or roll > 90:
-            continue
-            
-        pitch_yaw_roll = pitch/90.0, yaw/90.0, roll/90.0
-        
-        x,y,w,h = float(d['FACE_X']), float(d['FACE_Y']), float(d['FACE_WIDTH']), float(d['FACE_HEIGHT'])
-
-        data += [ ExtractSubprocessor.Data(filename=filename, rects=[ [x,y,x+w,y+h] ], pitch_yaw_roll=pitch_yaw_roll) ]
-        
-    images_found = len(data)
-    faces_detected = 0
-    if len(data) > 0:
-        io.log_info ("Performing 2nd pass from csv file...")
-        data = ExtractSubprocessor (data, 'landmarks', multi_gpu=multi_gpu, cpu_only=cpu_only).run()
-        
-        io.log_info ('Performing 3rd pass...')
-        data = ExtractSubprocessor (data, 'final', image_size, face_type, None, multi_gpu=multi_gpu, cpu_only=cpu_only, manual=False, final_output_path=output_path).run()
-        faces_detected += sum([d.faces_detected for d in data])
-        
-        
     io.log_info ('-------------------------')
     io.log_info ('Images found:        %d' % (images_found) )
     io.log_info ('Faces detected:      %d' % (faces_detected) )

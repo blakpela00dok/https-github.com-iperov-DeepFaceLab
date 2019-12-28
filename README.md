@@ -6,16 +6,6 @@
 
 ## **DeepFaceLab** is a tool that utilizes machine learning to replace faces in videos.
 
-If you like this software, please consider a donation.
-
-GOAL: next DeepFacelab update.
-
-[Donate via Yandex.Money](https://money.yandex.ru/to/41001142318065)
-
-[Donate via Paypal](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=lepersorium@gmail.com&lc=US&no_note=0&item_name=Support+DeepFaceLab&cn=&curency_code=USD&bn=PP-DonationsBF:btn_donateCC_LG.gif:NonHosted)
-                    
-bitcoin:31mPd6DxPCzbpCMZk4k1koWAbErSyqkAXr
-
 - ### [Gallery](doc/gallery/doc_gallery.md)
 
 - ### Manuals:
@@ -24,7 +14,7 @@ bitcoin:31mPd6DxPCzbpCMZk4k1koWAbErSyqkAXr
 
 [На русском](doc/manual_ru.pdf)
 
-- ### [Prebuilt windows app](doc/doc_prebuilt_windows_app.md)
+- ### [Windows Desktop App](doc/doc_windows_desktop_app.md)
 
 - ### Forks
 
@@ -35,6 +25,24 @@ bitcoin:31mPd6DxPCzbpCMZk4k1koWAbErSyqkAXr
 - ### [Ready to work facesets](doc/doc_ready_to_work_facesets.md)
 
 - ### [Build and repository info](doc/doc_build_and_repository_info.md)
+
+- ### How I can help the project?
+
+If you like this software, please consider a donation.
+
+GOAL: next DeepFacelab update.
+
+[Donate via Yandex.Money](https://money.yandex.ru/to/41001142318065)
+
+[Donate via Paypal](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=lepersorium@gmail.com&lc=US&no_note=0&item_name=Support+DeepFaceLab&cn=&curency_code=USD&bn=PP-DonationsBF:btn_donateCC_LG.gif:NonHosted)
+                    
+bitcoin:31mPd6DxPCzbpCMZk4k1koWAbErSyqkAXr
+
+![](doc/example_faceset.jpg)
+
+You can collect faceset of any celebrities that can be used in DeepFaceLab (described in manual) 
+
+and share it here [mrdeepfakes celebrity-facesets](https://mrdeepfakes.com/forums/forum-celebrity-facesets)
 
 - ### Communication groups:
 
