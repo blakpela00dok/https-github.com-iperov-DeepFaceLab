@@ -213,7 +213,7 @@ class SAEHDModel(ModelBase):
                                 x = Add()([x, x0])
                                 x = LeakyReLU(0.2)(x)
 
-                        return Conv2D(output_nc, kernel_size=5, padding='same', activation='sigmoid')(x)
+                        return Conv2D(output_nc, kernel_size=1, padding='same', activation='sigmoid')(x)
 
                     return func
 
@@ -327,7 +327,7 @@ class SAEHDModel(ModelBase):
                                 x = Add()([x, x0])
                                 x = LeakyReLU(0.2)(x)
 
-                        return Conv2D(output_nc, kernel_size=5, padding='same', activation='sigmoid')(x)
+                        return Conv2D(output_nc, kernel_size=1, padding='same', activation='sigmoid')(x)
 
                     return func
 
