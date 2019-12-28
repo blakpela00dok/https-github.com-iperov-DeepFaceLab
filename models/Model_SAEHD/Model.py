@@ -455,9 +455,9 @@ class SAEHDModel(ModelBase):
         if self.is_training_mode:
 
             lr_dropout = 0.3 if self.options['lr_dropout'] else 0.0
-            self.src_dst_opt      = RMSprop(lr=5e-5, lr_dropout=lr_dropout, clipnorm=1.0 if self.options['clipgrad'] else 0.0, tf_cpu_mode=self.options['optimizer_mode']-1)
-            self.src_dst_mask_opt = RMSprop(lr=5e-5, lr_dropout=lr_dropout, clipnorm=1.0 if self.options['clipgrad'] else 0.0, tf_cpu_mode=self.options['optimizer_mode']-1)
-            self.D_opt            = RMSprop(lr=5e-5, lr_dropout=lr_dropout, clipnorm=1.0 if self.options['clipgrad'] else 0.0, tf_cpu_mode=self.options['optimizer_mode']-1)
+            self.src_dst_opt      = RMSprop(lr=5e-6, lr_dropout=lr_dropout, clipnorm=1.0 if self.options['clipgrad'] else 0.0, tf_cpu_mode=self.options['optimizer_mode']-1)
+            self.src_dst_mask_opt = RMSprop(lr=5e-6, lr_dropout=lr_dropout, clipnorm=1.0 if self.options['clipgrad'] else 0.0, tf_cpu_mode=self.options['optimizer_mode']-1)
+            self.D_opt            = RMSprop(lr=5e-6, lr_dropout=lr_dropout, clipnorm=1.0 if self.options['clipgrad'] else 0.0, tf_cpu_mode=self.options['optimizer_mode']-1)
 
             src_loss =  K.mean ( 10*dssim(kernel_size=int(resolution/11.6),max_value=1.0)( target_src_masked_opt, pred_src_src_masked_opt) )
             src_loss += K.mean ( 10*K.square( target_src_masked_opt - pred_src_src_masked_opt ) )
