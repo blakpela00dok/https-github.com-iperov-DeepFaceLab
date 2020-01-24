@@ -27,7 +27,7 @@ class AVATARModel(ModelBase):
                            1:'head',
                            2:'full_face'}[avatar_type]
 
-            #self.options['avatar_type'] = 'head'
+            self.options['avatar_type'] = self.options.get('avatar_type', avatar_type)
         else:
             self.options['avatar_type'] = self.options.get('avatar_type', 'head')
 
