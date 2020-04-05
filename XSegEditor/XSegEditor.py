@@ -1206,6 +1206,11 @@ class MainWindow(QXMainWindow):
             ie_polys = dflimg.get_seg_ie_polys()            
             new_ie_polys = self.canvas.op.get_ie_polys()
 
+            # Remove unfinished polys
+            for new_ie_poly in new_ie_polys:
+                if new_ie_poly.get_pts_count() < 3:
+                    new_ie_polys.remove_poly(new_ie_poly)
+                    
             if not new_ie_polys.identical(ie_polys):
                 self.image_paths_has_ie_polys[image_path] = new_ie_polys.has_polys()
                 dflimg.set_seg_ie_polys( new_ie_polys )
