@@ -13,7 +13,8 @@ xseg_input_size = 256
 def MergeMaskedFace (predictor_func, predictor_input_shape,
                      face_enhancer_func,
                      xseg_256_extract_func,
-                     cfg, frame_info, img_bgr_uint8, img_bgr, img_face_landmarks):
+                     cfg, frame_info, img_bgr_uint8, img_bgr, img_face_landmarks,
+                     parallel_frame_info=None):
 
     img_size = img_bgr.shape[1], img_bgr.shape[0]
     img_face_mask_a = LandmarksProcessor.get_image_hull_mask (img_bgr.shape, img_face_landmarks)
@@ -316,14 +317,24 @@ def MergeMasked (predictor_func,
                  face_enhancer_func,
                  xseg_256_extract_func,
                  cfg,
-                 frame_info):
+                 frame_info,
+                 parallel_frame_info=None):
     img_bgr_uint8 = cv2_imread(frame_info.filepath)
     img_bgr_uint8 = imagelib.normalize_channels (img_bgr_uint8, 3)
     img_bgr = img_bgr_uint8.astype(np.float32) / 255.0
 
     outs = []
     for face_num, img_landmarks in enumerate( frame_info.landmarks_list ):
-        out_img, out_img_merging_mask = MergeMaskedFace (predictor_func, predictor_input_shape, face_enhancer_func, xseg_256_extract_func, cfg, frame_info, img_bgr_uint8, img_bgr, img_landmarks)
+        out_img, out_img_merging_mask = MergeMaskedFace (predictor_func,
+                                                         predictor_input_shape,
+                                                         face_enhancer_func,
+                                                         xseg_256_extract_func,
+                                                         cfg,
+                                                         frame_info,
+                                                         img_bgr_uint8,
+                                                         img_bgr,
+                                                         img_landmarks
+                                                         parallel_frame_info=parallel_frame_info)
         outs += [ (out_img, out_img_merging_mask) ]
 
     #Combining multiple face outputs
