@@ -81,6 +81,7 @@ class InteractiveMergerSubprocessor(Subprocessor):
             cfg = pf.cfg.copy()
 
             frame_info = pf.frame_info
+            parallel_frame_info = pf.parallel_frame_info
             filepath = frame_info.filepath
 
             if len(frame_info.landmarks_list) == 0:
@@ -109,7 +110,9 @@ class InteractiveMergerSubprocessor(Subprocessor):
                                                  face_enhancer_func=self.face_enhancer_func,
                                                  xseg_256_extract_func=self.xseg_256_extract_func,
                                                  cfg=cfg,
-                                                 frame_info=frame_info)
+                                                 frame_info=frame_info,
+                                                 parallel_frame_info=parallel_frame_info,
+                                                 )
                     except Exception as e:
                         e_str = traceback.format_exc()
                         if 'MemoryError' in e_str:
