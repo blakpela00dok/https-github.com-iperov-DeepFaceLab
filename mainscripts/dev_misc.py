@@ -1,16 +1,18 @@
+import traceback
+import json
 import multiprocessing
 import shutil
 from pathlib import Path
-
 import cv2
 import numpy as np
 
-from DFLIMG import *
-from facelib import FaceType, LandmarksProcessor
+from core import imagelib, pathex
+from core.cv2ex import *
 from core.interact import interact as io
 from core.joblib import Subprocessor
-from core import pathex
-from core.cv2ex import *
+from core.leras import nn
+from DFLIMG import *
+from facelib import FaceType, LandmarksProcessor
 
 from . import Extractor, Sorter
 from .Extractor import ExtractSubprocessor
@@ -216,181 +218,72 @@ def extract_vggface2_dataset(input_dir, device_args={} ):
 
 """
 
-class CelebAMASKHQSubprocessor(Subprocessor):
-    class Cli(Subprocessor.Cli):
-        #override
-        def on_initialize(self, client_dict):
-            self.masks_files_paths = client_dict['masks_files_paths']
-            return None
-
-        #override
-        def process_data(self, data):
-            filename = data[0]
-
-            dflimg = DFLIMG.load(Path(filename))
-
-            image_to_face_mat = dflimg.get_image_to_face_mat()
-            src_filename = dflimg.get_source_filename()
-
-            img = cv2_imread(filename)
-            h,w,c = img.shape
-
-            fanseg_mask = LandmarksProcessor.get_image_hull_mask(img.shape, dflimg.get_landmarks() )
-
-            idx_name = '%.5d' % int(src_filename.split('.')[0])
-            idx_files = [ x for x in self.masks_files_paths if idx_name in x ]
-
-            skin_files = [ x for x in idx_files if 'skin' in x ]
-            eye_glass_files = [ x for x in idx_files if 'eye_g' in x ]
-
-            for files, is_invert in [ (skin_files,False),
-                                      (eye_glass_files,True) ]:
-                if len(files) > 0:
-                    mask = cv2_imread(files[0])
-                    mask = mask[...,0]
-                    mask[mask == 255] = 1
-                    mask = mask.astype(np.float32)
-                    mask = cv2.resize(mask, (1024,1024) )
-                    mask = cv2.warpAffine(mask, image_to_face_mat, (w, h), cv2.INTER_LANCZOS4)
-
-                    if not is_invert:
-                        fanseg_mask *= mask[...,None]
-                    else:
-                        fanseg_mask *= (1-mask[...,None])
-
-            dflimg.embed_and_set (filename, fanseg_mask=fanseg_mask)
-            return 1
-
-        #override
-        def get_data_name (self, data):
-            #return string identificator of your data
-            return data[0]
-
-    #override
-    def __init__(self, image_paths, masks_files_paths ):
-        self.image_paths = image_paths
-        self.masks_files_paths = masks_files_paths
-
-        self.result = []
-        super().__init__('CelebAMASKHQSubprocessor', CelebAMASKHQSubprocessor.Cli, 60)
-
-    #override
-    def process_info_generator(self):
-        for i in range(min(multiprocessing.cpu_count(), 8)):
-            yield 'CPU%d' % (i), {}, {'masks_files_paths' : self.masks_files_paths }
-
-    #override
-    def on_clients_initialized(self):
-        io.progress_bar ("Processing", len (self.image_paths))
-
-    #override
-    def on_clients_finalized(self):
-        io.progress_bar_close()
-
-    #override
-    def get_data(self, host_dict):
-        if len (self.image_paths) > 0:
-            return [self.image_paths.pop(0)]
-        return None
-
-    #override
-    def on_data_return (self, host_dict, data):
-        self.image_paths.insert(0, data[0])
-
-    #override
-    def on_result (self, host_dict, data, result):
-        io.progress_bar_inc(1)
-
-    #override
-    def get_result(self):
-        return self.result
-
 #unused in end user workflow
-def apply_celebamaskhq(input_dir ):
-
-    input_path = Path(input_dir)
-
-    img_path = input_path / 'aligned'
-    mask_path = input_path / 'mask'
-
-    if not img_path.exists():
-        raise ValueError(f'{str(img_path)} directory not found. Please ensure it exists.')
-
-    CelebAMASKHQSubprocessor(pathex.get_image_paths(img_path),
-                             pathex.get_image_paths(mask_path, subdirs=True) ).run()
-
-    return
-
-    paths_to_extract = []
-    for filename in io.progress_bar_generator(pathex.get_image_paths(img_path), desc="Processing"):
-        filepath = Path(filename)
-        dflimg = DFLIMG.load(filepath)
-
-        if dflimg is not None:
-            paths_to_extract.append (filepath)
-
-        image_to_face_mat = dflimg.get_image_to_face_mat()
-        src_filename = dflimg.get_source_filename()
-
-        #img = cv2_imread(filename)
-        h,w,c = dflimg.get_shape()
-
-        fanseg_mask = LandmarksProcessor.get_image_hull_mask( (h,w,c), dflimg.get_landmarks() )
-
-        idx_name = '%.5d' % int(src_filename.split('.')[0])
-        idx_files = [ x for x in masks_files if idx_name in x ]
-
-        skin_files = [ x for x in idx_files if 'skin' in x ]
-        eye_glass_files = [ x for x in idx_files if 'eye_g' in x ]
-
-        for files, is_invert in [ (skin_files,False),
-                                  (eye_glass_files,True) ]:
-
-            if len(files) > 0:
-                mask = cv2_imread(files[0])
-                mask = mask[...,0]
-                mask[mask == 255] = 1
-                mask = mask.astype(np.float32)
-                mask = cv2.resize(mask, (1024,1024) )
-                mask = cv2.warpAffine(mask, image_to_face_mat, (w, h), cv2.INTER_LANCZOS4)
-
-                if not is_invert:
-                    fanseg_mask *= mask[...,None]
-                else:
-                    fanseg_mask *= (1-mask[...,None])
-
-        #cv2.imshow("", (fanseg_mask*255).astype(np.uint8) )
-        #cv2.waitKey(0)
-
-
-        dflimg.embed_and_set (filename, fanseg_mask=fanseg_mask)
-
-
-        #import code
-        #code.interact(local=dict(globals(), **locals()))
-
-
-
-#unused in end user workflow
-def extract_fanseg(input_dir, device_args={} ):
-    multi_gpu = device_args.get('multi_gpu', False)
-    cpu_only = device_args.get('cpu_only', False)
-
+def dev_test_68(input_dir ):
+    # process 68 landmarks dataset with .pts files
     input_path = Path(input_dir)
     if not input_path.exists():
-        raise ValueError('Input directory not found. Please ensure it exists.')
+        raise ValueError('input_dir not found. Please ensure it exists.')
 
-    paths_to_extract = []
-    for filename in pathex.get_image_paths(input_path) :
-        filepath = Path(filename)
-        dflimg = DFLIMG.load ( filepath )
-        if dflimg is not None:
-            paths_to_extract.append (filepath)
+    output_path = input_path.parent / (input_path.name+'_aligned')
 
-    paths_to_extract_len = len(paths_to_extract)
-    if paths_to_extract_len > 0:
-        io.log_info ("Performing extract fanseg for %d files..." % (paths_to_extract_len) )
-        data = ExtractSubprocessor ([ ExtractSubprocessor.Data(filename) for filename in paths_to_extract ], 'fanseg', multi_gpu=multi_gpu, cpu_only=cpu_only).run()
+    io.log_info(f'Output dir is % {output_path}')
+
+    if output_path.exists():
+        output_images_paths = pathex.get_image_paths(output_path)
+        if len(output_images_paths) > 0:
+            io.input_bool("WARNING !!! \n %s contains files! \n They will be deleted. \n Press enter to continue." % (str(output_path)), False )
+            for filename in output_images_paths:
+                Path(filename).unlink()
+    else:
+        output_path.mkdir(parents=True, exist_ok=True)
+
+    images_paths = pathex.get_image_paths(input_path)
+
+    for filepath in io.progress_bar_generator(images_paths, "Processing"):
+        filepath = Path(filepath)
+
+
+        pts_filepath = filepath.parent / (filepath.stem+'.pts')
+        if pts_filepath.exists():
+            pts = pts_filepath.read_text()
+            pts_lines = pts.split('\n')
+
+            lmrk_lines = None
+            for pts_line in pts_lines:
+                if pts_line == '{':
+                    lmrk_lines = []
+                elif pts_line == '}':
+                    break
+                else:
+                    if lmrk_lines is not None:
+                        lmrk_lines.append (pts_line)
+
+            if lmrk_lines is not None and len(lmrk_lines) == 68:
+                try:
+                    lmrks = [ np.array ( lmrk_line.strip().split(' ') ).astype(np.float32).tolist() for lmrk_line in lmrk_lines]
+                except Exception as e:
+                    print(e)
+                    print(filepath)
+                    continue
+
+                rect = LandmarksProcessor.get_rect_from_landmarks(lmrks)
+
+                output_filepath = output_path / (filepath.stem+'.jpg')
+
+                img = cv2_imread(filepath)
+                img = imagelib.normalize_channels(img, 3)
+                cv2_imwrite(output_filepath, img, [int(cv2.IMWRITE_JPEG_QUALITY), 95] )
+                
+                raise Exception("unimplemented")
+                #DFLJPG.x(output_filepath, face_type=FaceType.toString(FaceType.MARK_ONLY),
+                #                                landmarks=lmrks,
+                #                                source_filename=filepath.name,
+                #                                source_rect=rect,
+                #                                source_landmarks=lmrks
+                #                    )
+
+    io.log_info("Done.")
 
 #unused in end user workflow
 def extract_umd_csv(input_file_csv,
@@ -464,7 +357,7 @@ def extract_umd_csv(input_file_csv,
     io.log_info ('Faces detected:      %d' % (faces_detected) )
     io.log_info ('-------------------------')
 
-def dev_test(input_dir):
+def dev_test1(input_dir):
     input_path = Path(input_dir)
 
     dir_names = pathex.get_all_dir_names(input_path)
@@ -475,12 +368,46 @@ def dev_test(input_dir):
         for filename in img_paths:
             filepath = Path(filename)
 
-            dflimg = DFLIMG.load (filepath)
+            dflimg = DFLIMG.x (filepath)
             if dflimg is None:
                 raise ValueError
 
-            dflimg.embed_and_set(filename, person_name=dir_name)
+            #dflimg.x(filename, person_name=dir_name)
 
             #import code
             #code.interact(local=dict(globals(), **locals()))
+
+def dev_resave_pngs(input_dir):
+    input_path = Path(input_dir)
+    if not input_path.exists():
+        raise ValueError('input_dir not found. Please ensure it exists.')
+
+    images_paths = pathex.get_image_paths(input_path, image_extensions=['.png'], subdirs=True, return_Path_class=True)
+
+    for filepath in io.progress_bar_generator(images_paths,"Processing"):
+        cv2_imwrite(filepath, cv2_imread(filepath))
+
+
+def dev_segmented_trash(input_dir):
+    input_path = Path(input_dir)
+    if not input_path.exists():
+        raise ValueError('input_dir not found. Please ensure it exists.')
+
+    output_path = input_path.parent / (input_path.name+'_trash')
+    output_path.mkdir(parents=True, exist_ok=True)
+
+    images_paths = pathex.get_image_paths(input_path, return_Path_class=True)
+
+    trash_paths = []
+    for filepath in images_paths:
+        json_file = filepath.parent / (filepath.stem +'.json')
+        if not json_file.exists():
+            trash_paths.append(filepath)
+
+    for filepath in trash_paths:
+
+        try:
+            filepath.rename ( output_path / filepath.name )
+        except:
+            io.log_info ('fail to trashing %s' % (src.name) )
 

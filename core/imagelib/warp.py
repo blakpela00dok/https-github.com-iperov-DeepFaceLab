@@ -2,14 +2,8 @@ import numpy as np
 import cv2
 from core import randomex
 
-def gen_warp_params (source, flip, rotation_range=[-10,10], scale_range=[-0.5, 0.5], tx_range=[-0.05, 0.05], ty_range=[-0.05, 0.05], rnd_seed=None  ):
-    h,w,c = source.shape
-    if (h != w):
-        raise ValueError ('gen_warp_params accepts only square images.')
-
-    if rnd_seed != None:
-        rnd_state = np.random.RandomState (rnd_seed)
-    else:
+def gen_warp_params (w, flip, rotation_range=[-10,10], scale_range=[-0.5, 0.5], tx_range=[-0.05, 0.05], ty_range=[-0.05, 0.05], rnd_state=None  ):
+    if rnd_state is None:
         rnd_state = np.random
 
     rotation = rnd_state.uniform( rotation_range[0], rotation_range[1] )
@@ -31,8 +25,8 @@ def gen_warp_params (source, flip, rotation_range=[-10,10], scale_range=[-0.5, 0
 
     half_cell_size = cell_size // 2
 
-    mapx = cv2.resize(mapx, (w+cell_size,)*2 )[half_cell_size:-half_cell_size-1,half_cell_size:-half_cell_size-1].astype(np.float32)
-    mapy = cv2.resize(mapy, (w+cell_size,)*2 )[half_cell_size:-half_cell_size-1,half_cell_size:-half_cell_size-1].astype(np.float32)
+    mapx = cv2.resize(mapx, (w+cell_size,)*2 )[half_cell_size:-half_cell_size,half_cell_size:-half_cell_size].astype(np.float32)
+    mapy = cv2.resize(mapy, (w+cell_size,)*2 )[half_cell_size:-half_cell_size,half_cell_size:-half_cell_size].astype(np.float32)
 
     #random transform
     random_transform_mat = cv2.getRotationMatrix2D((w // 2, w // 2), rotation, scale)

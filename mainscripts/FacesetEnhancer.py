@@ -93,25 +93,29 @@ class FacesetEnhancerSubprocessor(Subprocessor):
             self.log_info (intro_str)
 
             from facelib import FaceEnhancer
-            self.fe = FaceEnhancer( place_model_on_cpu=(device_vram<=2) )
+            self.fe = FaceEnhancer( place_model_on_cpu=(device_vram<=2 or cpu_only), run_on_cpu=cpu_only )
 
         #override
         def process_data(self, filepath):
             try:
                 dflimg = DFLIMG.load (filepath)
-                if dflimg is None:
-                    self.log_err ("%s is not a dfl image file" % (filepath.name) )
+                if dflimg is None or not dflimg.has_data():
+                    self.log_err (f"{filepath.name} is not a dfl image file")
                 else:
+                    dfl_dict = dflimg.get_dict()
+
                     img = cv2_imread(filepath).astype(np.float32) / 255.0
-
                     img = self.fe.enhance(img)
-
                     img = np.clip (img*255, 0, 255).astype(np.uint8)
 
                     output_filepath = self.output_dirpath / filepath.name
 
                     cv2_imwrite ( str(output_filepath), img, [int(cv2.IMWRITE_JPEG_QUALITY), 100] )
-                    dflimg.embed_and_set ( str(output_filepath) )
+
+                    dflimg = DFLIMG.load (output_filepath)
+                    dflimg.set_dict(dfl_dict)
+                    dflimg.save()
+
                     return (1, filepath, output_filepath)
             except:
                 self.log_err (f"Exception occured while processing file {filepath}. Error: {traceback.format_exc()}")

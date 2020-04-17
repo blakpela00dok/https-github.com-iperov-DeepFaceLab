@@ -14,7 +14,7 @@ import numpy as np
 import facelib
 from core import imagelib
 from core import mathlib
-from facelib import FaceType, LandmarksProcessor, TernausNet
+from facelib import FaceType, LandmarksProcessor
 from core.interact import interact as io
 from core.joblib import Subprocessor
 from core.leras import nn
@@ -71,7 +71,9 @@ class ExtractSubprocessor(Subprocessor):
                 self.rects_extractor = facelib.S3FDExtractor(place_model_on_cpu=place_model_on_cpu)
 
             if self.type == 'all' or 'landmarks' in self.type:
-                self.landmarks_extractor = facelib.FANExtractor(place_model_on_cpu=place_model_on_cpu)
+                # for head type, extract "3D landmarks"
+                self.landmarks_extractor = facelib.FANExtractor(landmarks_3D=self.face_type >= FaceType.HEAD,
+                                                                place_model_on_cpu=place_model_on_cpu)
 
             self.cached_image = (None, None)
 
@@ -92,7 +94,9 @@ class ExtractSubprocessor(Subprocessor):
                 self.cached_image = ( filepath, image )
 
             h, w, c = image.shape
-            extract_from_dflimg = (h == w and DFLIMG.load (filepath) is not None)
+            
+            dflimg = DFLIMG.load (filepath)
+            extract_from_dflimg = (h == w and (dflimg is not None and dflimg.has_data()) )
 
             if 'rects' in self.type or self.type == 'all':
                 data = ExtractSubprocessor.Cli.rects_stage (data=data,
@@ -241,14 +245,14 @@ class ExtractSubprocessor(Subprocessor):
 
                         landmarks_bbox = LandmarksProcessor.transform_points ( [ (0,0), (0,image_size-1), (image_size-1, image_size-1), (image_size-1,0) ], image_to_face_mat, True)
 
-                        rect_area      = mathlib.polygon_area(np.array(rect[[0,2,2,0]]), np.array(rect[[1,1,3,3]]))
-                        landmarks_area = mathlib.polygon_area(landmarks_bbox[:,0], landmarks_bbox[:,1] )
+                        rect_area      = mathlib.polygon_area(np.array(rect[[0,2,2,0]]).astype(np.float32), np.array(rect[[1,1,3,3]]).astype(np.float32))
+                        landmarks_area = mathlib.polygon_area(landmarks_bbox[:,0].astype(np.float32), landmarks_bbox[:,1].astype(np.float32) )
 
                         if not data.manual and face_type <= FaceType.FULL_NO_ALIGN and landmarks_area > 4*rect_area: #get rid of faces which umeyama-landmark-area > 4*detector-rect-area
                             continue
 
                         if output_debug_path is not None:
-                            LandmarksProcessor.draw_rect_landmarks (debug_image, rect, image_landmarks, image_size, face_type, transparent_mask=True)
+                            LandmarksProcessor.draw_rect_landmarks (debug_image, rect, image_landmarks, face_type, image_size, transparent_mask=True)
 
                     output_path = final_output_path
                     if data.force_output_path is not None:
@@ -261,15 +265,16 @@ class ExtractSubprocessor(Subprocessor):
                             shutil.copy ( str(filepath), str(output_filepath) )
                     else:
                         output_filepath = output_path / f"{filepath.stem}_{face_idx}.jpg"
-                        cv2_imwrite(output_filepath, face_image, [int(cv2.IMWRITE_JPEG_QUALITY), 100] )
+                        cv2_imwrite(output_filepath, face_image, [int(cv2.IMWRITE_JPEG_QUALITY), 90] )
 
-                    DFLJPG.embed_data(output_filepath, face_type=FaceType.toString(face_type),
-                                                    landmarks=face_image_landmarks.tolist(),
-                                                    source_filename=filepath.name,
-                                                    source_rect=rect,
-                                                    source_landmarks=image_landmarks.tolist(),
-                                                    image_to_face_mat=image_to_face_mat
-                                        )
+                    dflimg = DFLJPG.load(output_filepath)
+                    dflimg.set_face_type(FaceType.toString(face_type))
+                    dflimg.set_landmarks(face_image_landmarks.tolist())
+                    dflimg.set_source_filename(filepath.name)
+                    dflimg.set_source_rect(rect)
+                    dflimg.set_source_landmarks(image_landmarks.tolist())
+                    dflimg.set_image_to_face_mat(image_to_face_mat)
+                    dflimg.save()
 
                     data.final_output_files.append (output_filepath)
                     face_idx += 1
@@ -601,7 +606,7 @@ class ExtractSubprocessor(Subprocessor):
                 view_landmarks = LandmarksProcessor.transform_points (view_landmarks, mat)
 
             landmarks_color = (255,255,0) if self.rect_locked else (0,255,0)
-            LandmarksProcessor.draw_rect_landmarks (image, view_rect, view_landmarks, self.image_size, self.face_type, landmarks_color=landmarks_color)
+            LandmarksProcessor.draw_rect_landmarks (image, view_rect, view_landmarks, self.face_type, self.image_size, landmarks_color=landmarks_color)
             self.extract_needed = False
 
             io.show_image (self.wnd_name, image)
@@ -685,13 +690,29 @@ def main(detector=None,
          cpu_only = False,
          force_gpu_idxs = None,
          ):
-    face_type = FaceType.fromString(face_type)
-
-    image_size = 512 if face_type == FaceType.WHOLE_FACE else 256
-    
+         
     if not input_path.exists():
         io.log_err ('Input directory not found. Please ensure it exists.')
         return
+
+    if face_type is not None:
+        face_type = FaceType.fromString(face_type)
+        
+    if face_type is None:
+        if manual_output_debug_fix and output_path.exists():
+            files = pathex.get_image_paths(output_path)
+            if len(files) != 0:
+                dflimg = DFLIMG.load(Path(files[0]))
+                if dflimg is not None and dflimg.has_data():
+                     face_type = FaceType.fromString ( dflimg.get_face_type() )
+                
+    if face_type is None:
+        face_type = io.input_str ("Face type", 'wf', ['f','wf','head'], help_message="Full face / whole face / head. 'Whole face' covers full area of face include forehead. 'head' covers full head, but requires XSeg for src and dst faceset.").lower()
+        face_type = {'f'  : FaceType.FULL,
+                     'wf' : FaceType.WHOLE_FACE,
+                     'head' : FaceType.HEAD}[face_type]
+
+    image_size = 512 if face_type < FaceType.HEAD else 768    
 
     if detector is None:
         io.log_info ("Choose detector type.")

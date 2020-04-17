@@ -1,18 +1,17 @@
-﻿import multiprocessing
-import math
+﻿import math
+import multiprocessing
 import operator
 import os
 import sys
 import tempfile
 from functools import cmp_to_key
 from pathlib import Path
-from shutil import copyfile
 
 import cv2
 import numpy as np
 from numpy import linalg as npla
 
-from core import imagelib, pathex
+from core import imagelib, mathlib, pathex
 from core.cv2ex import *
 from core.imagelib import estimate_sharpness
 from core.interact import interact as io
@@ -29,12 +28,13 @@ class BlurEstimatorSubprocessor(Subprocessor):
             filepath = Path( data[0] )
             dflimg = DFLIMG.load (filepath)
 
-            if dflimg is not None:
+            if dflimg is None or not dflimg.has_data():
+                self.log_err (f"{filepath.name} is not a dfl image file")
+                return [ str(filepath), 0 ]
+            else:
                 image = cv2_imread( str(filepath) )
                 return [ str(filepath), estimate_sharpness(image) ]
-            else:
-                self.log_err ("%s is not a dfl image file" % (filepath.name) )
-                return [ str(filepath), 0 ]
+
 
         #override
         def get_data_name (self, data):
@@ -109,8 +109,8 @@ def sort_by_face_yaw(input_path):
 
         dflimg = DFLIMG.load (filepath)
 
-        if dflimg is None:
-            io.log_err ("%s is not a dfl image file" % (filepath.name) )
+        if dflimg is None or not dflimg.has_data():
+            io.log_err (f"{filepath.name} is not a dfl image file")
             trash_img_list.append ( [str(filepath)] )
             continue
 
@@ -132,8 +132,8 @@ def sort_by_face_pitch(input_path):
 
         dflimg = DFLIMG.load (filepath)
 
-        if dflimg is None:
-            io.log_err ("%s is not a dfl image file" % (filepath.name) )
+        if dflimg is None or not dflimg.has_data():
+            io.log_err (f"{filepath.name} is not a dfl image file")
             trash_img_list.append ( [str(filepath)] )
             continue
 
@@ -145,6 +145,32 @@ def sort_by_face_pitch(input_path):
     img_list = sorted(img_list, key=operator.itemgetter(1), reverse=True)
 
     return img_list, trash_img_list
+
+def sort_by_face_source_rect_size(input_path):
+    io.log_info ("Sorting by face rect size...")
+    img_list = []
+    trash_img_list = []
+    for filepath in io.progress_bar_generator( pathex.get_image_paths(input_path), "Loading"):
+        filepath = Path(filepath)
+
+        dflimg = DFLIMG.load (filepath)
+
+        if dflimg is None or not dflimg.has_data():
+            io.log_err (f"{filepath.name} is not a dfl image file")
+            trash_img_list.append ( [str(filepath)] )
+            continue
+
+        source_rect = dflimg.get_source_rect()
+        rect_area = mathlib.polygon_area(np.array(source_rect[[0,2,2,0]]).astype(np.float32), np.array(source_rect[[1,1,3,3]]).astype(np.float32))
+
+        img_list.append( [str(filepath), rect_area ] )
+
+    io.log_info ("Sorting...")
+    img_list = sorted(img_list, key=operator.itemgetter(1), reverse=True)
+
+    return img_list, trash_img_list
+
+
 
 class HistSsimSubprocessor(Subprocessor):
     class Cli(Subprocessor.Cli):
@@ -315,7 +341,7 @@ def sort_by_hist_dissim(input_path):
 
         image = cv2_imread(str(filepath))
 
-        if dflimg is not None:
+        if dflimg is not None and dflimg.has_data():
             face_mask = LandmarksProcessor.get_image_hull_mask (image.shape, dflimg.get_landmarks())
             image = (image*face_mask).astype(np.uint8)
 
@@ -365,8 +391,8 @@ def sort_by_origname(input_path):
 
         dflimg = DFLIMG.load (filepath)
 
-        if dflimg is None:
-            io.log_err ("%s is not a dfl image file" % (filepath.name) )
+        if dflimg is None or not dflimg.has_data():
+            io.log_err (f"{filepath.name} is not a dfl image file")
             trash_img_list.append( [str(filepath)] )
             continue
 
@@ -399,7 +425,7 @@ class FinalLoaderSubprocessor(Subprocessor):
     class Cli(Subprocessor.Cli):
         #override
         def on_initialize(self, client_dict):
-            self.include_by_blur = client_dict['include_by_blur']
+            self.faster = client_dict['faster']
 
         #override
         def process_data(self, data):
@@ -408,8 +434,8 @@ class FinalLoaderSubprocessor(Subprocessor):
             try:
                 dflimg = DFLIMG.load (filepath)
 
-                if dflimg is None:
-                    self.log_err("%s is not a dfl image file" % (filepath.name))
+                if dflimg is None or not dflimg.has_data():
+                    self.log_err (f"{filepath.name} is not a dfl image file")
                     return [ 1, [str(filepath)] ]
 
                 bgr = cv2_imread(str(filepath))
@@ -417,7 +443,13 @@ class FinalLoaderSubprocessor(Subprocessor):
                     raise Exception ("Unable to load %s" % (filepath.name) )
 
                 gray = cv2.cvtColor(bgr, cv2.COLOR_BGR2GRAY)
-                sharpness = estimate_sharpness(gray) if self.include_by_blur else 0
+
+                if self.faster:
+                    source_rect = dflimg.get_source_rect()
+                    sharpness = mathlib.polygon_area(np.array(source_rect[[0,2,2,0]]).astype(np.float32), np.array(source_rect[[1,1,3,3]]).astype(np.float32))
+                else:
+                    sharpness = estimate_sharpness(gray)
+
                 pitch, yaw, roll = LandmarksProcessor.estimate_pitch_yaw_roll ( dflimg.get_landmarks(), size=dflimg.get_shape()[1] )
 
                 hist = cv2.calcHist([gray], [0], None, [256], [0, 256])
@@ -433,10 +465,10 @@ class FinalLoaderSubprocessor(Subprocessor):
             return data[0]
 
     #override
-    def __init__(self, img_list, include_by_blur ):
+    def __init__(self, img_list, faster ):
         self.img_list = img_list
 
-        self.include_by_blur = include_by_blur
+        self.faster = faster
         self.result = []
         self.result_trash = []
 
@@ -456,7 +488,7 @@ class FinalLoaderSubprocessor(Subprocessor):
         io.log_info(f'Running on {cpu_count} CPUs')
 
         for i in range(cpu_count):
-            yield 'CPU%d' % (i), {}, {'include_by_blur': self.include_by_blur}
+            yield 'CPU%d' % (i), {}, {'faster': self.faster}
 
     #override
     def get_data(self, host_dict):
@@ -553,18 +585,24 @@ class FinalHistDissimSubprocessor(Subprocessor):
     def get_result(self):
         return self.result
 
-def sort_best(input_path, include_by_blur=True):
-    io.log_info ("Performing sort by best faces.")
+def sort_best_faster(input_path):
+    return sort_best(input_path, faster=True)
 
+def sort_best(input_path, faster=False):
     target_count = io.input_int ("Target number of faces?", 2000)
 
-    img_list, trash_img_list = FinalLoaderSubprocessor( pathex.get_image_paths(input_path), include_by_blur ).run()
+    io.log_info ("Performing sort by best faces.")
+    if faster:
+        io.log_info("Using faster algorithm. Faces will be sorted by source-rect-area instead of blur.")
+
+    img_list, trash_img_list = FinalLoaderSubprocessor( pathex.get_image_paths(input_path), faster ).run()
     final_img_list = []
 
     grads = 128
     imgs_per_grad = round (target_count / grads)
 
-    grads_space = np.linspace (-math.pi / 2, math.pi / 2,grads)
+    #instead of math.pi / 2, using -1.2,+1.2 because actually maximum yaw for 2DFAN landmarks are -1.2+1.2
+    grads_space = np.linspace (-1.2, 1.2,grads)
 
     yaws_sample_list = [None]*grads
     for g in io.progress_bar_generator ( range(grads), "Sort by yaw"):
@@ -591,20 +629,20 @@ def sort_best(input_path, include_by_blur=True):
 
     imgs_per_grad += total_lack // grads
 
-    if include_by_blur:
-        sharpned_imgs_per_grad = imgs_per_grad*10
-        for g in io.progress_bar_generator ( range (grads), "Sort by blur"):
-            img_list = yaws_sample_list[g]
-            if img_list is None:
-                continue
 
-            img_list = sorted(img_list, key=operator.itemgetter(1), reverse=True)
+    sharpned_imgs_per_grad = imgs_per_grad*10
+    for g in io.progress_bar_generator ( range (grads), "Sort by blur"):
+        img_list = yaws_sample_list[g]
+        if img_list is None:
+            continue
 
-            if len(img_list) > sharpned_imgs_per_grad:
-                trash_img_list += img_list[sharpned_imgs_per_grad:]
-                img_list = img_list[0:sharpned_imgs_per_grad]
+        img_list = sorted(img_list, key=operator.itemgetter(1), reverse=True)
 
-            yaws_sample_list[g] = img_list
+        if len(img_list) > sharpned_imgs_per_grad:
+            trash_img_list += img_list[sharpned_imgs_per_grad:]
+            img_list = img_list[0:sharpned_imgs_per_grad]
+
+        yaws_sample_list[g] = img_list
 
 
     yaw_pitch_sample_list = [None]*grads
@@ -716,7 +754,7 @@ def sort_by_absdiff(input_path):
 
     from core.leras import nn
 
-    device_config = nn.ask_choose_device_idxs(choose_only_one=True, return_device_config=True)
+    device_config = nn.DeviceConfig.ask_choose_device(choose_only_one=True)
     nn.initialize( device_config=device_config, data_format="NHWC" )
     tf = nn.tf
 
@@ -731,7 +769,7 @@ def sort_by_absdiff(input_path):
 
     outputs_full = []
     outputs_remain = []
-    
+
     for i in range(batch_size):
         diff_t = tf.reduce_sum( tf.abs(i_t-j_t[i]), axis=[1,2,3] )
         outputs_full.append(diff_t)
@@ -836,6 +874,7 @@ sort_func_methods = {
     'blur':        ("blur", sort_by_blur),
     'face-yaw':    ("face yaw direction", sort_by_face_yaw),
     'face-pitch':  ("face pitch direction", sort_by_face_pitch),
+    'face-source-rect-size' : ("face rect size in source image", sort_by_face_source_rect_size),
     'hist':        ("histogram similarity", sort_by_hist),
     'hist-dissim': ("histogram dissimilarity", sort_by_hist_dissim),
     'brightness':  ("brightness", sort_by_brightness),
@@ -845,6 +884,7 @@ sort_func_methods = {
     'oneface':     ("one face in image", sort_by_oneface_in_image),
     'absdiff':     ("absolute pixel difference", sort_by_absdiff),
     'final':       ("best faces", sort_best),
+    'final-fast':  ("best faces faster", sort_best_faster),
 }
 
 def main (input_path, sort_by_method=None):
@@ -859,7 +899,7 @@ def main (input_path, sort_by_method=None):
             io.log_info(f"[{i}] {desc}")
 
         io.log_info("")
-        id = io.input_int("", 3, valid_list=[*range(len(key_list))] )
+        id = io.input_int("", 4, valid_list=[*range(len(key_list))] )
 
         sort_by_method = key_list[id]
     else:

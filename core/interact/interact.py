@@ -1,12 +1,15 @@
 import multiprocessing
 import os
 import sys
+import threading
 import time
 import types
 
 import colorama
 import cv2
 from tqdm import tqdm
+
+from core import stdex
 
 try:
     import IPython #if success we are in colab
@@ -37,6 +40,8 @@ class InteractBase(object):
         self.pg_bar = None
         self.focus_wnd_name = None
         self.error_log_line_prefix = '/!\\ '
+
+        self.process_messages_callbacks = {}
 
     def is_support_windows(self):
         return False
@@ -164,7 +169,21 @@ class InteractBase(object):
         self.pg_bar.close()
         self.pg_bar = None
 
+    def add_process_messages_callback(self, func ):
+        tid = threading.get_ident()
+        callbacks = self.process_messages_callbacks.get(tid, None)
+        if callbacks is None:
+            callbacks = []
+            self.process_messages_callbacks[tid] = callbacks
+
+        callbacks.append ( func )
+
     def process_messages(self, sleep_time=0):
+        callbacks = self.process_messages_callbacks.get(threading.get_ident(), None)
+        if callbacks is not None:
+            for func in callbacks:
+                func()
+
         self.on_process_messages(sleep_time)
 
     def wait_any_key(self):
@@ -377,8 +396,14 @@ class InteractBase(object):
                 break
             if time.time() - t > max_time_sec:
                 break
+
+
         p.terminate()
-        sys.stdin = os.fdopen( sys.stdin.fileno() )
+        p.join()
+
+        old_stdin = sys.stdin
+        sys.stdin = os.fdopen( os.dup(sys.stdin.fileno()) )
+        old_stdin.close()
         return inp
 
     def input_process_skip_pending(self, stdin_fd):
@@ -402,6 +427,7 @@ class InteractBase(object):
         p.start()
         time.sleep(0.5)
         p.terminate()
+        p.join()
         sys.stdin = os.fdopen( sys.stdin.fileno() )
 
 
