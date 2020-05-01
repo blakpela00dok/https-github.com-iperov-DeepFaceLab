@@ -387,7 +387,8 @@ class InteractiveMergerSubprocessor(Subprocessor):
                     if cur_frame.is_done:
                         if not cur_frame.is_shown:
                             if cur_frame.image is None:
-                                image      = cv2_imread (cur_frame.output_filepath, verbose=False)
+                                # delete alpha channel
+                                image      = cv2_imread (cur_frame.output_filepath, verbose=False)[:,:,0:3]
                                 image_mask = cv2_imread (cur_frame.output_mask_filepath, verbose=False)
                                 if image is None or image_mask is None:
                                     # unable to read? recompute then
