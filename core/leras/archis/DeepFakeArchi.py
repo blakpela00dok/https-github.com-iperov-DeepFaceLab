@@ -1,6 +1,7 @@
 from core.leras import nn
 tf = nn.tf
 
+
 class DeepFakeArchi(nn.ArchiBase):    
     """
     resolution
@@ -334,24 +335,30 @@ class DeepFakeArchi(nn.ArchiBase):
         elif mod == 'uhd':
             
             class Downscale(nn.ModelBase):
-                def __init__(self, in_ch, out_ch, kernel_size=5, dilations=1, subpixel=True, use_activator=True, *kwargs ):
+                def __init__(self, in_ch, out_ch, kernel_size=5, depth_multiplier=1, dilations=1, subpixel=True, use_activator=True, *kwargs ):
                     self.in_ch = in_ch
                     self.out_ch = out_ch
                     self.kernel_size = kernel_size
+                    self.depth_multiplier = depth_multiplier
                     self.dilations = dilations
                     self.subpixel = subpixel
                     self.use_activator = use_activator
                     super().__init__(*kwargs)
 
                 def on_build(self, *args, **kwargs ):
-                    self.conv1 = nn.Conv2D( self.in_ch,
+                    self.conv1 = nn.SeparableConv2D( self.in_ch,
                                             self.out_ch // (4 if self.subpixel else 1),
                                             kernel_size=self.kernel_size,
+                                            depth_multiplier=self.depth_multiplier,
                                             strides=1 if self.subpixel else 2,
                                             padding='SAME', dilations=self.dilations)
+                    self.frn1 = nn.FRNorm2D(self.out_ch//(4 if self.subpixel else 1))
+                    self.tlu1 = nn.TLU(self.out_ch//(4 if self.subpixel else 1))
 
                 def forward(self, x):
                     x = self.conv1(x)
+                    x = self.frn1(x)
+                    x = self.tlu1(x)
                     if self.subpixel:
                         x = nn.space_to_depth(x, 2)
                     if self.use_activator:
@@ -362,49 +369,89 @@ class DeepFakeArchi(nn.ArchiBase):
                     return (self.out_ch // 4) * 4 if self.subpixel else self.out_ch
 
             class DownscaleBlock(nn.ModelBase):
-                def on_build(self, in_ch, ch, n_downscales, kernel_size, dilations=1, subpixel=True):
+                def on_build(self, in_ch, ch, n_downscales, kernel_size, dilations=1, subpixel=True, use_activator=True):
                     self.downs = []
 
                     last_ch = in_ch
                     for i in range(n_downscales):
                         cur_ch = ch*( min(2**i, 8)  )
-                        self.downs.append ( Downscale(last_ch, cur_ch, kernel_size=kernel_size, dilations=dilations, subpixel=subpixel) )
+                        self.downs.append ( Downscale(last_ch, cur_ch, kernel_size=kernel_size, dilations=dilations, subpixel=subpixel, use_activator=use_activator) )
                         last_ch = self.downs[-1].get_out_ch()
+                        
+                    self.bp1 = nn.BlurPool(kernel_size)
 
                 def forward(self, inp):
                     x = inp
                     for down in self.downs:
                         x = down(x)
+                    x = self.bp1(x)
                     return x
 
             class Upscale(nn.ModelBase):
-                def on_build(self, in_ch, out_ch, kernel_size=3 ):
-                    self.conv1 = nn.Conv2D( in_ch, out_ch*4, kernel_size=kernel_size, padding='SAME')
+                def on_build(self, in_ch, out_ch, kernel_size=3, depth_multiplier=1 ):
+                    self.conv1 = nn.SeparableConv2D( in_ch, out_ch*4, kernel_size=kernel_size, depth_multiplier=depth_multiplier, padding='SAME')
+                    self.frn1 = nn.FRNorm2D(out_ch*4)
+                    self.tlu1 = nn.TLU(out_ch*4)
 
                 def forward(self, x):
                     x = self.conv1(x)
-                    x = tf.nn.leaky_relu(x, 0.1)
+                    x = self.frn1(x)
+                    x = self.tlu1(x)
+                    #x = tf.nn.leaky_relu(x, 0.1) (TLU replaces relu)
                     x = nn.depth_to_space(x, 2)
                     return x
 
             class ResidualBlock(nn.ModelBase):
-                def on_build(self, ch, kernel_size=3 ):
-                    self.conv1 = nn.Conv2D( ch, ch, kernel_size=kernel_size, padding='SAME')
-                    self.conv2 = nn.Conv2D( ch, ch, kernel_size=kernel_size, padding='SAME')
+                def on_build(self, ch, kernel_size=3, depth_multiplier=1 ):
+                    self.conv1 = nn.SeparableConv2D( ch, ch, kernel_size=kernel_size, depth_multiplier=depth_multiplier, padding='SAME')
+                    self.frn1 = nn.FRNorm2D(ch)
+                    self.tlu1 = nn.TLU(ch)
+                    
+                    self.conv2 = nn.SeparableConv2D( ch, ch, kernel_size=kernel_size, depth_multiplier=depth_multiplier, padding='SAME')
+                    self.frn2 = nn.FRNorm2D(ch)
+                    self.tlu2 = nn.TLU(ch)
 
                 def forward(self, inp):
                     x = self.conv1(inp)
-                    x = tf.nn.leaky_relu(x, 0.2)
+                    #x = tf.nn.leaky_relu(x, 0.2)
+                    x = self.frn1(x)
+                    x = self.tlu1(x)
                     x = self.conv2(x)
-                    x = tf.nn.leaky_relu(inp + x, 0.2)
+                    x = self.frn2(x)
+                    x = self.tlu2(inp + x)
                     return x
+            """                    
+            class UpdownResidualBlock(nn.ModelBase):
+                def on_build(self, ch, inner_ch, kernel_size=3 ):
+                    self.up   = Upscale (ch, inner_ch, kernel_size=kernel_size)
+                    self.res  = ResidualBlock (inner_ch, kernel_size=kernel_size)
+                    self.down = Downscale (inner_ch, ch, kernel_size=kernel_size, use_activator=False)
+                    #self.frn1 = nn.FRNorm2D(ch)
+                    self.tlu1 = nn.TLU(ch)
 
+                def forward(self, inp):
+                    x = self.up(inp)
+                    x = upx = self.res(x)
+                    x = self.down(x)
+                    x = x + inp
+                    #x = self.frn1(x)
+                    x = self.tlu1(x)
+                    #x = tf.nn.leaky_relu(x, 0.2)
+                    return x, upx
+            """                    
             class Encoder(nn.ModelBase):
                 def on_build(self, in_ch, e_ch, **kwargs):
-                    self.down1 = DownscaleBlock(in_ch, e_ch, n_downscales=4, kernel_size=5, dilations=1, subpixel=False)
+                    self.down1 = DownscaleBlock(in_ch, e_ch, n_downscales=4, kernel_size=5, dilations=1, use_activator=False, subpixel=False)
+                    #self.down2 = DownscaleBlock(in_ch, e_ch//2, n_downscales=4, kernel_size=5, dilations=1, use_activator=False)
+                    #self.down3 = DownscaleBlock(in_ch, e_ch//2, n_downscales=4, kernel_size=5, dilations=2, use_activator=False)
+                    #self.down4 = DownscaleBlock(in_ch, e_ch//2, n_downscales=4, kernel_size=7, dilations=2, use_activator=False)
 
                 def forward(self, inp):
                     x = nn.flatten(self.down1(inp))
+                    #x = tf.concat([ nn.flatten(self.down1(inp)),
+                                        #nn.flatten(self.down2(inp)) ], -1),
+                                        #nn.flatten(self.down3(inp)),
+                                        #nn.flatten(self.down4(inp)) ], -1 )
                     return x
 
             lowest_dense_res = resolution // 16
@@ -413,11 +460,14 @@ class DeepFakeArchi(nn.ArchiBase):
                 def on_build(self, in_ch, ae_ch, ae_out_ch, **kwargs):
                     self.ae_out_ch = ae_out_ch
                     self.dense_norm = nn.DenseNorm()
+                    
                     self.dense1 = nn.Dense( in_ch, ae_ch )
+                    #self.frn2 = nn.FRNorm2D(ae_ch)
                     self.dense2 = nn.Dense( ae_ch, lowest_dense_res * lowest_dense_res * ae_out_ch )
                     self.upscale1 = Upscale(ae_out_ch, ae_out_ch)                   
 
                 def forward(self, inp):
+                    #x = self.frn1(inp)
                     x = self.dense_norm(inp)
                     x = self.dense1(x)
                     x = self.dense2(x)
@@ -443,12 +493,12 @@ class DeepFakeArchi(nn.ArchiBase):
                     self.res1 = ResidualBlock(d_ch*4, kernel_size=3)
                     self.res2 = ResidualBlock(d_ch*2, kernel_size=3)
 
-                    self.out_conv  = nn.Conv2D( d_ch*2, 3, kernel_size=1, padding='SAME')
+                    self.out_conv  = nn.SeparableConv2D( d_ch*2, 3, kernel_size=1, padding='SAME')
 
                     self.upscalem0 = Upscale(in_ch, d_mask_ch*8, kernel_size=3)
                     self.upscalem1 = Upscale(d_mask_ch*8, d_mask_ch*4, kernel_size=3)
                     self.upscalem2 = Upscale(d_mask_ch*4, d_mask_ch*2, kernel_size=3)
-                    self.out_convm = nn.Conv2D( d_mask_ch*2, 1, kernel_size=1, padding='SAME')
+                    self.out_convm = nn.SeparableConv2D( d_mask_ch*2, 1, kernel_size=1, padding='SAME')
 
                 def forward(self, inp):
                     z = inp
@@ -463,6 +513,7 @@ class DeepFakeArchi(nn.ArchiBase):
                     m = self.upscalem0(z)
                     m = self.upscalem1(m)
                     m = self.upscalem2(m)
+                    
 
                     return tf.nn.sigmoid(self.out_conv(x)), \
                            tf.nn.sigmoid(self.out_convm(m))

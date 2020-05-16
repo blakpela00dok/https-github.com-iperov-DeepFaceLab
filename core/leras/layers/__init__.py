@@ -2,6 +2,7 @@ from .Saveable import *
 from .LayerBase import *
 
 from .Conv2D import *
+from .SeparableConv2D import *
 from .Conv2DTranspose import *
 from .Dense import *
 from .BlurPool import *

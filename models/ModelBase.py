@@ -66,7 +66,7 @@ class ModelBase(object):
                     if len(saved_models_names) != 0:
                         if silent_start:
                             self.model_name = saved_models_names[0]
-                            io.log_info(f'Silent start: choosed model "{self.model_name}"')
+                            io.log_info(f'Silent start: chose model "{self.model_name}"')
                         else:
                             io.log_info ("Choose one of saved models, or enter a name to create a new model.")
                             io.log_info ("[r] : rename")
@@ -153,7 +153,7 @@ class ModelBase(object):
             
         if silent_start:
             self.device_config = nn.DeviceConfig.BestGPU()
-            io.log_info (f"Silent start: choosed device {'CPU' if self.device_config.cpu_only else self.device_config.devices[0].name}")            
+            io.log_info (f"Silent start: chose device {'CPU' if self.device_config.cpu_only else self.device_config.devices[0].name}")            
         else:
             self.device_config = nn.DeviceConfig.GPUIndexes( force_gpu_idxs or nn.ask_choose_device_idxs(suggest_best_multi_gpu=True)) \
                                 if not cpu_only else nn.DeviceConfig.CPU()
@@ -267,7 +267,7 @@ class ModelBase(object):
         return def_value
 
     def ask_override(self):
-        return self.is_training and self.iter != 0 and io.input_in_time ("Press enter in 2 seconds to override model settings.", 5 if io.is_colab() else 2 )
+        return self.is_training and self.iter != 0 #and io.input_in_time ("Press enter in 2 seconds to override model settings.", 5 if io.is_colab() else 2 )
 
     def ask_autobackup_hour(self, default_value=0):
         default_autobackup_hour = self.options['autobackup_hour'] = self.load_or_def_option('autobackup_hour', default_value)
