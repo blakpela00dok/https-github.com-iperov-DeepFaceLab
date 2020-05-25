@@ -25,7 +25,7 @@ class DeepFakeArchi(nn.ArchiBase):
                     super().__init__(*kwargs)
 
                 def on_build(self, *args, **kwargs ):
-                    self.conv1 = nn.Conv2D( self.in_ch,
+                    self.conv1 = nn.SeparableConv2D( self.in_ch,
                                             self.out_ch // (4 if self.subpixel else 1),
                                             kernel_size=self.kernel_size,
                                             strides=1 if self.subpixel else 2,
@@ -60,7 +60,7 @@ class DeepFakeArchi(nn.ArchiBase):
 
             class Upscale(nn.ModelBase):
                 def on_build(self, in_ch, out_ch, kernel_size=3 ):
-                    self.conv1 = nn.Conv2D( in_ch, out_ch*4, kernel_size=kernel_size, padding='SAME')
+                    self.conv1 = nn.SeparableConv2D( in_ch, out_ch*4, kernel_size=kernel_size, padding='SAME')
 
                 def forward(self, x):
                     x = self.conv1(x)
@@ -70,8 +70,8 @@ class DeepFakeArchi(nn.ArchiBase):
 
             class ResidualBlock(nn.ModelBase):
                 def on_build(self, ch, kernel_size=3 ):
-                    self.conv1 = nn.Conv2D( ch, ch, kernel_size=kernel_size, padding='SAME')
-                    self.conv2 = nn.Conv2D( ch, ch, kernel_size=kernel_size, padding='SAME')
+                    self.conv1 = nn.SeparableConv2D( ch, ch, kernel_size=kernel_size, padding='SAME')
+                    self.conv2 = nn.SeparableConv2D( ch, ch, kernel_size=kernel_size, padding='SAME')
 
                 def forward(self, inp):
                     x = self.conv1(inp)
@@ -161,12 +161,12 @@ class DeepFakeArchi(nn.ArchiBase):
                         self.res1 = ResidualBlock(d_ch*4, kernel_size=3)
                         self.res2 = ResidualBlock(d_ch*2, kernel_size=3)
 
-                    self.out_conv  = nn.Conv2D( d_ch*2, 3, kernel_size=1, padding='SAME')
+                    self.out_conv  = nn.SeparableConv2D( d_ch*2, 3, kernel_size=1, padding='SAME')
 
                     self.upscalem0 = Upscale(in_ch, d_mask_ch*8, kernel_size=3)
                     self.upscalem1 = Upscale(d_mask_ch*8, d_mask_ch*4, kernel_size=3)
                     self.upscalem2 = Upscale(d_mask_ch*4, d_mask_ch*2, kernel_size=3)
-                    self.out_convm = nn.Conv2D( d_mask_ch*2, 1, kernel_size=1, padding='SAME')
+                    self.out_convm = nn.SeparableConv2D( d_mask_ch*2, 1, kernel_size=1, padding='SAME')
 
                 def forward(self, inp):
                     z = inp
@@ -211,7 +211,7 @@ class DeepFakeArchi(nn.ArchiBase):
                     super().__init__(*kwargs)
 
                 def on_build(self, *args, **kwargs ):
-                    self.conv1 = nn.Conv2D( self.in_ch,
+                    self.conv1 = nn.SeparableConv2D( self.in_ch,
                                             self.out_ch // (4 if self.subpixel else 1),
                                             kernel_size=self.kernel_size,
                                             strides=1 if self.subpixel else 2,
@@ -248,7 +248,7 @@ class DeepFakeArchi(nn.ArchiBase):
 
             class Upscale(nn.ModelBase):
                 def on_build(self, in_ch, out_ch, kernel_size=3 ):
-                    self.conv1 = nn.Conv2D( in_ch, out_ch*4, kernel_size=kernel_size, padding='SAME')
+                    self.conv1 = nn.SeparableConv2D( in_ch, out_ch*4, kernel_size=kernel_size, padding='SAME')
 
                 def forward(self, x):
                     x = self.conv1(x)
@@ -258,8 +258,8 @@ class DeepFakeArchi(nn.ArchiBase):
 
             class ResidualBlock(nn.ModelBase):
                 def on_build(self, ch, kernel_size=3 ):
-                    self.conv1 = nn.Conv2D( ch, ch, kernel_size=kernel_size, padding='SAME')
-                    self.conv2 = nn.Conv2D( ch, ch, kernel_size=kernel_size, padding='SAME')
+                    self.conv1 = nn.SeparableConv2D( ch, ch, kernel_size=kernel_size, padding='SAME')
+                    self.conv2 = nn.SeparableConv2D( ch, ch, kernel_size=kernel_size, padding='SAME')
 
                 def forward(self, inp):
                     x = self.conv1(inp)
@@ -314,8 +314,8 @@ class DeepFakeArchi(nn.ArchiBase):
                     self.upscalem2 = Upscale(d_ch, d_ch//2)
                     self.upscalem3 = Upscale(d_ch//2, d_ch//2)
 
-                    self.out_conv = nn.Conv2D( d_ch*1, 3, kernel_size=1, padding='SAME')
-                    self.out_convm = nn.Conv2D( d_ch//2, 1, kernel_size=1, padding='SAME')
+                    self.out_conv = nn.SeparableConv2D( d_ch*1, 3, kernel_size=1, padding='SAME')
+                    self.out_convm = nn.SeparableConv2D( d_ch//2, 1, kernel_size=1, padding='SAME')
 
                 def forward(self, inp):
                     z = inp
@@ -352,13 +352,13 @@ class DeepFakeArchi(nn.ArchiBase):
                                             depth_multiplier=self.depth_multiplier,
                                             strides=1 if self.subpixel else 2,
                                             padding='SAME', dilations=self.dilations)
-                    self.frn1 = nn.FRNorm2D(self.out_ch//(4 if self.subpixel else 1))
-                    self.tlu1 = nn.TLU(self.out_ch//(4 if self.subpixel else 1))
+                    #self.frn1 = nn.FRNorm2D(self.out_ch//(4 if self.subpixel else 1))
+                    #self.tlu1 = nn.TLU(self.out_ch//(4 if self.subpixel else 1))
 
                 def forward(self, x):
                     x = self.conv1(x)
-                    x = self.frn1(x)
-                    x = self.tlu1(x)
+                    #x = self.frn1(x)
+                    #x = self.tlu1(x)
                     if self.subpixel:
                         if (x.get_shape().as_list()[-2] % 2 != 0): #or (x.get_shape().as_list()[-1] % 2 != 0):
                             #padding = self.kernel_size//2
@@ -415,7 +415,7 @@ class DeepFakeArchi(nn.ArchiBase):
                     for i in range(n_downscales):
                         cur_ch = ch*( min(2**i, 8)  )
                         
-                        if (d % 2 == 0) and alternating_dilations:
+                        if (d % 2 != 0) and alternating_dilations:
                             dil = True
                             d += 1
                         else:
@@ -444,35 +444,36 @@ class DeepFakeArchi(nn.ArchiBase):
             class Upscale(nn.ModelBase):
                 def on_build(self, in_ch, out_ch, kernel_size=3, depth_multiplier=1 ):
                     self.conv1 = nn.SeparableConv2D( in_ch, out_ch*4, kernel_size=kernel_size, depth_multiplier=depth_multiplier, padding='SAME')
-                    self.frn1 = nn.FRNorm2D(out_ch*4)
-                    self.tlu1 = nn.TLU(out_ch*4)
+                    #self.frn1 = nn.FRNorm2D(out_ch*4)
+                    #self.tlu1 = nn.TLU(out_ch*4)
 
                 def forward(self, x):
                     x = self.conv1(x)
-                    x = self.frn1(x)
-                    x = self.tlu1(x)
-                    #x = tf.nn.leaky_relu(x, 0.1) (TLU replaces relu)
+                    #x = self.frn1(x)
+                    #x = self.tlu1(x)
+                    x = tf.nn.leaky_relu(x, 0.1)# (TLU replaces relu)
                     x = nn.depth_to_space(x, 2)
                     return x
 
             class ResidualBlock(nn.ModelBase):
                 def on_build(self, ch, kernel_size=3, depth_multiplier=1 ):
                     self.conv1 = nn.SeparableConv2D( ch, ch, kernel_size=kernel_size, depth_multiplier=depth_multiplier, padding='SAME')
-                    self.frn1 = nn.FRNorm2D(ch)
-                    self.tlu1 = nn.TLU(ch)
+                    #self.frn1 = nn.FRNorm2D(ch)
+                    #self.tlu1 = nn.TLU(ch)
                     
                     self.conv2 = nn.SeparableConv2D( ch, ch, kernel_size=kernel_size, depth_multiplier=depth_multiplier, padding='SAME')
-                    self.frn2 = nn.FRNorm2D(ch)
-                    self.tlu2 = nn.TLU(ch)
+                    #self.frn2 = nn.FRNorm2D(ch)
+                    #self.tlu2 = nn.TLU(ch)
 
                 def forward(self, inp):
                     x = self.conv1(inp)
-                    #x = tf.nn.leaky_relu(x, 0.2)
-                    x = self.frn1(x)
-                    x = self.tlu1(x)
+                    x = tf.nn.leaky_relu(x, 0.2)
+                    #x = self.frn1(x)
+                    #x = self.tlu1(x)
                     x = self.conv2(x)
-                    x = self.frn2(x)
-                    x = self.tlu2(inp + x)
+                    #x = self.frn2(x)
+                    x = tf.nn.leaky_relu(inp + x, 0.2)
+                    #x = self.tlu2(inp + x)
                     return x
             """                    
             class UpdownResidualBlock(nn.ModelBase):
@@ -495,7 +496,7 @@ class DeepFakeArchi(nn.ArchiBase):
             """                    
             class Encoder(nn.ModelBase):
                 def on_build(self, in_ch, e_ch, **kwargs):
-                    self.down1 = DecayingDownscaleBlock(in_ch, e_ch, init_kernel_size=7, n_downscales=8, dilations=2, use_activator=False)
+                    self.down1 = DownscaleBlock(in_ch, e_ch, kernel_size=5, n_downscales=4, dilations=1)
                     #self.down2 = DecayingDownscaleBlock(in_ch, e_ch//2, n_downscales=6, dilations=2, use_activator=False)
     
 
