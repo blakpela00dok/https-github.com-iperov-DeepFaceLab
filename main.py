@@ -43,7 +43,7 @@ if __name__ == "__main__":
                       )
 
     p = subparsers.add_parser( "extract", help="Extract the faces from a pictures.")
-    p.add_argument('--detector', dest="detector", choices=['s3fd','manual'], default=None, help="Type of detector.")
+    p.add_argument('--detector', dest="detector", choices=['retinaface', 'manual'], default=None, help="Type of detector.")
     p.add_argument('--input-dir', required=True, action=fixPathAction, dest="input_dir", help="Input directory. A directory containing the files you wish to process.")
     p.add_argument('--output-dir', required=True, action=fixPathAction, dest="output_dir", help="Output directory. This is where the extracted files will be stored.")
     p.add_argument('--output-debug', action="store_true", dest="output_debug", default=None, help="Writes debug images to <output-dir>_debug\ directory.")
