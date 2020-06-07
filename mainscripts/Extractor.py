@@ -1,4 +1,4 @@
-import traceback
+﻿import traceback
 import math
 import multiprocessing
 import operator
@@ -15,9 +15,9 @@ import facelib
 from core import imagelib
 from core import mathlib
 from facelib import FaceType, LandmarksProcessor
-from facelib.nn_pt import nn
 from core.interact import interact as io
 from core.joblib import Subprocessor
+from core.leras import nn
 from core import pathex
 from core.cv2ex import *
 from DFLIMG import *
@@ -68,11 +68,12 @@ class ExtractSubprocessor(Subprocessor):
             self.log_info (f"Running on {client_dict['device_name'] }")
 
             if self.type == 'all' or self.type == 'rects-s3fd' or 'landmarks' in self.type:
-                self.rects_extractor = facelib.RetinaFaceExtractor(place_model_on_cpu=place_model_on_cpu)
+                self.rects_extractor = facelib.S3FDExtractor(place_model_on_cpu=place_model_on_cpu)
 
             if self.type == 'all' or 'landmarks' in self.type:
                 # for head type, extract "3D landmarks"
-                self.landmarks_extractor = facelib.FANExtractor(place_model_on_cpu=place_model_on_cpu)
+                self.landmarks_extractor = facelib.FANExtractor(landmarks_3D=self.face_type >= FaceType.HEAD,
+                                                                place_model_on_cpu=place_model_on_cpu)
 
             self.cached_image = (None, None)
 
@@ -715,9 +716,9 @@ def main(detector=None,
 
     if detector is None:
         io.log_info ("Choose detector type.")
-        io.log_info ("[0] RetinaFace")
+        io.log_info ("[0] S3FD")
         io.log_info ("[1] manual")
-        detector = {0:'retinaface', 1:'manual'}[ io.input_int("", 0, [0,1]) ]
+        detector = {0:'s3fd', 1:'manual'}[ io.input_int("", 0, [0,1]) ]
 
     device_config = nn.DeviceConfig.GPUIndexes( force_gpu_idxs or nn.ask_choose_device_idxs(choose_only_one=detector=='manual', suggest_all_gpu=True) ) \
                     if not cpu_only else nn.DeviceConfig.CPU()
