@@ -32,7 +32,7 @@ class SAEHDModel(ModelBase):
         default_face_type          = self.options['face_type']          = self.load_or_def_option('face_type', 'f')
         default_models_opt_on_gpu  = self.options['models_opt_on_gpu']  = self.load_or_def_option('models_opt_on_gpu', True)
         default_archi              = self.options['archi']              = self.load_or_def_option('archi', 'df')
-        default_separable          = self.options['separable']          = self.load_or_def_option('separable', False)
+        default_separable_base     = self.options['separable_base']     = self.load_or_def_option('separable_base', False)
         default_separable_enc      = self.options['separable_enc']      = self.load_or_def_option('separable_enc', False)
         default_separable_inter    = self.options['separable_inter']    = self.load_or_def_option('separable_inter', False)
         default_separable_dec      = self.options['separable_dec']      = self.load_or_def_option('separable_dec', False)
@@ -66,16 +66,16 @@ class SAEHDModel(ModelBase):
             self.options['resolution'] = resolution
             self.options['face_type'] = io.input_str ("Face type", default_face_type, ['h','mf','f','wf','head'], help_message="Half / mid face / full face / whole face / head. Half face has better resolution, but covers less area of cheeks. Mid face is 30% wider than half face. 'Whole face' covers full area of face including forehead. 'head' covers full head, but requires XSeg for src and dst faceset.").lower()
             self.options['archi'] = io.input_str ("AE architecture", default_archi, ['df','liae','dfhd','liaehd','dfuhd','liaeuhd'], help_message="'df' keeps faces more natural.\n'liae' can fix overly different face shapes.\n'hd' are experimental versions.").lower()
-            self.options['separable'] = io.input_bool ("Use depthwise separable convolutions throughout model", default_separable, help_message="Use lighter and more effecient layers in the encoder, bottleneck, and decoder.  This speeds up iterations (~15-200%) and reduces memory usage considerably in the encoder and decoder (~60%) - allowing for increased settings or faster training - but it may take more iterations for the model to become good and possibly hurt quality.  Set this to false if you wish to only have these layers in certain parts of the model (e.g. only in the encoder) or if you do not want them at all.")
+            self.options['separable_base'] = io.input_bool ("Use depthwise separable convolutions", default_separable_base, help_message="Use lighter and more effecient layers in any parts (encoder, bottleneck, and decoder) of the model you want, which speeds up iterations (~15-200%) and reduces memory usage considerably (~60%).  However, more iterations may be required to get a good model and there may be some degree of quality loss (can be compensated for with higher enc/dec dims).")
 
-            if not self.options['separable']:
+            if self.options['separable_base']:
                 self.options['separable_enc'] = io.input_bool ("Use depthwise separable convolutions in the encoder", default_separable_enc, help_message="This is the part of the model second most impacted by using these more efficient layers in terms of better iteration speed, memory savings, possible quality loss, and possible increase in required iterations as it may have anywhere from one to four downscaling operations for UHD and HD architectures respectively.")
-                self.options['separable_inter'] = io.input_bool ("Use depthwise separable convolutions in the bottleneck", default_separable_inter, help_message="This is the part of the model least impacted by using these more efficient layers in terms of better iteration speed, memory savings, possible quality loss, and possible increase in required iterations as it only has a single upscaling operation regardless of architecture.")
+                self.options['separable_inter'] = io.input_bool ("Use depthwise separable convolutions in the bottleneck (AE)", default_separable_inter, help_message="This is the part of the model least impacted by using these more efficient layers in terms of better iteration speed, memory savings, possible quality loss, and possible increase in required iterations as it only has a single upscaling operation regardless of architecture.")
                 self.options['separable_dec'] = io.input_bool ("Use depthwise separable convolutions in the decoder", default_separable_dec, help_message="This is the part of the model most impacted by using these more efficient layers in terms of better iteration speed, memory savings, possible quality loss, and possible increase in required iterations as it has by far the most operations that these layers use out of all parts of the model.")
             else:
-                self.options['separable_enc'] = True
-                self.options['separable_inter'] = True
-                self.options['separable_dec'] = True
+                self.options['separable_enc'] = False
+                self.options['separable_inter'] = False
+                self.options['separable_dec'] = False
 
         default_d_dims             = 48 if self.options['archi'] == 'dfhd' else 64
         default_d_dims             = self.options['d_dims']             = self.load_or_def_option('d_dims', default_d_dims)
@@ -85,7 +85,7 @@ class SAEHDModel(ModelBase):
         default_d_mask_dims        = self.options['d_mask_dims']        = self.load_or_def_option('d_mask_dims', default_d_mask_dims)
 
         if self.is_first_run():
-            self.options['ae_dims'] = np.clip ( io.input_int("AutoEncoder dimensions", default_ae_dims, add_info="32-1024", help_message="All face information will packed to AE dims. If amount of AE dims are not enough, then for example closed eyes will not be recognized. More dims are better, but require more VRAM. You can fine-tune model size to fit your GPU." ), 32, 1024 )
+            self.options['ae_dims'] = np.clip ( io.input_int("AutoEncoder dimensions", default_ae_dims, add_info="32-1024", help_message="All face information will packed into the AE dims. If the amount of AE dims are not high enough, then for example closed eyes will not be recognized. More dims are better, but require more VRAM. You can fine-tune model size to fit your GPU." ), 32, 1024 )
 
             e_dims = np.clip ( io.input_int("Encoder dimensions", default_e_dims, add_info="16-256", help_message="More dims help to recognize more facial features and achieve sharper result, but require more VRAM. You can fine-tune model size to fit your GPU." ), 16, 256 )
             self.options['e_dims'] = e_dims + e_dims % 2
