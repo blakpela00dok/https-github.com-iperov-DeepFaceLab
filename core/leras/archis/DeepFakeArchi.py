@@ -159,7 +159,7 @@ class DeepFakeArchi(nn.ArchiBase):
                     return self.ae_out_ch
 
             class Decoder(nn.ModelBase):
-                def on_build(self, in_ch, d_ch, d_mask_ch, is_hd ):
+                def on_build(self, in_ch, d_ch, d_mask_ch, is_hd, separable=False ):
                     self.is_hd = is_hd
 
                     self.upscale0 = Upscale(in_ch, d_ch*8, kernel_size=3, separable=separable)
