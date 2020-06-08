@@ -32,6 +32,10 @@ class SAEHDModel(ModelBase):
         default_face_type          = self.options['face_type']          = self.load_or_def_option('face_type', 'f')
         default_models_opt_on_gpu  = self.options['models_opt_on_gpu']  = self.load_or_def_option('models_opt_on_gpu', True)
         default_archi              = self.options['archi']              = self.load_or_def_option('archi', 'df')
+        default_separable          = self.options['separable']          = self.load_or_def_option('separable', False)
+        default_separable_enc      = self.options['separable_enc']      = self.load_or_def_option('separable_enc', False)
+        default_separable_inter    = self.options['separable_inter']    = self.load_or_def_option('separable_inter', False)
+        default_separable_dec      = self.options['separable_dec']      = self.load_or_def_option('separable_dec', False)
         default_ae_dims            = self.options['ae_dims']            = self.load_or_def_option('ae_dims', 256)
         default_e_dims             = self.options['e_dims']             = self.load_or_def_option('e_dims', 64)
         default_d_dims             = self.options['d_dims']             = self.options.get('d_dims', None)
@@ -60,8 +64,18 @@ class SAEHDModel(ModelBase):
             resolution = io.input_int("Resolution", default_resolution, add_info="64-512", help_message="More resolution requires more VRAM and time to train. Value will be adjusted to multiple of 16.")
             resolution = np.clip ( (resolution // 16) * 16, 64, 512)
             self.options['resolution'] = resolution
-            self.options['face_type'] = io.input_str ("Face type", default_face_type, ['h','mf','f','wf','head'], help_message="Half / mid face / full face / whole face / head. Half face has better resolution, but covers less area of cheeks. Mid face is 30% wider than half face. 'Whole face' covers full area of face include forehead. 'head' covers full head, but requires XSeg for src and dst faceset.").lower()
+            self.options['face_type'] = io.input_str ("Face type", default_face_type, ['h','mf','f','wf','head'], help_message="Half / mid face / full face / whole face / head. Half face has better resolution, but covers less area of cheeks. Mid face is 30% wider than half face. 'Whole face' covers full area of face including forehead. 'head' covers full head, but requires XSeg for src and dst faceset.").lower()
             self.options['archi'] = io.input_str ("AE architecture", default_archi, ['df','liae','dfhd','liaehd','dfuhd','liaeuhd'], help_message="'df' keeps faces more natural.\n'liae' can fix overly different face shapes.\n'hd' are experimental versions.").lower()
+            self.options['separable'] = io.input_bool ("Use depthwise separable convolutions throughout model", default_separable, help_message="Use lighter and more effecient layers in the encoder, bottleneck, and decoder.  This speeds up iterations (~15-200%) and reduces memory usage considerably in the encoder and decoder (~60%) - allowing for increased settings or faster training - but it may take more iterations for the model to become good and possibly hurt quality.  Set this to false if you wish to only have these layers in certain parts of the model (e.g. only in the encoder) or if you do not want them at all.").lower()
+
+            if not self.options['separable']:
+                self.options['separable_enc'] = io.input_bool ("Use depthwise separable convolutions in the encoder", default_separable_enc, help_message="This is the part of the model second most impacted by using these more efficient layers in terms of better iteration speed, memory savings, possible quality loss, and possible increase in required iterations as it may have anywhere from one to four downscaling operations for UHD and HD architectures respectively.").lower()
+                self.options['separable_inter'] = io.input_bool ("Use depthwise separable convolutions in the bottleneck", default_separable_inter, help_message="This is the part of the model least impacted by using these more efficient layers in terms of better iteration speed, memory savings, possible quality loss, and possible increase in required iterations as it only has a single upscaling operation regardless of architecture.").lower()
+                self.options['separable_dec'] = io.input_bool ("Use depthwise separable convolutions in the decoder", default_separable_dec, help_message="This is the part of the model most impacted by using these more efficient layers in terms of better iteration speed, memory savings, possible quality loss, and possible increase in required iterations as it has by far the most operations that these layers use out of all parts of the model.").lower()
+            else:
+                self.options['separable_enc'] = True
+                self.options['separable_inter'] = True
+                self.options['separable_dec'] = True
 
         default_d_dims             = 48 if self.options['archi'] == 'dfhd' else 64
         default_d_dims             = self.options['d_dims']             = self.load_or_def_option('d_dims', default_d_dims)
@@ -133,6 +147,12 @@ class SAEHDModel(ModelBase):
         eyes_prio = self.options['eyes_prio']
         archi = self.options['archi']
         is_hd = 'hd' in archi
+        
+        separable_enc = self.options['separable_enc']
+        separable_inter = self.options['separable_inter']
+        separable_dec = self.options['separable_dec']
+        
+        
         ae_dims = self.options['ae_dims']
         e_dims = self.options['e_dims']
         d_dims = self.options['d_dims']
@@ -173,14 +193,14 @@ class SAEHDModel(ModelBase):
 
         with tf.device (models_opt_device):
             if 'df' in archi:
-                self.encoder = model_archi.Encoder(in_ch=input_ch, e_ch=e_dims, is_hd=is_hd, name='encoder')
+                self.encoder = model_archi.Encoder(in_ch=input_ch, e_ch=e_dims, is_hd=is_hd, separable=separable_enc, name='encoder')
                 encoder_out_ch = self.encoder.compute_output_channels ( (nn.floatx, bgr_shape))
 
-                self.inter = model_archi.Inter (in_ch=encoder_out_ch, ae_ch=ae_dims, ae_out_ch=ae_dims, is_hd=is_hd, name='inter')
+                self.inter = model_archi.Inter (in_ch=encoder_out_ch, ae_ch=ae_dims, ae_out_ch=ae_dims, is_hd=is_hd, separable=separable_inter, name='inter')
                 inter_out_ch = self.inter.compute_output_channels ( (nn.floatx, (None,encoder_out_ch)))
 
-                self.decoder_src = model_archi.Decoder(in_ch=inter_out_ch, d_ch=d_dims, d_mask_ch=d_mask_dims, is_hd=is_hd, name='decoder_src')
-                self.decoder_dst = model_archi.Decoder(in_ch=inter_out_ch, d_ch=d_dims, d_mask_ch=d_mask_dims, is_hd=is_hd, name='decoder_dst')
+                self.decoder_src = model_archi.Decoder(in_ch=inter_out_ch, d_ch=d_dims, d_mask_ch=d_mask_dims, is_hd=is_hd, separable=separable_dec, name='decoder_src')
+                self.decoder_dst = model_archi.Decoder(in_ch=inter_out_ch, d_ch=d_dims, d_mask_ch=d_mask_dims, is_hd=is_hd, separable=separable_dec, name='decoder_dst')
 
                 self.model_filename_list += [ [self.encoder,     'encoder.npy'    ],
                                               [self.inter,       'inter.npy'      ],
@@ -193,16 +213,16 @@ class SAEHDModel(ModelBase):
                         self.model_filename_list += [ [self.code_discriminator, 'code_discriminator.npy'] ]
 
             elif 'liae' in archi:
-                self.encoder = model_archi.Encoder(in_ch=input_ch, e_ch=e_dims, is_hd=is_hd, name='encoder')
+                self.encoder = model_archi.Encoder(in_ch=input_ch, e_ch=e_dims, is_hd=is_hd, separable=separable_enc, name='encoder')
                 encoder_out_ch = self.encoder.compute_output_channels ( (nn.floatx, bgr_shape))
 
-                self.inter_AB = model_archi.Inter(in_ch=encoder_out_ch, ae_ch=ae_dims, ae_out_ch=ae_dims*2, is_hd=is_hd, name='inter_AB')
-                self.inter_B  = model_archi.Inter(in_ch=encoder_out_ch, ae_ch=ae_dims, ae_out_ch=ae_dims*2, is_hd=is_hd, name='inter_B')
+                self.inter_AB = model_archi.Inter(in_ch=encoder_out_ch, ae_ch=ae_dims, ae_out_ch=ae_dims*2, is_hd=is_hd, separable=separable_inter, name='inter_AB')
+                self.inter_B  = model_archi.Inter(in_ch=encoder_out_ch, ae_ch=ae_dims, ae_out_ch=ae_dims*2, is_hd=is_hd, separable=separable_inter, name='inter_B')
 
                 inter_AB_out_ch = self.inter_AB.compute_output_channels ( (nn.floatx, (None,encoder_out_ch)))
                 inter_B_out_ch = self.inter_B.compute_output_channels ( (nn.floatx, (None,encoder_out_ch)))
                 inters_out_ch = inter_AB_out_ch+inter_B_out_ch
-                self.decoder = model_archi.Decoder(in_ch=inters_out_ch, d_ch=d_dims, d_mask_ch=d_mask_dims, is_hd=is_hd, name='decoder')
+                self.decoder = model_archi.Decoder(in_ch=inters_out_ch, d_ch=d_dims, d_mask_ch=d_mask_dims, is_hd=is_hd, separable=separable_dec, name='decoder')
 
                 self.model_filename_list += [ [self.encoder,  'encoder.npy'],
                                               [self.inter_AB, 'inter_AB.npy'],
