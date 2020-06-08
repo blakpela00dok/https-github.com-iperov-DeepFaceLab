@@ -267,7 +267,7 @@ class ModelBase(object):
         return def_value
 
     def ask_override(self):
-        return self.is_training and self.iter != 0 #and io.input_in_time ("Press enter in 2 seconds to override model settings.", 5 if io.is_colab() else 2 )
+        return self.is_training and self.iter != 0 and io.input_in_time ("Press enter in 2 seconds to override model settings.", 5 if io.is_colab() else 2 )
 
     def ask_autobackup_hour(self, default_value=0):
         default_autobackup_hour = self.options['autobackup_hour'] = self.load_or_def_option('autobackup_hour', default_value)

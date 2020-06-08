@@ -178,7 +178,6 @@ class FANExtractor(object):
         landmarks = []
         for (left, top, right, bottom) in rects:
             scale = (right - left + bottom - top) / 195.0
-            print(scale)
 
             center = np.array( [ (left + right) / 2.0, (top + bottom) / 2.0] )
             centers = [ center ]
