@@ -221,6 +221,8 @@ def MergeMaskedFace (predictor_func, predictor_input_shape,
                         #calc same bounding rect and center point as in cv2.seamlessClone to prevent jittering (not flickering)
                         l,t,w,h = cv2.boundingRect( (img_face_seamless_mask_a*255).astype(np.uint8) )
                         s_maskx, s_masky = int(l+w/2), int(t+h/2)
+                        if not is_windows:
+                            out_img = np.nan_to_num(out_img)
                         out_img = cv2.seamlessClone( (out_img*255).astype(np.uint8), img_bgr_uint8, (img_face_seamless_mask_a*255).astype(np.uint8), (s_maskx,s_masky) , cv2.NORMAL_CLONE )
                         out_img = out_img.astype(dtype=np.float32) / 255.0
                     except Exception as e:
@@ -303,7 +305,8 @@ def MergeMaskedFace (predictor_func, predictor_input_shape,
                         img_bgr = cv2.resize (img_bgr_downscaled, img_size, cv2.INTER_CUBIC)
 
                     new_out = cv2.warpAffine( out_face_bgr, face_mat, img_size, np.empty_like(img_bgr), cv2.WARP_INVERSE_MAP | cv2.INTER_CUBIC, cv2.BORDER_TRANSPARENT )
-
+                    if not is_windows:
+                        new_out = np.nan_to_num(new_out)
                     out_img =  np.clip( img_bgr*(1-img_face_mask_a) + (new_out*img_face_mask_a) , 0, 1.0 )
 
                 if cfg.color_degrade_power != 0:
