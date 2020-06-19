@@ -36,6 +36,7 @@ class OpMode(IntEnum):
     VIEW_BAKED = 3
     VIEW_XSEG_MASK = 4
     VIEW_XSEG_OVERLAY_MASK = 5
+    EDIT_LANDMARKS = 10
 
 class PTEditMode(IntEnum):
     MOVE = 0
@@ -268,6 +269,11 @@ class QCanvasControlsRightBar(QFrame):
         btn_view_xseg_overlay_mask.setDefaultAction(self.btn_view_xseg_overlay_mask_act)
         btn_view_xseg_overlay_mask.setIconSize(QUIConfig.icon_q_size)
 
+        btn_landmarks = QToolButton()
+        self.btn_landmarks_act = QActionEx( QIconDB.landmarks, QStringDB.btn_landmarks_tip, shortcut='Shift+1', shortcut_in_tooltip=True, is_checkable=True)
+        btn_landmarks.setDefaultAction(self.btn_landmarks_act)
+        btn_landmarks.setIconSize(QUIConfig.icon_q_size)
+
         self.btn_poly_color_act_grp = QActionGroup (self)
         self.btn_poly_color_act_grp.addAction(self.btn_poly_color_red_act)
         self.btn_poly_color_act_grp.addAction(self.btn_poly_color_green_act)
@@ -275,6 +281,7 @@ class QCanvasControlsRightBar(QFrame):
         self.btn_poly_color_act_grp.addAction(self.btn_view_baked_mask_act)
         self.btn_poly_color_act_grp.addAction(self.btn_view_xseg_mask_act)
         self.btn_poly_color_act_grp.addAction(self.btn_view_xseg_overlay_mask_act)
+        self.btn_poly_color_act_grp.addAction(self.btn_landmarks_act)
         self.btn_poly_color_act_grp.setExclusive(True)
         #==============================================
         btn_view_lock_center = QToolButton()
@@ -289,6 +296,7 @@ class QCanvasControlsRightBar(QFrame):
         controls_bar_frame1_l.addWidget ( btn_view_baked_mask )
         controls_bar_frame1_l.addWidget ( btn_view_xseg_mask )
         controls_bar_frame1_l.addWidget ( btn_view_xseg_overlay_mask )
+        controls_bar_frame1_l.addWidget ( btn_landmarks )
         controls_bar_frame1 = QFrame()
         controls_bar_frame1.setFrameShape(QFrame.StyledPanel)
         controls_bar_frame1.setSizePolicy (QSizePolicy.Fixed, QSizePolicy.Fixed)
@@ -322,6 +330,7 @@ class QCanvasOperator(QWidget):
         self.cbar.btn_view_baked_mask_act.toggled.connect ( lambda : self.set_op_mode(OpMode.VIEW_BAKED) )
         self.cbar.btn_view_xseg_mask_act.toggled.connect ( self.set_view_xseg_mask )
         self.cbar.btn_view_xseg_overlay_mask_act.toggled.connect ( self.set_view_xseg_overlay_mask )
+        self.cbar.btn_landmarks_act.toggled.connect ( self.set_landmarks )
 
         self.cbar.btn_poly_type_include_act.triggered.connect ( lambda : self.set_poly_include_type(SegIEPolyType.INCLUDE) )
         self.cbar.btn_poly_type_exclude_act.triggered.connect ( lambda : self.set_poly_include_type(SegIEPolyType.EXCLUDE) )
@@ -343,7 +352,7 @@ class QCanvasOperator(QWidget):
         self.initialized = False
         self.last_state = None
 
-    def initialize(self, img, img_look_pt=None, view_scale=None, ie_polys=None, xseg_mask=None, canvas_config=None ):
+    def initialize(self, img, img_look_pt=None, view_scale=None, ie_polys=None, xseg_mask=None, landmarks=None, canvas_config=None ):
         q_img = self.q_img = QImage_from_np(img)
         self.img_pixmap = QPixmap.fromImage(q_img)
 
@@ -368,6 +377,8 @@ class QCanvasOperator(QWidget):
         if ie_polys is None:
             ie_polys = SegIEPolys()
         self.ie_polys = ie_polys
+        
+        self.landmarks = landmarks
 
         if canvas_config is None:
             canvas_config = CanvasConfig()
@@ -410,7 +421,7 @@ class QCanvasOperator(QWidget):
             if self.op_mode == OpMode.DRAW_PTS:
                 self.set_op_mode(OpMode.EDIT_PTS)
 
-            self.last_state = sn(op_mode = self.op_mode if self.op_mode in [OpMode.VIEW_BAKED, OpMode.VIEW_XSEG_MASK, OpMode.VIEW_XSEG_OVERLAY_MASK] else None,
+            self.last_state = sn(op_mode = self.op_mode if self.op_mode in [OpMode.VIEW_BAKED, OpMode.VIEW_XSEG_MASK, OpMode.VIEW_XSEG_OVERLAY_MASK, OpMode.EDIT_LANDMARKS] else None,
                                  color_scheme_id = self.color_scheme_id,
                                )
 
@@ -433,6 +444,9 @@ class QCanvasOperator(QWidget):
 
     def get_ie_polys(self):
         return self.ie_polys
+
+    def get_landmarks(self):
+        return self.landmarks
 
     def get_cli_center_pt(self):
         return np.round(QSize_to_np(self.size())/2.0)
@@ -458,6 +472,10 @@ class QCanvasOperator(QWidget):
 
     def get_poly_pt_id_under_pt(self, poly, cli_pt):
         w = np.argwhere ( npla.norm ( cli_pt - self.img_to_cli_pt( poly.get_pts() ), axis=1 )  <= self.canvas_config.pt_select_radius )
+        return None if len(w) == 0 else w[-1][0]
+
+    def get_landmarks_pt_id_under_pt(self, landmarks, cli_pt):
+        w = np.argwhere ( npla.norm ( cli_pt - self.img_to_cli_pt( landmarks ), axis=1 )  <= self.canvas_config.pt_select_radius )
         return None if len(w) == 0 else w[-1][0]
 
     def get_poly_edge_id_pt_under_pt(self, poly, cli_pt):
@@ -544,6 +562,8 @@ class QCanvasOperator(QWidget):
                 self.cbar.btn_view_xseg_mask_act.setChecked(False)
             elif self.op_mode == OpMode.VIEW_XSEG_OVERLAY_MASK:
                 self.cbar.btn_view_xseg_overlay_mask_act.setChecked(False)
+            elif self.op_mode == OpMode.EDIT_LANDMARKS:
+                self.cbar.btn_landmarks_act.setChecked(False)
 
             self.op_mode = op_mode
 
@@ -569,11 +589,14 @@ class QCanvasOperator(QWidget):
                 self.cbar.btn_view_xseg_mask_act.setChecked(True)
             elif op_mode == OpMode.VIEW_XSEG_OVERLAY_MASK:
                 self.cbar.btn_view_xseg_overlay_mask_act.setChecked(True)
+            elif op_mode == OpMode.EDIT_LANDMARKS:
+                self.cbar.btn_landmarks_act.setChecked(True)
 
-            if op_mode in [OpMode.DRAW_PTS, OpMode.EDIT_PTS]:
+            if op_mode in [OpMode.DRAW_PTS, OpMode.EDIT_PTS, OpMode.EDIT_LANDMARKS]:
                 self.mouse_op_poly_pt_id = None
                 self.mouse_op_poly_edge_id = None
                 self.mouse_op_poly_edge_id_pt = None
+                self.mouse_landmarks_pt_id = None
 
             self.op_poly = op_poly
             if op_poly is not None:
@@ -651,6 +674,14 @@ class QCanvasOperator(QWidget):
 
         self.cbar.btn_view_xseg_overlay_mask_act.setChecked(is_checked )
 
+    def set_landmarks(self, is_checked):
+        if is_checked:
+            self.set_op_mode(OpMode.EDIT_LANDMARKS)
+        else:
+            self.set_op_mode(OpMode.NONE)
+
+        self.cbar.btn_landmarks_act.setChecked(is_checked )
+
     # ====================================================================================
     # ====================================================================================
     # ====================================== METHODS =====================================
@@ -691,6 +722,12 @@ class QCanvasOperator(QWidget):
                         if self.mouse_op_poly_edge_id is not None and \
                         self.mouse_op_poly_pt_id is None:
                             nc = color_cc
+                elif self.op_mode == OpMode.EDIT_LANDMARKS:
+                    nc = Qt.ArrowCursor
+                    
+                    if self.mouse_landmarks_pt_id is not None:
+                        nc = Qt.PointingHandCursor
+                    
             if self.current_cursor != nc:
                 if self.current_cursor is None:
                     QApplication.setOverrideCursor(nc)
@@ -740,6 +777,13 @@ class QCanvasOperator(QWidget):
                 all(self.mouse_op_poly_edge_id_pt != new_mouse_op_poly_edge_id_pt)):
 
                 self.mouse_op_poly_edge_id_pt = new_mouse_op_poly_edge_id_pt
+                self.update_cursor()
+                self.update()
+                
+        if self.op_mode == OpMode.EDIT_LANDMARKS:
+            new_mouse_landmarks_pt_id = self.get_landmarks_pt_id_under_pt (self.landmarks, self.mouse_cli_pt)
+            if self.mouse_landmarks_pt_id != new_mouse_landmarks_pt_id:
+                self.mouse_landmarks_pt_id = new_mouse_landmarks_pt_id
                 self.update_cursor()
                 self.update()
 
@@ -867,6 +911,16 @@ class QCanvasOperator(QWidget):
                     # other cases -> unselect poly
                     self.set_op_mode(OpMode.NONE)
 
+            elif self.op_mode == OpMode.EDIT_LANDMARKS:
+                if self.mouse_landmarks_pt_id is not None:
+                    if self.drag_type == DragType.NONE:
+                        self.drag_type = DragType.POLY_PT
+                        self.drag_cli_pt     = self.mouse_cli_pt
+                        self.drag_landmarks_pt_id = self.mouse_landmarks_pt_id
+                        self.drag_landmarks_pt    = self.landmarks[ self.drag_landmarks_pt_id ]
+                        self.cursor_offset = self.img_to_cli_pt(self.drag_landmarks_pt) - self.drag_cli_pt
+                
+
         elif btn == Qt.MiddleButton:
             if self.drag_type == DragType.NONE:
                 # Start image drag
@@ -886,7 +940,7 @@ class QCanvasOperator(QWidget):
         btn = ev.button()
 
         if btn == Qt.LeftButton:
-            if self.op_mode == OpMode.EDIT_PTS:
+            if self.op_mode in [OpMode.EDIT_PTS, OpMode.EDIT_LANDMARKS]:
                 if self.drag_type == DragType.POLY_PT:
                     self.drag_type = DragType.NONE
                     self.update()
@@ -923,6 +977,10 @@ class QCanvasOperator(QWidget):
             if self.drag_type == DragType.POLY_PT:
                 delta_pt = self.cli_to_img_pt(self.mouse_cli_pt) - self.cli_to_img_pt(self.drag_cli_pt)
                 self.op_poly.set_point(self.drag_poly_pt_id, self.drag_poly_pt + delta_pt)
+                self.update()
+        elif self.op_mode == OpMode.EDIT_LANDMARKS:
+            if self.drag_type == DragType.POLY_PT:
+                self.landmarks[self.drag_landmarks_pt_id] = self.cli_to_img_pt(self.mouse_cli_pt + self.cursor_offset)
                 self.update()
 
     def wheelEvent(self, ev):
@@ -974,9 +1032,6 @@ class QCanvasOperator(QWidget):
             if self.img_pixmap is not None:
                 qp.drawPixmap(dst_rect, self.img_pixmap, src_rect)
 
-            polys = self.ie_polys.get_polys()
-            polys_len = len(polys)
-
             color_scheme = self.get_current_color_scheme()
 
             pt_rad = self.canvas_config.pt_radius
@@ -984,100 +1039,143 @@ class QCanvasOperator(QWidget):
 
             pt_select_radius = self.canvas_config.pt_select_radius
 
-            op_mode = self.op_mode
-            op_poly = self.op_poly
+            if self.op_mode == OpMode.EDIT_LANDMARKS:
 
-            for i,poly in enumerate(polys):
-
-                selected_pt_path = QPainterPath()
+                landmarks = self.landmarks
+                
+                facepart_poly_lens = [17,5,5,9,6,6,12,8]
                 poly_line_path = QPainterPath()
                 pts_line_path = QPainterPath()
+                pt_idx = 0
+                for facepart_id,facepart_poly_len in enumerate(facepart_poly_lens):
+                    for i in range(facepart_poly_len):
+                        img_pt = landmarks[pt_idx]
+                        cli_pt = self.img_to_cli_pt(img_pt)
+                        q_cli_pt = QPoint_from_np(cli_pt)
+                        if i == 0:
+                            poly_line_path.moveTo(q_cli_pt)
+                            # eyes and lips
+                            if facepart_id >= 4:
+                                start_pt = q_cli_pt
+                        else:
+                            poly_line_path.lineTo(q_cli_pt)
+                            # eyes, nose and lips
+                            if pt_idx == 30: # override to nose center
+                                start_pt = q_cli_pt
+                            if facepart_id >= 3 and i == facepart_poly_len - 1:
+                                poly_line_path.lineTo(start_pt)
+                        # crosses on points
+                        pts_line_path.moveTo( QPoint_from_np(cli_pt + np.float32([0,-pt_rad])) )
+                        pts_line_path.lineTo( QPoint_from_np(cli_pt + np.float32([0,pt_rad])) )
+                        pts_line_path.moveTo( QPoint_from_np(cli_pt + np.float32([-pt_rad,0])) )
+                        pts_line_path.lineTo( QPoint_from_np(cli_pt + np.float32([pt_rad,0])) )
+                        pt_idx += 1
+                        
+                # Draw calls
+                qp.setPen(color_scheme.poly_outline_solid_pen)
+                qp.setBrush(color_scheme.poly_unselected_brush)
+                qp.drawPath(poly_line_path)
+                qp.drawPath(pts_line_path)
+                
+            else:
+            
+                polys = self.ie_polys.get_polys()
+                polys_len = len(polys)
+                
+                op_mode = self.op_mode
+                op_poly = self.op_poly
+            
+                for i,poly in enumerate(polys):
 
-                pt_remove_cli_pt = None
-                poly_pts = poly.get_pts()
-                for pt_id, img_pt in enumerate(poly_pts):
-                    cli_pt = self.img_to_cli_pt(img_pt)
-                    q_cli_pt = QPoint_from_np(cli_pt)
+                    selected_pt_path = QPainterPath()
+                    poly_line_path = QPainterPath()
+                    pts_line_path = QPainterPath()
 
-                    if pt_id == 0:
-                        poly_line_path.moveTo(q_cli_pt)
-                    else:
-                        poly_line_path.lineTo(q_cli_pt)
+                    pt_remove_cli_pt = None
+                    poly_pts = poly.get_pts()
+                    for pt_id, img_pt in enumerate(poly_pts):
+                        cli_pt = self.img_to_cli_pt(img_pt)
+                        q_cli_pt = QPoint_from_np(cli_pt)
+
+                        if pt_id == 0:
+                            poly_line_path.moveTo(q_cli_pt)
+                        else:
+                            poly_line_path.lineTo(q_cli_pt)
+
+
+                        if poly == op_poly:
+                            if self.op_mode == OpMode.DRAW_PTS or \
+                                (self.op_mode == OpMode.EDIT_PTS and \
+                                (self.pt_edit_mode == PTEditMode.MOVE) or \
+                                (self.pt_edit_mode == PTEditMode.ADD_DEL and self.mouse_op_poly_pt_id == pt_id) \
+                                ):
+                                pts_line_path.moveTo( QPoint_from_np(cli_pt + np.float32([0,-pt_rad])) )
+                                pts_line_path.lineTo( QPoint_from_np(cli_pt + np.float32([0,pt_rad])) )
+                                pts_line_path.moveTo( QPoint_from_np(cli_pt + np.float32([-pt_rad,0])) )
+                                pts_line_path.lineTo( QPoint_from_np(cli_pt + np.float32([pt_rad,0])) )
+
+                            if (self.op_mode == OpMode.EDIT_PTS and \
+                                self.pt_edit_mode == PTEditMode.ADD_DEL and \
+                                self.mouse_op_poly_pt_id == pt_id):
+                                pt_remove_cli_pt = cli_pt
+
+                            if self.op_mode == OpMode.DRAW_PTS and \
+                                len(op_poly.get_pts()) >= 3 and pt_id == 0 and self.mouse_op_poly_pt_id == pt_id:
+                                # Circle around poly point
+                                selected_pt_path.addEllipse(q_cli_pt, pt_rad_x2, pt_rad_x2)
 
 
                     if poly == op_poly:
-                        if self.op_mode == OpMode.DRAW_PTS or \
-                            (self.op_mode == OpMode.EDIT_PTS and \
-                            (self.pt_edit_mode == PTEditMode.MOVE) or \
-                            (self.pt_edit_mode == PTEditMode.ADD_DEL and self.mouse_op_poly_pt_id == pt_id) \
-                            ):
-                            pts_line_path.moveTo( QPoint_from_np(cli_pt + np.float32([0,-pt_rad])) )
-                            pts_line_path.lineTo( QPoint_from_np(cli_pt + np.float32([0,pt_rad])) )
-                            pts_line_path.moveTo( QPoint_from_np(cli_pt + np.float32([-pt_rad,0])) )
-                            pts_line_path.lineTo( QPoint_from_np(cli_pt + np.float32([pt_rad,0])) )
+                        if op_mode == OpMode.DRAW_PTS:
+                            # Line from last point to mouse
+                            poly_line_path.lineTo( QPoint_from_np(self.mouse_cli_pt) )
 
-                        if (self.op_mode == OpMode.EDIT_PTS and \
-                            self.pt_edit_mode == PTEditMode.ADD_DEL and \
-                            self.mouse_op_poly_pt_id == pt_id):
-                            pt_remove_cli_pt = cli_pt
+                        if self.mouse_op_poly_pt_id is not None:
+                            pass
 
-                        if self.op_mode == OpMode.DRAW_PTS and \
-                            len(op_poly.get_pts()) >= 3 and pt_id == 0 and self.mouse_op_poly_pt_id == pt_id:
-                            # Circle around poly point
-                            selected_pt_path.addEllipse(q_cli_pt, pt_rad_x2, pt_rad_x2)
+                        if self.mouse_op_poly_edge_id_pt is not None:
+                            if self.pt_edit_mode == PTEditMode.ADD_DEL and self.mouse_op_poly_pt_id is None:
+                                # Ready to insert point on edge
+                                m_cli_pt = self.mouse_op_poly_edge_id_pt
+                                pts_line_path.moveTo( QPoint_from_np(m_cli_pt + np.float32([0,-pt_rad])) )
+                                pts_line_path.lineTo( QPoint_from_np(m_cli_pt + np.float32([0,pt_rad])) )
+                                pts_line_path.moveTo( QPoint_from_np(m_cli_pt + np.float32([-pt_rad,0])) )
+                                pts_line_path.lineTo( QPoint_from_np(m_cli_pt + np.float32([pt_rad,0])) )
 
+                    if len(poly_pts) >= 2:
+                        # Closing poly line
+                        poly_line_path.lineTo( QPoint_from_np(self.img_to_cli_pt(poly_pts[0])) )
 
-                if poly == op_poly:
-                    if op_mode == OpMode.DRAW_PTS:
-                        # Line from last point to mouse
-                        poly_line_path.lineTo( QPoint_from_np(self.mouse_cli_pt) )
+                    # Draw calls
+                    qp.setPen(color_scheme.pt_outline_pen)
+                    qp.setBrush(QBrush())
+                    qp.drawPath(selected_pt_path)
 
-                    if self.mouse_op_poly_pt_id is not None:
-                        pass
-
-                    if self.mouse_op_poly_edge_id_pt is not None:
-                        if self.pt_edit_mode == PTEditMode.ADD_DEL and self.mouse_op_poly_pt_id is None:
-                            # Ready to insert point on edge
-                            m_cli_pt = self.mouse_op_poly_edge_id_pt
-                            pts_line_path.moveTo( QPoint_from_np(m_cli_pt + np.float32([0,-pt_rad])) )
-                            pts_line_path.lineTo( QPoint_from_np(m_cli_pt + np.float32([0,pt_rad])) )
-                            pts_line_path.moveTo( QPoint_from_np(m_cli_pt + np.float32([-pt_rad,0])) )
-                            pts_line_path.lineTo( QPoint_from_np(m_cli_pt + np.float32([pt_rad,0])) )
-
-                if len(poly_pts) >= 2:
-                    # Closing poly line
-                    poly_line_path.lineTo( QPoint_from_np(self.img_to_cli_pt(poly_pts[0])) )
-
-                # Draw calls
-                qp.setPen(color_scheme.pt_outline_pen)
-                qp.setBrush(QBrush())
-                qp.drawPath(selected_pt_path)
-
-                qp.setPen(color_scheme.poly_outline_solid_pen)
-                qp.setBrush(QBrush())
-                qp.drawPath(pts_line_path)
-
-                if poly.get_type() == SegIEPolyType.INCLUDE:
-                    qp.setPen(color_scheme.poly_outline_solid_pen)
-                else:
-                    qp.setPen(color_scheme.poly_outline_dot_pen)
-
-                qp.setBrush(color_scheme.poly_unselected_brush)
-                if op_mode == OpMode.NONE:
-                    if poly == self.mouse_wire_poly:
-                        qp.setBrush(color_scheme.poly_selected_brush)
-                #else:
-                #    if poly == op_poly:
-                #        qp.setBrush(color_scheme.poly_selected_brush)
-
-                qp.drawPath(poly_line_path)
-
-                if pt_remove_cli_pt is not None:
                     qp.setPen(color_scheme.poly_outline_solid_pen)
                     qp.setBrush(QBrush())
+                    qp.drawPath(pts_line_path)
 
-                    qp.drawLine( *(pt_remove_cli_pt + np.float32([-pt_rad_x2,-pt_rad_x2])), *(pt_remove_cli_pt + np.float32([pt_rad_x2,pt_rad_x2])) )
-                    qp.drawLine( *(pt_remove_cli_pt + np.float32([-pt_rad_x2,pt_rad_x2])), *(pt_remove_cli_pt + np.float32([pt_rad_x2,-pt_rad_x2])) )
+                    if poly.get_type() == SegIEPolyType.INCLUDE:
+                        qp.setPen(color_scheme.poly_outline_solid_pen)
+                    else:
+                        qp.setPen(color_scheme.poly_outline_dot_pen)
+
+                    qp.setBrush(color_scheme.poly_unselected_brush)
+                    if op_mode == OpMode.NONE:
+                        if poly == self.mouse_wire_poly:
+                            qp.setBrush(color_scheme.poly_selected_brush)
+                    #else:
+                    #    if poly == op_poly:
+                    #        qp.setBrush(color_scheme.poly_selected_brush)
+
+                    qp.drawPath(poly_line_path)
+
+                    if pt_remove_cli_pt is not None:
+                        qp.setPen(color_scheme.poly_outline_solid_pen)
+                        qp.setBrush(QBrush())
+
+                        qp.drawLine( *(pt_remove_cli_pt + np.float32([-pt_rad_x2,-pt_rad_x2])), *(pt_remove_cli_pt + np.float32([pt_rad_x2,pt_rad_x2])) )
+                        qp.drawLine( *(pt_remove_cli_pt + np.float32([-pt_rad_x2,pt_rad_x2])), *(pt_remove_cli_pt + np.float32([pt_rad_x2,-pt_rad_x2])) )
 
         qp.end()
 
@@ -1094,6 +1192,7 @@ class QCanvas(QFrame):
                    btn_view_baked_mask_act  = self.canvas_control_right_bar.btn_view_baked_mask_act,
                    btn_view_xseg_mask_act  = self.canvas_control_right_bar.btn_view_xseg_mask_act,
                    btn_view_xseg_overlay_mask_act  = self.canvas_control_right_bar.btn_view_xseg_overlay_mask_act,
+                   btn_landmarks_act  = self.canvas_control_right_bar.btn_landmarks_act,
                    btn_poly_color_act_grp = self.canvas_control_right_bar.btn_poly_color_act_grp,
                    btn_view_lock_center_act = self.canvas_control_right_bar.btn_view_lock_center_act,
 
@@ -1275,12 +1374,13 @@ class MainWindow(QXMainWindow):
             return False
 
         ie_polys = dflimg.get_seg_ie_polys()
+        landmarks = dflimg.get_landmarks()
         xseg_mask = dflimg.get_xseg_mask()
         img = self.load_image(image_path)
         if img is None:
             return False
 
-        self.canvas.op.initialize ( img,  ie_polys=ie_polys, xseg_mask=xseg_mask )
+        self.canvas.op.initialize ( img,  ie_polys=ie_polys, xseg_mask=xseg_mask, landmarks=landmarks )
 
         self.filename_label.setText(f"{image_path.name}")
 
@@ -1293,12 +1393,20 @@ class MainWindow(QXMainWindow):
             dflimg = DFLIMG.load(image_path)
             ie_polys = dflimg.get_seg_ie_polys()
             new_ie_polys = self.canvas.op.get_ie_polys()
+            landmarks = dflimg.get_landmarks()
+            new_landmarks = self.canvas.op.get_landmarks()
 
+            save_needed = False
             if not new_ie_polys.identical(ie_polys):
                 new_has_ie_polys = new_ie_polys.has_polys()
                 self.set_has_ie_polys_count ( self.get_has_ie_polys_count() + (1 if new_has_ie_polys else -1) )
                 self.image_paths_has_ie_polys[image_path] = new_has_ie_polys
                 dflimg.set_seg_ie_polys( new_ie_polys )
+                save_needed = True
+            if not np.array_equal(new_landmarks, landmarks):
+                dflimg.set_landmarks( new_landmarks )
+                save_needed = True
+            if save_needed:
                 dflimg.save()
 
         self.filename_label.setText(f"")

@@ -39,6 +39,10 @@ class QStringDB():
                                                         'ru' : 'Посмотреть тренированную XSeg маску поверх лица',
                                                         'zh' : '查看导入后的XSeg遮罩于脸上方',
                                                     }[lang]
+                                            
+        QStringDB.btn_landmarks_tip =  {   'en' : 'View and edit landmarks',
+                                           'ru' : 'Посмотреть и редактировать разметку частей лица',
+                                       }[lang]
                                            
         QStringDB.btn_poly_type_include_tip = { 'en' : 'Poly include mode',
                                                 'ru' : 'Режим полигонов - включение',
