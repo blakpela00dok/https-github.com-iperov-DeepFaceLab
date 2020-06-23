@@ -301,6 +301,7 @@ class QCanvasControlsRightBar(QFrame):
         controls_bar_frame1_l.addWidget ( btn_view_baked_mask )
         controls_bar_frame1_l.addWidget ( btn_view_xseg_mask )
         controls_bar_frame1_l.addWidget ( btn_landmarks )
+
         controls_bar_frame1 = QFrame()
         controls_bar_frame1.setFrameShape(QFrame.StyledPanel)
         controls_bar_frame1.setSizePolicy (QSizePolicy.Fixed, QSizePolicy.Fixed)
@@ -333,8 +334,8 @@ class QCanvasOperator(QWidget):
         self.cbar.btn_poly_color_green_act.triggered.connect ( lambda : self.set_color_scheme_id(1) )
         self.cbar.btn_poly_color_blue_act.triggered.connect ( lambda : self.set_color_scheme_id(2) )
         self.cbar.btn_view_baked_mask_act.triggered.connect ( lambda : self.set_op_mode(OpMode.VIEW_BAKED) )
-        self.cbar.btn_view_xseg_mask_act.triggered.connect ( self.set_view_xseg_mask )
-        
+        self.cbar.btn_view_xseg_mask_act.triggered.connect ( lambda : self.set_op_mode(OpMode.VIEW_XSEG_MASK) )
+
         self.cbar.btn_view_xseg_overlay_mask_act.toggled.connect ( lambda is_checked: self.update() )
         self.cbar.btn_landmarks_act.toggled.connect ( self.set_landmarks )
 
@@ -429,8 +430,7 @@ class QCanvasOperator(QWidget):
                 self.set_op_mode(OpMode.EDIT_PTS)
 
             self.last_state = sn(op_mode = self.op_mode if self.op_mode in [OpMode.VIEW_BAKED, OpMode.VIEW_XSEG_MASK, OpMode.EDIT_LANDMARKS] else None,
-                                 color_scheme_id = self.color_scheme_id,
-                               )
+                                 color_scheme_id = self.color_scheme_id)
 
             self.img_pixmap = None
             self.update_cursor(is_finalize=True)
@@ -632,7 +632,9 @@ class QCanvasOperator(QWidget):
         self.cbar.btn_pt_edit_mode_act.setDisabled(True)
         self.cbar.btn_view_lock_center_act.setDisabled(True)
         self.cbar.btn_poly_color_act_grp.setDisabled(True)
+        self.cbar.btn_view_xseg_overlay_mask_act.setDisabled(True)
         self.cbar.btn_poly_type_act_grp.setDisabled(True)
+
 
     def set_color_scheme_id(self, id):
         if self.op_mode == OpMode.VIEW_BAKED or self.op_mode == OpMode.VIEW_XSEG_MASK:
