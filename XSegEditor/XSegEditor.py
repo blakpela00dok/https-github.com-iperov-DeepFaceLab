@@ -35,7 +35,6 @@ class OpMode(IntEnum):
     EDIT_PTS = 2
     VIEW_BAKED = 3
     VIEW_XSEG_MASK = 4
-    VIEW_XSEG_OVERLAY_MASK = 5
     EDIT_LANDMARKS = 10
 
 class PTEditMode(IntEnum):
@@ -265,7 +264,7 @@ class QCanvasControlsRightBar(QFrame):
         btn_view_xseg_mask.setIconSize(QUIConfig.icon_q_size)
 
         btn_view_xseg_overlay_mask = QToolButton()
-        self.btn_view_xseg_overlay_mask_act = QActionEx( QIconDB.view_xseg_overlay, QStringDB.btn_view_xseg_overlay_mask_tip, shortcut='6', shortcut_in_tooltip=True, is_checkable=True)
+        self.btn_view_xseg_overlay_mask_act = QActionEx( QIconDB.view_xseg_overlay, QStringDB.btn_view_xseg_overlay_mask_tip, shortcut='`', shortcut_in_tooltip=True, is_checkable=True)
         btn_view_xseg_overlay_mask.setDefaultAction(self.btn_view_xseg_overlay_mask_act)
         btn_view_xseg_overlay_mask.setIconSize(QUIConfig.icon_q_size)
 
@@ -280,7 +279,6 @@ class QCanvasControlsRightBar(QFrame):
         self.btn_poly_color_act_grp.addAction(self.btn_poly_color_blue_act)
         self.btn_poly_color_act_grp.addAction(self.btn_view_baked_mask_act)
         self.btn_poly_color_act_grp.addAction(self.btn_view_xseg_mask_act)
-        self.btn_poly_color_act_grp.addAction(self.btn_view_xseg_overlay_mask_act)
         self.btn_poly_color_act_grp.addAction(self.btn_landmarks_act)
         self.btn_poly_color_act_grp.setExclusive(True)
         #==============================================
@@ -289,30 +287,37 @@ class QCanvasControlsRightBar(QFrame):
         btn_view_lock_center.setDefaultAction(self.btn_view_lock_center_act)
         btn_view_lock_center.setIconSize(QUIConfig.icon_q_size)
 
+        controls_bar_frame2_l = QVBoxLayout()
+        controls_bar_frame2_l.addWidget ( btn_view_xseg_overlay_mask )
+        controls_bar_frame2 = QFrame()
+        controls_bar_frame2.setFrameShape(QFrame.StyledPanel)
+        controls_bar_frame2.setSizePolicy (QSizePolicy.Fixed, QSizePolicy.Fixed)
+        controls_bar_frame2.setLayout(controls_bar_frame2_l)
+
         controls_bar_frame1_l = QVBoxLayout()
         controls_bar_frame1_l.addWidget ( btn_poly_color_red )
         controls_bar_frame1_l.addWidget ( btn_poly_color_green )
         controls_bar_frame1_l.addWidget ( btn_poly_color_blue )
         controls_bar_frame1_l.addWidget ( btn_view_baked_mask )
         controls_bar_frame1_l.addWidget ( btn_view_xseg_mask )
-        controls_bar_frame1_l.addWidget ( btn_view_xseg_overlay_mask )
         controls_bar_frame1_l.addWidget ( btn_landmarks )
         controls_bar_frame1 = QFrame()
         controls_bar_frame1.setFrameShape(QFrame.StyledPanel)
         controls_bar_frame1.setSizePolicy (QSizePolicy.Fixed, QSizePolicy.Fixed)
         controls_bar_frame1.setLayout(controls_bar_frame1_l)
-
-        controls_bar_frame2_l = QVBoxLayout()
-        controls_bar_frame2_l.addWidget ( btn_view_lock_center )
-        controls_bar_frame2 = QFrame()
-        controls_bar_frame2.setFrameShape(QFrame.StyledPanel)
-        controls_bar_frame2.setSizePolicy (QSizePolicy.Fixed, QSizePolicy.Fixed)
-        controls_bar_frame2.setLayout(controls_bar_frame2_l)
+        
+        controls_bar_frame3_l = QVBoxLayout()
+        controls_bar_frame3_l.addWidget ( btn_view_lock_center )
+        controls_bar_frame3 = QFrame()
+        controls_bar_frame3.setFrameShape(QFrame.StyledPanel)
+        controls_bar_frame3.setSizePolicy (QSizePolicy.Fixed, QSizePolicy.Fixed)
+        controls_bar_frame3.setLayout(controls_bar_frame3_l)
 
         controls_bar_l = QVBoxLayout()
         controls_bar_l.setContentsMargins(0,0,0,0)
-        controls_bar_l.addWidget(controls_bar_frame1)
         controls_bar_l.addWidget(controls_bar_frame2)
+        controls_bar_l.addWidget(controls_bar_frame1)
+        controls_bar_l.addWidget(controls_bar_frame3)
 
         self.setSizePolicy ( QSizePolicy.Fixed, QSizePolicy.Expanding )
         self.setLayout(controls_bar_l)
@@ -327,9 +332,10 @@ class QCanvasOperator(QWidget):
         self.cbar.btn_poly_color_red_act.triggered.connect ( lambda : self.set_color_scheme_id(0) )
         self.cbar.btn_poly_color_green_act.triggered.connect ( lambda : self.set_color_scheme_id(1) )
         self.cbar.btn_poly_color_blue_act.triggered.connect ( lambda : self.set_color_scheme_id(2) )
-        self.cbar.btn_view_baked_mask_act.toggled.connect ( lambda : self.set_op_mode(OpMode.VIEW_BAKED) )
-        self.cbar.btn_view_xseg_mask_act.toggled.connect ( self.set_view_xseg_mask )
-        self.cbar.btn_view_xseg_overlay_mask_act.toggled.connect ( self.set_view_xseg_overlay_mask )
+        self.cbar.btn_view_baked_mask_act.triggered.connect ( lambda : self.set_op_mode(OpMode.VIEW_BAKED) )
+        self.cbar.btn_view_xseg_mask_act.triggered.connect ( self.set_view_xseg_mask )
+        
+        self.cbar.btn_view_xseg_overlay_mask_act.toggled.connect ( lambda is_checked: self.update() )
         self.cbar.btn_landmarks_act.toggled.connect ( self.set_landmarks )
 
         self.cbar.btn_poly_type_include_act.triggered.connect ( lambda : self.set_poly_include_type(SegIEPolyType.INCLUDE) )
@@ -387,6 +393,7 @@ class QCanvasOperator(QWidget):
         # UI init
         self.set_cbar_disabled()
         self.cbar.btn_poly_color_act_grp.setDisabled(False)
+        self.cbar.btn_view_xseg_overlay_mask_act.setDisabled(False)
         self.cbar.btn_poly_type_act_grp.setDisabled(False)
 
         # Initial vars
@@ -421,7 +428,7 @@ class QCanvasOperator(QWidget):
             if self.op_mode == OpMode.DRAW_PTS:
                 self.set_op_mode(OpMode.EDIT_PTS)
 
-            self.last_state = sn(op_mode = self.op_mode if self.op_mode in [OpMode.VIEW_BAKED, OpMode.VIEW_XSEG_MASK, OpMode.VIEW_XSEG_OVERLAY_MASK, OpMode.EDIT_LANDMARKS] else None,
+            self.last_state = sn(op_mode = self.op_mode if self.op_mode in [OpMode.VIEW_BAKED, OpMode.VIEW_XSEG_MASK, OpMode.EDIT_LANDMARKS] else None,
                                  color_scheme_id = self.color_scheme_id,
                                )
 
@@ -438,7 +445,6 @@ class QCanvasOperator(QWidget):
     # ====================================== GETTERS =====================================
     # ====================================================================================
     # ====================================================================================
-
     def is_initialized(self):
         return self.initialized
 
@@ -560,8 +566,6 @@ class QCanvasOperator(QWidget):
                 self.cbar.btn_view_baked_mask_act.setChecked(False)
             elif self.op_mode == OpMode.VIEW_XSEG_MASK:
                 self.cbar.btn_view_xseg_mask_act.setChecked(False)
-            elif self.op_mode == OpMode.VIEW_XSEG_OVERLAY_MASK:
-                self.cbar.btn_view_xseg_overlay_mask_act.setChecked(False)
             elif self.op_mode == OpMode.EDIT_LANDMARKS:
                 self.cbar.btn_landmarks_act.setChecked(False)
 
@@ -587,8 +591,6 @@ class QCanvasOperator(QWidget):
                 self.img_baked_pixmap = QPixmap.fromImage(QImage_from_np(n))
             elif op_mode == OpMode.VIEW_XSEG_MASK:
                 self.cbar.btn_view_xseg_mask_act.setChecked(True)
-            elif op_mode == OpMode.VIEW_XSEG_OVERLAY_MASK:
-                self.cbar.btn_view_xseg_overlay_mask_act.setChecked(True)
             elif op_mode == OpMode.EDIT_LANDMARKS:
                 self.cbar.btn_landmarks_act.setChecked(True)
 
@@ -633,7 +635,7 @@ class QCanvasOperator(QWidget):
         self.cbar.btn_poly_type_act_grp.setDisabled(True)
 
     def set_color_scheme_id(self, id):
-        if self.op_mode == OpMode.VIEW_BAKED:
+        if self.op_mode == OpMode.VIEW_BAKED or self.op_mode == OpMode.VIEW_XSEG_MASK:
             self.set_op_mode(OpMode.NONE)
 
         if not hasattr(self, 'color_scheme_id') or self.color_scheme_id != id:
@@ -654,25 +656,8 @@ class QCanvasOperator(QWidget):
              self.op_mode in [OpMode.NONE, OpMode.EDIT_PTS] ):
             self.poly_include_type = poly_include_type
             self.update()
-
         self.cbar.btn_poly_type_include_act.setChecked(self.poly_include_type == SegIEPolyType.INCLUDE)
         self.cbar.btn_poly_type_exclude_act.setChecked(self.poly_include_type == SegIEPolyType.EXCLUDE)
-
-    def set_view_xseg_mask(self, is_checked):
-        if is_checked:
-            self.set_op_mode(OpMode.VIEW_XSEG_MASK)
-        else:
-            self.set_op_mode(OpMode.NONE)
-
-        self.cbar.btn_view_xseg_mask_act.setChecked(is_checked )
-
-    def set_view_xseg_overlay_mask(self, is_checked):
-        if is_checked:
-            self.set_op_mode(OpMode.VIEW_XSEG_OVERLAY_MASK)
-        else:
-            self.set_op_mode(OpMode.NONE)
-
-        self.cbar.btn_view_xseg_overlay_mask_act.setChecked(is_checked )
 
     def set_landmarks(self, is_checked):
         if is_checked:
@@ -883,10 +868,10 @@ class QCanvasOperator(QWidget):
                 if self.mouse_op_poly_pt_id is not None:
                     # Click on point of op_poly
                     if self.pt_edit_mode == PTEditMode.ADD_DEL:
-                        # with mode -> delete point
+                        # in mode 'delete point'
                         self.op_poly.remove_pt(self.mouse_op_poly_pt_id)
                         if self.op_poly.get_pts_count() < 3:
-                            # not enough points -> remove poly
+                            # not enough points after delete -> remove poly
                             self.ie_polys.remove_poly (self.op_poly)
                             self.set_op_mode(OpMode.NONE)
                         self.update()
@@ -900,7 +885,7 @@ class QCanvasOperator(QWidget):
                 elif self.mouse_op_poly_edge_id is not None:
                     # Click on edge of op_poly
                     if self.pt_edit_mode == PTEditMode.ADD_DEL:
-                        # with mode -> insert new point
+                        # in mode 'insert new point'
                         edge_img_pt = self.cli_to_img_pt(self.mouse_op_poly_edge_id_pt)
                         self.op_poly.insert_pt (self.mouse_op_poly_edge_id+1, edge_img_pt)
                         self.update()
@@ -963,7 +948,6 @@ class QCanvasOperator(QWidget):
             if npla.norm(self.mouse_cli_pt - prev_mouse_cli_pt) >= 1:
                 self.img_look_pt = self.mouse_img_pt
                 QCursor.setPos ( self.mapToGlobal( QPoint_from_np(self.img_to_cli_pt(self.img_look_pt)) ))
-
             self.update()
 
         if self.drag_type == DragType.IMAGE_LOOK:
@@ -1025,11 +1009,11 @@ class QCanvasOperator(QWidget):
         elif self.op_mode == OpMode.VIEW_XSEG_MASK:
             if self.xseg_mask_pixmap is not None:
                 qp.drawPixmap(dst_rect, self.xseg_mask_pixmap, src_rect)
-        elif self.op_mode == OpMode.VIEW_XSEG_OVERLAY_MASK:
-            if self.xseg_overlay_mask_pixmap is not None:
-                qp.drawPixmap(dst_rect, self.xseg_overlay_mask_pixmap, src_rect)
         else:
-            if self.img_pixmap is not None:
+            if self.cbar.btn_view_xseg_overlay_mask_act.isChecked() and \
+               self.xseg_overlay_mask_pixmap is not None:
+                qp.drawPixmap(dst_rect, self.xseg_overlay_mask_pixmap, src_rect)
+            elif self.img_pixmap is not None:
                 qp.drawPixmap(dst_rect, self.img_pixmap, src_rect)
 
             color_scheme = self.get_current_color_scheme()
@@ -1397,16 +1381,16 @@ class MainWindow(QXMainWindow):
             new_landmarks = self.canvas.op.get_landmarks()
 
             save_needed = False
-            if not new_ie_polys.identical(ie_polys):                
-                prev_has_polys = self.image_paths_has_ie_polys[image_path]                
+            if not new_ie_polys.identical(ie_polys):
+                prev_has_polys = self.image_paths_has_ie_polys[image_path]
                 self.image_paths_has_ie_polys[image_path] = new_ie_polys.has_polys()
                 new_has_polys = self.image_paths_has_ie_polys[image_path]
-                
+
                 if not prev_has_polys and new_has_polys:
                     self.set_has_ie_polys_count ( self.get_has_ie_polys_count() +1)
                 elif prev_has_polys and not new_has_polys:
                     self.set_has_ie_polys_count ( self.get_has_ie_polys_count() -1)
-                
+
                 dflimg.set_seg_ie_polys( new_ie_polys )
                 save_needed = True
             if not np.array_equal(new_landmarks, landmarks):
