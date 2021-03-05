@@ -40,7 +40,9 @@ def extract_video(input_file, output_dir, output_ext=None, fps=None):
 
     if output_ext == 'jpg':
         kwargs.update ({'q:v':'2'}) #highest quality for jpg
-
+    
+    kwargs.update ({'vf':'mpdecimate'}) #drop duplicate frames
+    
     job = job.output( str (output_path / ('%5d.'+output_ext)), **kwargs )
 
     try:
