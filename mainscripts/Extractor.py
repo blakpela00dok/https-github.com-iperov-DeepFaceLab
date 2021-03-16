@@ -69,8 +69,9 @@ class ExtractSubprocessor(Subprocessor):
 
             self.log_info (f"Running on {client_dict['device_name'] }")
 
-            if self.type == 'all' or self.type == 'rects-s3fd' or 'landmarks' in self.type:
-                self.rects_extractor = facelib.S3FDExtractor(place_model_on_cpu=place_model_on_cpu)
+            # if self.type == 'all' or self.type == 'rects-s3fd' or 'landmarks' in self.type:
+            #     self.rects_extractor = facelib.S3FDExtractor(place_model_on_cpu=place_model_on_cpu)
+            self.rects_extractor = facelib.S3FDExtractor()
 
             if self.type == 'all' or 'landmarks' in self.type:
                 # for head type, extract "3D landmarks"
@@ -115,7 +116,7 @@ class ExtractSubprocessor(Subprocessor):
                                                                 rects_extractor=self.rects_extractor,
                                                                 )
 
-            if self.type == 'final' or self.type == 'all':
+            if 'final' in self.type or self.type == 'final' or self.type == 'all':
                 data = ExtractSubprocessor.Cli.final_stage(data=data,
                                                            image=image,
                                                            face_type=self.face_type,
