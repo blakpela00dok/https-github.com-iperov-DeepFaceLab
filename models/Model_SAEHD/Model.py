@@ -65,7 +65,8 @@ class SAEHDModel(ModelBase):
             self.ask_autobackup_hour()
             self.ask_write_preview_history()
             self.ask_target_iter()
-            self.ask_random_flip()
+            self.ask_random_src_flip()
+            self.ask_random_dst_flip()
             self.ask_batch_size(suggest_batch_size)
 
         if self.is_first_run():
@@ -169,7 +170,7 @@ Examples: df, liae, df-d, df-ud, liae-ud, ...
             self.options['ct_mode'] = io.input_str (f"Color transfer for src faceset", default_ct_mode, ['none','rct','lct','mkl','idt','sot'], help_message="Change color distribution of src samples close to dst samples. Try all modes to find the best.")
             self.options['clipgrad'] = io.input_bool ("Enable gradient clipping", default_clipgrad, help_message="Gradient clipping reduces chance of model collapse, sacrificing speed of training.")
 
-            self.options['pretrain'] = io.input_bool ("Enable pretraining mode", default_pretrain, help_message="Pretrain the model with large amount of various faces. After that, model can be used to train the fakes more quickly.")
+            self.options['pretrain'] = io.input_bool ("Enable pretraining mode", default_pretrain, help_message="Pretrain the model with large amount of various faces. After that, model can be used to train the fakes more quickly. Forces random_warp=Y, random_flips=Y, gan_power=0.0, lr_dropout=N, styles=0.0, uniform_yaw=Y")
 
         if self.options['pretrain'] and self.get_pretraining_data_path() is None:
             raise Exception("pretraining_data_path is not defined")
@@ -204,6 +205,8 @@ Examples: df, liae, df-d, df-ud, liae-ud, ...
             archi_type, archi_opts = archi_split
         elif len(archi_split) == 1:
             archi_type, archi_opts = archi_split[0], None
+            
+        self.archi_type = archi_type
 
         ae_dims = self.options['ae_dims']
         e_dims = self.options['e_dims']
@@ -217,7 +220,9 @@ Examples: df, liae, df-d, df-ud, liae-ud, ...
 
         self.gan_power = gan_power = 0.0 if self.pretrain else self.options['gan_power']
         random_warp = False if self.pretrain else self.options['random_warp']
-
+        random_src_flip = self.random_src_flip if not self.pretrain else True
+        random_dst_flip = self.random_dst_flip if not self.pretrain else True
+        
         if self.pretrain:
             self.options_show_override['gan_power'] = 0.0
             self.options_show_override['random_warp'] = False
@@ -236,22 +241,22 @@ Examples: df, liae, df-d, df-ud, liae-ud, ...
         optimizer_vars_on_cpu = models_opt_device=='/CPU:0'
 
         input_ch=3
-        bgr_shape = nn.get4Dshape(resolution,resolution,input_ch)
+        bgr_shape = self.bgr_shape = nn.get4Dshape(resolution,resolution,input_ch)
         mask_shape = nn.get4Dshape(resolution,resolution,1)
         self.model_filename_list = []
 
         with tf.device ('/CPU:0'):
             #Place holders on CPU
-            self.warped_src = tf.placeholder (nn.floatx, bgr_shape)
-            self.warped_dst = tf.placeholder (nn.floatx, bgr_shape)
+            self.warped_src = tf.placeholder (nn.floatx, bgr_shape, name='warped_src')
+            self.warped_dst = tf.placeholder (nn.floatx, bgr_shape, name='warped_dst')
 
-            self.target_src = tf.placeholder (nn.floatx, bgr_shape)
-            self.target_dst = tf.placeholder (nn.floatx, bgr_shape)
+            self.target_src = tf.placeholder (nn.floatx, bgr_shape, name='target_src')
+            self.target_dst = tf.placeholder (nn.floatx, bgr_shape, name='target_dst')
 
-            self.target_srcm    = tf.placeholder (nn.floatx, mask_shape)
-            self.target_srcm_em = tf.placeholder (nn.floatx, mask_shape)
-            self.target_dstm    = tf.placeholder (nn.floatx, mask_shape)
-            self.target_dstm_em = tf.placeholder (nn.floatx, mask_shape)
+            self.target_srcm    = tf.placeholder (nn.floatx, mask_shape, name='target_srcm')
+            self.target_srcm_em = tf.placeholder (nn.floatx, mask_shape, name='target_srcm_em')
+            self.target_dstm    = tf.placeholder (nn.floatx, mask_shape, name='target_dstm')
+            self.target_dstm_em = tf.placeholder (nn.floatx, mask_shape, name='target_dstm_em')
 
         # Initializing model classes
         model_archi = nn.DeepFakeArchi(resolution, opts=archi_opts)
@@ -609,7 +614,10 @@ Examples: df, liae, df-d, df-ud, liae-ud, ...
 
             if do_init:
                 model.init_weights()
-
+        
+        
+        ###############
+       
         # initializing sample generators
         if self.is_training:
             training_data_src_path = self.training_data_src_path if not self.pretrain else self.get_pretraining_data_path()
@@ -625,7 +633,7 @@ Examples: df, liae, df-d, df-ud, liae-ud, ...
 
             self.set_training_data_generators ([
                     SampleGeneratorFace(training_data_src_path, random_ct_samples_path=random_ct_samples_path, debug=self.is_debug(), batch_size=self.get_batch_size(),
-                        sample_process_options=SampleProcessor.Options(random_flip=self.random_flip),
+                        sample_process_options=SampleProcessor.Options(random_flip=random_src_flip),
                         output_sample_types = [ {'sample_type': SampleProcessor.SampleType.FACE_IMAGE,'warp':random_warp, 'transform':True, 'channel_type' : SampleProcessor.ChannelType.BGR, 'ct_mode': ct_mode,                                           'face_type':self.face_type, 'data_format':nn.data_format, 'resolution': resolution},
                                                 {'sample_type': SampleProcessor.SampleType.FACE_IMAGE,'warp':False                      , 'transform':True, 'channel_type' : SampleProcessor.ChannelType.BGR, 'ct_mode': ct_mode,                                           'face_type':self.face_type, 'data_format':nn.data_format, 'resolution': resolution},
                                                 {'sample_type': SampleProcessor.SampleType.FACE_MASK, 'warp':False                      , 'transform':True, 'channel_type' : SampleProcessor.ChannelType.G,   'face_mask_type' : SampleProcessor.FaceMaskType.FULL_FACE, 'face_type':self.face_type, 'data_format':nn.data_format, 'resolution': resolution},
@@ -635,7 +643,7 @@ Examples: df, liae, df-d, df-ud, liae-ud, ...
                         generators_count=src_generators_count ),
 
                     SampleGeneratorFace(training_data_dst_path, debug=self.is_debug(), batch_size=self.get_batch_size(),
-                        sample_process_options=SampleProcessor.Options(random_flip=self.random_flip),
+                        sample_process_options=SampleProcessor.Options(random_flip=random_dst_flip),
                         output_sample_types = [ {'sample_type': SampleProcessor.SampleType.FACE_IMAGE,'warp':random_warp, 'transform':True, 'channel_type' : SampleProcessor.ChannelType.BGR,                                                                'face_type':self.face_type, 'data_format':nn.data_format, 'resolution': resolution},
                                                 {'sample_type': SampleProcessor.SampleType.FACE_IMAGE,'warp':False                      , 'transform':True, 'channel_type' : SampleProcessor.ChannelType.BGR,                                                                'face_type':self.face_type, 'data_format':nn.data_format, 'resolution': resolution},
                                                 {'sample_type': SampleProcessor.SampleType.FACE_MASK, 'warp':False                      , 'transform':True, 'channel_type' : SampleProcessor.ChannelType.G,   'face_mask_type' : SampleProcessor.FaceMaskType.FULL_FACE, 'face_type':self.face_type, 'data_format':nn.data_format, 'resolution': resolution},
@@ -650,7 +658,44 @@ Examples: df, liae, df-d, df-ud, liae-ud, ...
 
             if self.pretrain_just_disabled:
                 self.update_sample_for_preview(force_new=True)
+    
+    def dump_ckpt(self):
+        tf = nn.tf
+        
+        
+        with tf.device ('/CPU:0'):
+            warped_dst = tf.placeholder (nn.floatx, (None, self.resolution, self.resolution, 3), name='in_face')
+            warped_dst = tf.transpose(warped_dst, (0,3,1,2))
+            
+            
+            if 'df' in self.archi_type:
+                gpu_dst_code     = self.inter(self.encoder(warped_dst))
+                gpu_pred_src_dst, gpu_pred_src_dstm = self.decoder_src(gpu_dst_code)
+                _, gpu_pred_dst_dstm = self.decoder_dst(gpu_dst_code)
 
+            elif 'liae' in self.archi_type:
+                gpu_dst_code = self.encoder (warped_dst)
+                gpu_dst_inter_B_code = self.inter_B (gpu_dst_code)
+                gpu_dst_inter_AB_code = self.inter_AB (gpu_dst_code)
+                gpu_dst_code = tf.concat([gpu_dst_inter_B_code,gpu_dst_inter_AB_code], nn.conv2d_ch_axis)
+                gpu_src_dst_code = tf.concat([gpu_dst_inter_AB_code,gpu_dst_inter_AB_code], nn.conv2d_ch_axis)
+
+                gpu_pred_src_dst, gpu_pred_src_dstm = self.decoder(gpu_src_dst_code)
+                _, gpu_pred_dst_dstm = self.decoder(gpu_dst_code)
+                
+            gpu_pred_src_dst = tf.transpose(gpu_pred_src_dst, (0,2,3,1))
+            gpu_pred_dst_dstm = tf.transpose(gpu_pred_dst_dstm, (0,2,3,1))
+            gpu_pred_src_dstm = tf.transpose(gpu_pred_src_dstm, (0,2,3,1))
+
+            
+        saver = tf.train.Saver()
+        tf.identity(gpu_pred_dst_dstm, name='out_face_mask')
+        tf.identity(gpu_pred_src_dst, name='out_celeb_face')
+        tf.identity(gpu_pred_src_dstm, name='out_celeb_face_mask')       
+        
+        saver.save(nn.tf_sess, self.get_strpath_storage_for_file('.ckpt') )
+
+        
     #override
     def get_model_filename_list(self):
         return self.model_filename_list
