@@ -48,7 +48,7 @@ class IndexHost():
 
     # disable pickling
     def __getstate__(self):
-        return dict()
+        return {}
     def __setstate__(self, d):
         self.__dict__.update(d)
 
@@ -137,7 +137,7 @@ class Index2DHost():
 
     # disable pickling
     def __getstate__(self):
-        return dict()
+        return {}
     def __setstate__(self, d):
         self.__dict__.update(d)
 
@@ -203,7 +203,7 @@ class ListHost():
 
     # disable pickling
     def __getstate__(self):
-        return dict()
+        return {}
     def __setstate__(self, d):
         self.__dict__.update(d)
 
@@ -278,7 +278,7 @@ class DictHost():
 
     # disable pickling
     def __getstate__(self):
-        return dict()
+        return {}
     def __setstate__(self, d):
         self.__dict__.update(d)
 

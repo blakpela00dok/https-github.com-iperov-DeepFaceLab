@@ -246,7 +246,7 @@ class S3FDExtractor(object):
         return bboxlist
 
     def refine_nms(self, dets, thresh):
-        keep = list()
+        keep = []
         if len(dets) == 0:
             return keep
 

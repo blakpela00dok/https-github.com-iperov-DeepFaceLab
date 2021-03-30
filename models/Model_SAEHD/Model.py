@@ -177,7 +177,7 @@ Examples: df, liae, df-d, df-ud, liae-ud, ...
         
         self.gan_model_changed = (default_gan_patch_size != self.options['gan_patch_size']) or (default_gan_dims != self.options['gan_dims'])
 
-        self.pretrain_just_disabled = (default_pretrain == True and self.options['pretrain'] == False)
+        self.pretrain_just_disabled = (default_pretrain is True and self.options['pretrain'] == False)
 
     #override
     def on_initialize(self):

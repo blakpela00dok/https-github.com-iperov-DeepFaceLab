@@ -22,8 +22,7 @@ class ModelBase(nn.Saveable):
             for subname in layer.keys():
                 sublayer = layer[subname]
                 self._build_sub(sublayer, f"{name}_{subname}")
-        elif isinstance (layer, nn.LayerBase) or \
-                isinstance (layer, ModelBase):
+        elif isinstance (layer, (nn.LayerBase, ModelBase)):
 
             if layer.name is None:
                 layer.name = name

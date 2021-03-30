@@ -90,7 +90,7 @@ class Subprocessor(object):
 
         # disable pickling
         def __getstate__(self):
-            return dict()
+            return {}
         def __setstate__(self, d):
             self.__dict__.update(d)
 

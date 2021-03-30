@@ -33,7 +33,7 @@ class MergerConfig(object):
     #overridable
     def ask_settings(self):
         s = """Choose sharpen mode: \n"""
-        for key in self.sharpen_dict.keys():
+        for key in self.sharpen_dict:
             s += f"""({key}) {self.sharpen_dict[key]}\n"""
         io.log_info(s)
         self.sharpen_mode = io.input_int ("", 0, valid_list=self.sharpen_dict.keys(), help_message="Enhance details by applying sharpen filter.")
@@ -79,7 +79,7 @@ mode_dict = {0:'original',
              5:'raw-rgb',
              6:'raw-predict'}
 
-mode_str_dict = { mode_dict[key] : key for key in mode_dict.keys() }
+mode_str_dict = { mode_dict[key] : key for key in mode_dict }
 
 mask_mode_dict = {1:'dst',
                   2:'learned-prd',
@@ -189,7 +189,7 @@ class MergerConfigMasked(MergerConfig):
 
     def ask_settings(self):
         s = """Choose mode: \n"""
-        for key in mode_dict.keys():
+        for key in mode_dict:
             s += f"""({key}) {mode_dict[key]}\n"""
         io.log_info(s)
         mode = io.input_int ("", mode_str_dict.get(self.default_mode, 1) )
@@ -204,7 +204,7 @@ class MergerConfigMasked(MergerConfig):
                 self.hist_match_threshold = np.clip ( io.input_int("Hist match threshold", 255, add_info="0..255"), 0, 255)
 
         s = """Choose mask mode: \n"""
-        for key in mask_mode_dict.keys():
+        for key in mask_mode_dict:
             s += f"""({key}) {mask_mode_dict[key]}\n"""
         io.log_info(s)
         self.mask_mode = io.input_int ("", 1, valid_list=mask_mode_dict.keys() )

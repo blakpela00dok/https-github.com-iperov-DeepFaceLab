@@ -24,7 +24,7 @@ def cv2_imread(filename, flags=cv2.IMREAD_UNCHANGED, loader_func=None, verbose=T
 
 def cv2_imwrite(filename, img, *args):
     ret, buf = cv2.imencode( Path(filename).suffix, img, *args)
-    if ret == True:
+    if ret is True:
         try:
             with open(filename, "wb") as stream:
                 stream.write( buf )

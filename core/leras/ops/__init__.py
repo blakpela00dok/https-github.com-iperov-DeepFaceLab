@@ -16,8 +16,7 @@ def batch_set_value(tuples):
             feed_dict = {}
 
             for x, value in tuples:
-                if isinstance(value, nn.tf.Operation) or \
-                    isinstance(value, nn.tf.Variable):
+                if isinstance(value, (nn.tf.Operation, nn.tf.Variable)):
                     assign_ops.append(value)
                 else:
                     value = np.asarray(value, dtype=x.dtype.as_numpy_dtype)

@@ -34,4 +34,4 @@ to_string_dict = { FaceType.HALF : 'half_face',
                    FaceType.MARK_ONLY :'mark_only',  
                  }
 
-from_string_dict = { to_string_dict[x] : x for x in to_string_dict.keys() }  
+from_string_dict = { to_string_dict[x] : x for x in to_string_dict }  

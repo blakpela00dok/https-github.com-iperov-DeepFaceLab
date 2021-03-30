@@ -531,7 +531,7 @@ class InteractiveMergerSubprocessor(Subprocessor):
                 self.process_remain_frames = False
 
         return (self.is_interactive and self.is_interactive_quitting) or \
-               (not self.is_interactive and self.process_remain_frames == False)
+               (not self.is_interactive and self.process_remain_frames is False)
 
 
     #override

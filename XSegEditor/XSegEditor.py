@@ -1206,7 +1206,7 @@ class MainWindow(QXMainWindow):
         self.image_paths_done = []
         self.image_paths = image_paths
         self.image_paths_has_ie_polys = image_paths_has_ie_polys
-        self.set_has_ie_polys_count ( len([ 1 for x in self.image_paths_has_ie_polys if self.image_paths_has_ie_polys[x] == True]) )
+        self.set_has_ie_polys_count ( len([ 1 for x in self.image_paths_has_ie_polys if self.image_paths_has_ie_polys[x] is True]) )
         self.loading_frame.hide()
         self.loading_frame = None
 
