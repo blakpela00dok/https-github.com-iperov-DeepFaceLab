@@ -718,6 +718,7 @@ def draw_landmarks (image, image_landmarks, color=(0,255,0), draw_circles=True, 
     if transparent_mask:
         mask = get_image_hull_mask (image.shape, image_landmarks)
         image[...] = ( image * (1-mask) + image * mask / 2 )[...]
+    return(image)
 
 def draw_rect_landmarks (image, rect, image_landmarks, face_type, face_size=256, transparent_mask=False, landmarks_color=(0,255,0)):
     draw_landmarks(image, image_landmarks, color=landmarks_color, transparent_mask=transparent_mask)
@@ -729,7 +730,8 @@ def draw_rect_landmarks (image, rect, image_landmarks, face_type, face_size=256,
 
     points = transform_points ( [ ( int(face_size*0.05), 0), ( int(face_size*0.1), int(face_size*0.1) ), ( 0, int(face_size*0.1) ) ], image_to_face_mat, True)
     imagelib.draw_polygon (image, points, (0,0,255), 2)
-
+    return(image)
+    
 def calc_face_pitch(landmarks):
     if not isinstance(landmarks, np.ndarray):
         landmarks = np.array (landmarks)
