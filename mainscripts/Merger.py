@@ -14,7 +14,7 @@ from core.joblib import MPClassFuncOnDemand, MPFunc
 from core.leras import nn
 from DFLIMG import DFLIMG
 from facelib import FaceEnhancer, FaceType, LandmarksProcessor, XSegNet
-from merger import FrameInfo, InteractiveMergerSubprocessor, MergerConfig
+from merger import FrameInfo, InteractiveMergerSubprocessor, MergerConfig, MergerConfigMaskedMorph
 
 
 def main (model_class_name=None,
@@ -78,7 +78,7 @@ def main (model_class_name=None,
 
         input_path_image_paths = pathex.get_image_paths(input_path)
 
-        if cfg.type == MergerConfig.TYPE_MASKED:
+        if cfg.type == MergerConfig.TYPE_MASKED or cfg.type == MergerConfig.TYPE_MASKED_MORPH:
             if not aligned_path.exists():
                 io.log_err('Aligned directory not found. Please ensure it exists.')
                 return

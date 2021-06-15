@@ -11,7 +11,7 @@ from core import imagelib, pathex
 from core.cv2ex import *
 from core.interact import interact as io
 from core.joblib import Subprocessor
-from merger import MergeFaceAvatar, MergeMasked, MergerConfig
+from merger import MergeFaceAvatar, MergeMasked, MergeMaskedMorph, MergerConfig
 
 from .MergerScreen import Screen, ScreenManager
 
@@ -105,6 +105,7 @@ class InteractiveMergerSubprocessor(Subprocessor):
             else:
                 if cfg.type == MergerConfig.TYPE_MASKED:
                     try:
+                       
                         final_img = MergeMasked (self.predictor_func, self.predictor_input_shape,
                                                  face_enhancer_func=self.face_enhancer_func,
                                                  xseg_256_extract_func=self.xseg_256_extract_func,
@@ -116,6 +117,21 @@ class InteractiveMergerSubprocessor(Subprocessor):
                             raise Subprocessor.SilenceException
                         else:
                             raise Exception( f'Error while merging file [{filepath}]: {e_str}' )
+                elif cfg.type == MergerConfig.TYPE_MASKED_MORPH:
+                    try:
+                        
+                        final_img = MergeMaskedMorph (self.predictor_func, self.predictor_input_shape,
+                                                 face_enhancer_func=self.face_enhancer_func,
+                                                 xseg_256_extract_func=self.xseg_256_extract_func,
+                                                 cfg=cfg,
+                                                 frame_info=frame_info)
+                    except Exception as e:
+                        e_str = traceback.format_exc()
+                        if 'MemoryError' in e_str:
+                            raise Subprocessor.SilenceException
+                        else:
+                            raise Exception( f'Error while merging file [{filepath}]: {e_str}' )
+                            
 
                 elif cfg.type == MergerConfig.TYPE_FACE_AVATAR:
                     final_img = MergeFaceAvatar (self.predictor_func, self.predictor_input_shape,
@@ -290,6 +306,7 @@ class InteractiveMergerSubprocessor(Subprocessor):
             help_images = {
                     MergerConfig.TYPE_MASKED :      cv2_imread ( str(Path(__file__).parent / 'gfx' / 'help_merger_masked.jpg') ),
                     MergerConfig.TYPE_FACE_AVATAR : cv2_imread ( str(Path(__file__).parent / 'gfx' / 'help_merger_face_avatar.jpg') ),
+                    MergerConfig.TYPE_MASKED_MORPH : cv2_imread ( str(Path(__file__).parent / 'gfx' / 'help_merger_masked.jpg') ),
                 }
 
             self.main_screen = Screen(initial_scale_to_width=1368, image=None, waiting_icon=True)
@@ -332,7 +349,17 @@ class InteractiveMergerSubprocessor(Subprocessor):
                     'c' : lambda cfg,shift_pressed: cfg.toggle_color_transfer_mode(),
                     'n' : lambda cfg,shift_pressed: cfg.toggle_sharpen_mode(),
                     }
+                    
+            #TODO remove side effects
+            
+            self.masked_morph_keys_funcs = self.masked_keys_funcs.copy()
+            self.masked_morph_keys_funcs.update({
+                'p' : lambda cfg,shift_pressed: cfg.add_morph_power(1 if not shift_pressed else 5),
+                ';' : lambda cfg,shift_pressed: cfg.add_morph_power(-1),
+                ':' : lambda cfg,shift_pressed: cfg.add_morph_power(-5)})
+                    
             self.masked_keys = list(self.masked_keys_funcs.keys())
+            self.masked_morph_keys = list(self.masked_morph_keys_funcs.keys())
 
     #overridable optional
     def on_clients_finalized(self):
@@ -417,7 +444,7 @@ class InteractiveMergerSubprocessor(Subprocessor):
                     self.is_interactive_quitting = True
                 elif self.screen_manager.get_current() is self.main_screen:
 
-                    if self.merger_config.type == MergerConfig.TYPE_MASKED and chr_key in self.masked_keys:
+                    if (self.merger_config.type == MergerConfig.TYPE_MASKED and chr_key in self.masked_keys) or (self.merger_config.type == MergerConfig.TYPE_MASKED_MORPH and chr_key in self.masked_morph_keys):
                         self.process_remain_frames = False
 
                         if cur_frame is not None:
@@ -426,6 +453,9 @@ class InteractiveMergerSubprocessor(Subprocessor):
 
                             if cfg.type == MergerConfig.TYPE_MASKED:
                                 self.masked_keys_funcs[chr_key](cfg, shift_pressed)
+                            
+                            if cfg.type == MergerConfig.TYPE_MASKED_MORPH:
+                                self.masked_morph_keys_funcs[chr_key](cfg, shift_pressed)
 
                             if prev_cfg != cfg:
                                 io.log_info ( cfg.to_string(cur_frame.frame_info.filepath.name) )

@@ -9,10 +9,12 @@ class MergerConfig(object):
     TYPE_NONE = 0
     TYPE_MASKED = 1
     TYPE_FACE_AVATAR = 2
+    
     ####
 
     TYPE_IMAGE = 3
     TYPE_IMAGE_WITH_LANDMARKS = 4
+    TYPE_MASKED_MORPH = 5
 
     def __init__(self, type=0,
                        sharpen_mode=0,
@@ -327,3 +329,87 @@ class MergerConfigFaceAvatar(MergerConfig):
                 f"add_source_image : {self.add_source_image}\n") + \
                 super().to_string(filename) + "================"
 
+
+class MergerConfigMaskedMorph(MergerConfigMasked):
+
+    #override
+    def __init__(self, face_type=FaceType.WHOLE_FACE,
+                       default_mode = 'overlay',
+                       mode='overlay',
+                       masked_hist_match=True,
+                       hist_match_threshold = 238,
+                       mask_mode = 4,
+                       erode_mask_modifier = 0,
+                       blur_mask_modifier = 0,
+                       motion_blur_power = 0,
+                       output_face_scale = 0,
+                       super_resolution_power = 0,
+                       color_transfer_mode = ctm_str_dict['rct'],
+                       image_denoise_power = 0,
+                       bicubic_degrade_power = 0,
+                       color_degrade_power = 0,
+                       morph_power=100,
+                       **kwargs
+                       ):
+
+        MergerConfig.__init__(self, type=MergerConfig.TYPE_MASKED_MORPH, **kwargs)
+
+        self.face_type = face_type
+        if self.face_type not in [FaceType.WHOLE_FACE, FaceType.HEAD ]:
+            raise ValueError("MergerConfigMaskedMorph does not support this type of face.")
+
+        self.default_mode = default_mode
+
+        #default changeable params
+        if mode not in mode_str_dict:
+            mode = mode_dict[1]
+
+        self.mode = mode
+        self.masked_hist_match = masked_hist_match
+        self.hist_match_threshold = hist_match_threshold
+        self.mask_mode = mask_mode
+        self.erode_mask_modifier = erode_mask_modifier
+        self.blur_mask_modifier = blur_mask_modifier
+        self.motion_blur_power = motion_blur_power
+        self.output_face_scale = output_face_scale
+        self.super_resolution_power = super_resolution_power
+        self.color_transfer_mode = color_transfer_mode
+        self.image_denoise_power = image_denoise_power
+        self.bicubic_degrade_power = bicubic_degrade_power
+        self.color_degrade_power = color_degrade_power
+        self.morph_power = morph_power
+        
+        
+        
+    #override
+    def to_string(self, filename):
+        r = super().to_string(filename)
+        if r.endswith('================'):
+            r = r[:-16]
+                      
+        r += f"""morph_power: {self.morph_power}\n"""
+
+        r += "================"
+
+        return r
+    
+    #override
+    def ask_settings(self):
+    
+        super().ask_settings()
+    
+        self.morph_power = np.clip (  io.input_int ("Morph power in percent (overwrites morph factor)", 0, add_info="0..100"), 0, 100)
+    
+    #override
+    def add_morph_power(self, diff):
+        self.morph_power = np.clip ( self.morph_power+diff , 0, 100)
+        
+    def __eq__(self, other):
+        #check equality of changeable params
+
+        if isinstance(other, MergerConfigMaskedMorph):
+            return super().__eq__(other) and \
+                   self.morph_power == other.morph_power
+
+        return False
+        
