@@ -111,7 +111,7 @@ class UNetPatchDiscriminator(nn.ModelBase):
                 for i in range(layers_count-1):
                     st = 1 + (1 if val & (1 << i) !=0 else 0 )
                     layers.append ( [3, st ])
-                    sum_st += st                
+                    sum_st += st
 
                 rf = self.calc_receptive_field_size(layers)
 
@@ -131,7 +131,7 @@ class UNetPatchDiscriminator(nn.ModelBase):
         return s[q][2]
 
     def on_build(self, patch_size, in_ch, base_ch = 16):
-    
+
         class ResidualBlock(nn.ModelBase):
             def on_build(self, ch, kernel_size=3 ):
                 self.conv1 = nn.Conv2D( ch, ch, kernel_size=kernel_size, padding='SAME')
@@ -152,7 +152,7 @@ class UNetPatchDiscriminator(nn.ModelBase):
         self.upres1 = []
         self.upres2 = []
         layers = self.find_archi(patch_size)
-        
+
         level_chs = { i-1:v for i,v in enumerate([ min( base_ch * (2**i), 512 ) for i in range(len(layers)+1)]) }
 
         self.in_conv = nn.Conv2D( in_ch, level_chs[-1], kernel_size=1, padding='VALID')
@@ -162,12 +162,12 @@ class UNetPatchDiscriminator(nn.ModelBase):
 
             self.res1.append ( ResidualBlock(level_chs[i]) )
             self.res2.append ( ResidualBlock(level_chs[i]) )
-            
+
             self.upconvs.insert (0, nn.Conv2DTranspose( level_chs[i]*(2 if i != len(layers)-1 else 1), level_chs[i-1], kernel_size=kernel_size, strides=strides, padding='SAME') )
 
             self.upres1.insert (0, ResidualBlock(level_chs[i-1]*2) )
             self.upres2.insert (0, ResidualBlock(level_chs[i-1]*2) )
-            
+
         self.out_conv = nn.Conv2D( level_chs[-1]*2, 1, kernel_size=1, padding='VALID')
 
         self.center_out  =  nn.Conv2D( level_chs[len(layers)-1], 1, kernel_size=1, padding='VALID')
@@ -183,7 +183,7 @@ class UNetPatchDiscriminator(nn.ModelBase):
             x = tf.nn.leaky_relu( conv(x), 0.2 )
             x = res1(x)
             x = res2(x)
-            
+
         center_out, x = self.center_out(x), tf.nn.leaky_relu( self.center_conv(x), 0.2 )
 
         for i, (upconv, enc, upres1, upres2 ) in enumerate(zip(self.upconvs, encs, self.upres1, self.upres2)):

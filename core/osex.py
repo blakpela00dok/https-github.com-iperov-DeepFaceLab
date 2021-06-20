@@ -32,6 +32,5 @@ def get_screen_size():
         pass
     elif 'linux' in sys.platform:
         pass
-        
+
     return (1366, 768)
-        

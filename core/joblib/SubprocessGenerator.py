@@ -5,11 +5,11 @@ import time
 
 
 class SubprocessGenerator(object):
-    
+
     @staticmethod
-    def launch_thread(generator): 
+    def launch_thread(generator):
         generator._start()
-        
+
     @staticmethod
     def start_in_parallel( generator_list ):
         """
@@ -22,7 +22,7 @@ class SubprocessGenerator(object):
 
         while not all ([generator._is_started() for generator in generator_list]):
             time.sleep(0.005)
-    
+
     def __init__(self, generator_func, user_param=None, prefetch=2, start_now=True):
         super().__init__()
         self.prefetch = prefetch
@@ -42,10 +42,10 @@ class SubprocessGenerator(object):
             p.daemon = True
             p.start()
             self.p = p
-            
+
     def _is_started(self):
         return self.p is not None
-        
+
     def process_func(self, user_param):
         self.generator_func = self.generator_func(user_param)
         while True:

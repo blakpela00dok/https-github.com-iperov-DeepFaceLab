@@ -286,7 +286,7 @@ class QCanvasControlsRightBar(QFrame):
         controls_bar_frame2.setFrameShape(QFrame.StyledPanel)
         controls_bar_frame2.setSizePolicy (QSizePolicy.Fixed, QSizePolicy.Fixed)
         controls_bar_frame2.setLayout(controls_bar_frame2_l)
-        
+
         controls_bar_frame1_l = QVBoxLayout()
         controls_bar_frame1_l.addWidget ( btn_poly_color_red )
         controls_bar_frame1_l.addWidget ( btn_poly_color_green )
@@ -297,7 +297,7 @@ class QCanvasControlsRightBar(QFrame):
         controls_bar_frame1.setFrameShape(QFrame.StyledPanel)
         controls_bar_frame1.setSizePolicy (QSizePolicy.Fixed, QSizePolicy.Fixed)
         controls_bar_frame1.setLayout(controls_bar_frame1_l)
-        
+
         controls_bar_frame3_l = QVBoxLayout()
         controls_bar_frame3_l.addWidget ( btn_view_lock_center )
         controls_bar_frame3 = QFrame()
@@ -310,7 +310,7 @@ class QCanvasControlsRightBar(QFrame):
         controls_bar_l.addWidget(controls_bar_frame2)
         controls_bar_l.addWidget(controls_bar_frame1)
         controls_bar_l.addWidget(controls_bar_frame3)
-        
+
         self.setSizePolicy ( QSizePolicy.Fixed, QSizePolicy.Expanding )
         self.setLayout(controls_bar_l)
 
@@ -1342,18 +1342,18 @@ class MainWindow(QXMainWindow):
 
         self.update_cached_images()
         self.update_preview_bar()
-        
+
     def trash_current_image(self):
         self.process_next_image()
-        
+
         img_path = self.image_paths_done.pop(-1)
         img_path = Path(img_path)
         self.trash_dirpath.mkdir(parents=True, exist_ok=True)
         img_path.rename( self.trash_dirpath / img_path.name )
-        
+
         self.update_cached_images()
         self.update_preview_bar()
-        
+
     def initialize_ui(self):
 
         self.canvas = QCanvas()
@@ -1370,10 +1370,10 @@ class MainWindow(QXMainWindow):
 
         btn_delete_image = QXIconButton(QIconDB.trashcan, QStringDB.btn_delete_image_tip, shortcut='X', click_func=self.trash_current_image)
         btn_delete_image.setIconSize(QUIConfig.preview_bar_icon_q_size)
-    
+
         pad_image = QWidget()
         pad_image.setFixedSize(QUIConfig.preview_bar_icon_q_size)
-        
+
         preview_image_bar_frame_l = QHBoxLayout()
         preview_image_bar_frame_l.setContentsMargins(0,0,0,0)
         preview_image_bar_frame_l.addWidget ( pad_image, alignment=Qt.AlignCenter)
@@ -1393,11 +1393,11 @@ class MainWindow(QXMainWindow):
         preview_image_bar_frame2 = QFrame()
         preview_image_bar_frame2.setSizePolicy ( QSizePolicy.Fixed, QSizePolicy.Fixed )
         preview_image_bar_frame2.setLayout(preview_image_bar_frame2_l)
-        
+
         preview_image_bar_l = QHBoxLayout()
         preview_image_bar_l.addWidget (preview_image_bar_frame, alignment=Qt.AlignCenter)
         preview_image_bar_l.addWidget (preview_image_bar_frame2)
-        
+
         preview_image_bar = QFrame()
         preview_image_bar.setFrameShape(QFrame.StyledPanel)
         preview_image_bar.setSizePolicy ( QSizePolicy.Expanding, QSizePolicy.Fixed )

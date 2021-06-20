@@ -30,8 +30,8 @@ to_string_dict = { FaceType.HALF : 'half_face',
                    FaceType.WHOLE_FACE : 'whole_face',
                    FaceType.HEAD : 'head',
                    FaceType.HEAD_NO_ALIGN : 'head_no_align',
-                   
-                   FaceType.MARK_ONLY :'mark_only',  
+
+                   FaceType.MARK_ONLY :'mark_only',
                  }
 
-from_string_dict = { to_string_dict[x] : x for x in to_string_dict.keys() }  
+from_string_dict = { to_string_dict[x] : x for x in to_string_dict.keys() }

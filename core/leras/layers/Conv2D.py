@@ -28,8 +28,8 @@ class Conv2D(nn.LayerBase):
                 raise ValueError ("Wrong padding type. Should be VALID SAME or INT or 4x INTs")
         else:
             padding = int(padding)
-            
-        
+
+
 
         self.in_ch = in_ch
         self.out_ch = out_ch
@@ -85,7 +85,7 @@ class Conv2D(nn.LayerBase):
             else:
                 padding = [ [0,0], [0,0], [padding,padding], [padding,padding] ]
             x = tf.pad (x, padding, mode='CONSTANT')
-        
+
         strides = self.strides
         if nn.data_format == "NHWC":
             strides = [1,strides,strides,1]
@@ -97,7 +97,7 @@ class Conv2D(nn.LayerBase):
             dilations = [1,dilations,dilations,1]
         else:
             dilations = [1,1,dilations,dilations]
-            
+
         x = tf.nn.conv2d(x, weight, strides, 'VALID', dilations=dilations, data_format=nn.data_format)
         if self.use_bias:
             if nn.data_format == "NHWC":

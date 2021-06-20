@@ -6,16 +6,16 @@ class MPClassFuncOnDemand():
         self.class_handle = class_handle
         self.class_func_name = class_func_name
         self.class_kwargs = class_kwargs
-   
+
         self.class_func = None
-        
+
         self.s2c = multiprocessing.Queue()
         self.c2s = multiprocessing.Queue()
         self.lock = multiprocessing.Lock()
-        
+
         io.add_process_messages_callback(self.io_callback)
 
-    def io_callback(self):        
+    def io_callback(self):
         while not self.c2s.empty():
             func_args, func_kwargs = self.c2s.get()
             if self.class_func is None:

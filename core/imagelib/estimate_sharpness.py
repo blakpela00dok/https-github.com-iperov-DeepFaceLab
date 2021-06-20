@@ -43,7 +43,7 @@ def sobel(image):
     from skimage.filters.edges import HSOBEL_WEIGHTS
     h1 = np.array(HSOBEL_WEIGHTS)
     h1 /= np.sum(abs(h1))  # normalize h1
-    
+
     from scipy.ndimage import convolve
     strength2 = np.square(convolve(image, h1.T))
 
@@ -274,5 +274,5 @@ def estimate_sharpness(image):
             image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         else:
             image = image[...,0]
-        
+
     return compute(image)

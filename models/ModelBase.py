@@ -187,7 +187,7 @@ class ModelBase(object):
         self.random_flip = self.options.get('random_flip',True)
         self.random_src_flip = self.options.get('random_src_flip', False)
         self.random_dst_flip = self.options.get('random_dst_flip', True)
-        
+
         self.on_initialize()
         self.options['batch_size'] = self.batch_size
 
@@ -299,7 +299,7 @@ class ModelBase(object):
     def ask_random_flip(self):
         default_random_flip = self.load_or_def_option('random_flip', True)
         self.options['random_flip'] = io.input_bool("Flip faces randomly", default_random_flip, help_message="Predicted face will look more naturally without this option, but src faceset should cover all face directions as dst faceset.")
-    
+
     def ask_random_src_flip(self):
         default_random_src_flip = self.load_or_def_option('random_src_flip', False)
         self.options['random_src_flip'] = io.input_bool("Flip SRC faces randomly", default_random_src_flip, help_message="Random horizontal flip SRC faceset. Covers more angles, but the face may look less naturally.")
@@ -545,7 +545,7 @@ class ModelBase(object):
     def get_summary_text(self):
         visible_options = self.options.copy()
         visible_options.update(self.options_show_override)
-        
+
         ###Generate text summary of model hyperparameters
         #Find the longest key name and value string. Used as column widths.
         width_name = max([len(k) for k in visible_options.keys()] + [17]) + 1 # Single space buffer to left edge. Minimum of 17, the length of the longest static string used "Current iteration"

@@ -76,16 +76,16 @@ class DeepFakeArchi(nn.ArchiBase):
                     self.in_ch = in_ch
                     self.e_ch = e_ch
                     super().__init__(**kwargs)
-                    
-                def on_build(self):                    
+
+                def on_build(self):
                     self.down1 = DownscaleBlock(self.in_ch, self.e_ch, n_downscales=4, kernel_size=5)
 
                 def forward(self, inp):
                     return nn.flatten(self.down1(inp))
-                    
+
                 def get_out_res(self, res):
                     return res // (2**4)
-                    
+
                 def get_out_ch(self):
                     return self.e_ch * 8
 
@@ -203,7 +203,7 @@ class DeepFakeArchi(nn.ArchiBase):
                     m = tf.nn.sigmoid(self.out_convm(m))
 
                     return x, m
-        
+
         self.Encoder = Encoder
         self.Inter = Inter
         self.Decoder = Decoder

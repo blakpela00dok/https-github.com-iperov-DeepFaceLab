@@ -36,7 +36,6 @@ SID_HOT_KEY = 1
 if system_language == 'en':
     StringsDB = {'S_HOT_KEY' : 'hot key'}
 elif system_language == 'ru':
-    StringsDB = {'S_HOT_KEY' : 'горячая клавиша'}    
+    StringsDB = {'S_HOT_KEY' : 'горячая клавиша'}
 elif system_language == 'zh':
-    StringsDB = {'S_HOT_KEY' : '热键'}   
-    
+    StringsDB = {'S_HOT_KEY' : '热键'}

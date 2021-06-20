@@ -24,7 +24,7 @@ def save_faceset_metadata_folder(input_path):
         if dflimg is None or not dflimg.has_data():
             io.log_info(f"{filepath} is not a dfl image file")
             continue
-            
+
         dfl_dict = dflimg.get_dict()
         d[filepath.name] = ( dflimg.get_shape(), dfl_dict )
 
@@ -59,7 +59,7 @@ def restore_faceset_metadata_folder(input_path):
         if saved_data is None:
             io.log_info(f"No saved metadata for {filepath}")
             continue
-        
+
         shape, dfl_dict = saved_data
 
         img = cv2_imread (filepath)
@@ -90,19 +90,19 @@ def add_landmarks_debug_images(input_path):
         if dflimg is None or not dflimg.has_data():
             io.log_err (f"{filepath.name} is not a dfl image file")
             continue
-        
+
         if img is not None:
             face_landmarks = dflimg.get_landmarks()
             face_type = FaceType.fromString ( dflimg.get_face_type() )
-            
+
             if face_type == FaceType.MARK_ONLY:
                 rect = dflimg.get_source_rect()
                 LandmarksProcessor.draw_rect_landmarks(img, rect, face_landmarks, FaceType.FULL )
             else:
                 LandmarksProcessor.draw_landmarks(img, face_landmarks, transparent_mask=True )
-            
-            
-            
+
+
+
             output_file = '{}{}'.format( str(Path(str(input_path)) / filepath.stem),  '_debug.jpg')
             cv2_imwrite(output_file, img, [int(cv2.IMWRITE_JPEG_QUALITY), 50] )
 

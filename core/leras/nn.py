@@ -34,13 +34,13 @@ class nn():
     tf_sess = None
     tf_sess_config = None
     tf_default_device_name = None
-    
+
     data_format = None
     conv2d_ch_axis = None
     conv2d_spatial_axes = None
 
     floatx = None
-    
+
     @staticmethod
     def initialize(device_config=None, floatx="float32", data_format="NHWC"):
 
@@ -67,7 +67,7 @@ class nn():
                         first_run = True
                         compute_cache_path.mkdir(parents=True, exist_ok=True)
                     os.environ['CUDA_CACHE_PATH'] = str(compute_cache_path)
-            
+
             if first_run:
                 io.log_info("Caching GPU kernels...")
 
@@ -87,7 +87,7 @@ class nn():
             # Disable tensorflow warnings
             tf_logger = logging.getLogger('tensorflow')
             tf_logger.setLevel(logging.ERROR)
-            
+
             if tf_version[0] == '2':
                 tf.disable_v2_behavior()
             nn.tf = tf
@@ -99,21 +99,21 @@ class nn():
             import core.leras.optimizers
             import core.leras.models
             import core.leras.archis
-            
+
             # Configure tensorflow session-config
             if len(device_config.devices) == 0:
                 config = tf.ConfigProto(device_count={'GPU': 0})
                 nn.tf_default_device_name = '/CPU:0'
             else:
                 nn.tf_default_device_name = f'/{device_config.devices[0].tf_dev_type}:0'
-                
+
                 config = tf.ConfigProto()
                 config.gpu_options.visible_device_list = ','.join([str(device.index) for device in device_config.devices])
-                
+
             config.gpu_options.force_gpu_compatible = True
             config.gpu_options.allow_growth = True
             nn.tf_sess_config = config
-            
+
         if nn.tf_sess is None:
             nn.tf_sess = tf.Session(config=nn.tf_sess_config)
 
@@ -260,7 +260,7 @@ class nn():
         @staticmethod
         def ask_choose_device(*args, **kwargs):
             return nn.DeviceConfig.GPUIndexes( nn.ask_choose_device_idxs(*args,**kwargs) )
-        
+
         def __init__ (self, devices=None):
             devices = devices or []
 

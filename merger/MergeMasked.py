@@ -316,7 +316,7 @@ def MergeMaskedFace (predictor_func, predictor_input_shape,
 
     if out_img is None:
         out_img = img_bgr.copy()
-        
+
     return out_img, out_merging_mask_a
 
 

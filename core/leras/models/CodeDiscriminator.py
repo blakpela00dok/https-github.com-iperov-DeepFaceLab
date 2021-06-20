@@ -2,7 +2,7 @@ from core.leras import nn
 tf = nn.tf
 
 class CodeDiscriminator(nn.ModelBase):
-    def on_build(self, in_ch, code_res, ch=256, conv_kernel_initializer=None):            
+    def on_build(self, in_ch, code_res, ch=256, conv_kernel_initializer=None):
         n_downscales = 1 + code_res // 8
 
         self.convs = []
@@ -18,5 +18,5 @@ class CodeDiscriminator(nn.ModelBase):
         for conv in self.convs:
             x = tf.nn.leaky_relu( conv(x), 0.1 )
         return self.out_conv(x)
-        
+
 nn.CodeDiscriminator = CodeDiscriminator

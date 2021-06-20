@@ -14,12 +14,12 @@ def dist_to_edges(pts, pt, is_closed=False):
 
     pa = pt-a
     ba = b-a
-    
+
     div = np.einsum('ij,ij->i', ba, ba)
     div[div==0]=1
     h = np.clip( np.einsum('ij,ij->i', pa, ba) / div, 0, 1 )
-    
+
     x = npla.norm ( pa - ba*h[...,None], axis=1 )
-    
+
     return x, a+ba*h[...,None]
-    
+

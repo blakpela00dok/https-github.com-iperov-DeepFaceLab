@@ -84,7 +84,7 @@ class PackedFaceset():
             of.write ( struct.pack("Q", offset) )
         of.seek(0,2)
         of.close()
-        
+
         if io.input_bool(f"Delete original files?", True):
             for filename in io.progress_bar_generator(image_paths, "Deleting files"):
                 Path(filename).unlink()
@@ -125,7 +125,7 @@ class PackedFaceset():
     def path_contains(samples_path):
         samples_dat_path = samples_path / packed_faceset_filename
         return samples_dat_path.exists()
-    
+
     @staticmethod
     def load(samples_path):
         samples_dat_path = samples_path / packed_faceset_filename

@@ -87,7 +87,7 @@ class AMPModel(ModelBase):
 
             d_mask_dims = np.clip ( io.input_int("Decoder mask dimensions", default_d_mask_dims, add_info="16-256", help_message="Typical mask dimensions = decoder dimensions / 3. If you manually cut out obstacles from the dst mask, you can increase this parameter to achieve better quality." ), 16, 256 )
             self.options['d_mask_dims'] = d_mask_dims + d_mask_dims % 2
-            
+
             morph_factor = np.clip ( io.input_number ("Morph factor.", default_morph_factor, add_info="0.1 .. 0.5", help_message="The smaller the value, the more src-like facial expressions will appear. The larger the value, the less space there is to train a large dst faceset in the neural network. Typical fine value is 0.33"), 0.1, 0.5 )
             self.options['morph_factor'] = morph_factor
 
@@ -121,9 +121,9 @@ class AMPModel(ModelBase):
 
             self.options['ct_mode'] = io.input_str (f"Color transfer for src faceset", default_ct_mode, ['none','rct','lct','mkl','idt','sot'], help_message="Change color distribution of src samples close to dst samples. Try all modes to find the best.")
             self.options['clipgrad'] = io.input_bool ("Enable gradient clipping", default_clipgrad, help_message="Gradient clipping reduces chance of model collapse, sacrificing speed of training.")
-            
+
             self.options['pretrain'] = io.input_bool ("Enable pretraining mode", default_pretrain, help_message="Pretrain the model with large amount of various faces. After that, model can be used to train the fakes more quickly. Forces random_warp=N, random_flips=Y, gan_power=0.0, lr_dropout=N, uniform_yaw=Y")
-        
+
         self.gan_model_changed = (default_gan_patch_size != self.options['gan_patch_size']) or (default_gan_dims != self.options['gan_dims'])
         self.pretrain_just_disabled = (default_pretrain == True and self.options['pretrain'] == False)
 
@@ -285,22 +285,22 @@ class AMPModel(ModelBase):
         d_dims = self.options['d_dims']
         d_mask_dims = self.options['d_mask_dims']
         morph_factor = self.options['morph_factor']
-        
+
         pretrain = self.pretrain = self.options['pretrain']
         if self.pretrain_just_disabled:
             self.set_iter(0)
-            
+
         self.gan_power = gan_power = 0.0 if self.pretrain else self.options['gan_power']
         random_warp = False if self.pretrain else self.options['random_warp']
         random_src_flip = self.random_src_flip if not self.pretrain else True
         random_dst_flip = self.random_dst_flip if not self.pretrain else True
-        
+
         if self.pretrain:
             self.options_show_override['gan_power'] = 0.0
             self.options_show_override['random_warp'] = False
             self.options_show_override['lr_dropout'] = 'n'
             self.options_show_override['uniform_yaw'] = True
-            
+
         masked_training = self.options['masked_training']
         ct_mode = self.options['ct_mode']
         if ct_mode == 'none':
@@ -351,7 +351,7 @@ class AMPModel(ModelBase):
                 # Initialize optimizers
                 lr=5e-5
                 lr_dropout = 0.3 if self.options['lr_dropout'] in ['y','cpu'] and not self.pretrain else 1.0
-                
+
                 clipnorm = 1.0 if self.options['clipgrad'] else 0.0
 
                 self.all_weights = self.encoder.get_weights() + self.inter_src.get_weights() + self.inter_dst.get_weights() + self.decoder.get_weights()
@@ -407,7 +407,7 @@ class AMPModel(ModelBase):
                     # process model tensors
                     gpu_src_code = self.encoder (gpu_warped_src)
                     gpu_dst_code = self.encoder (gpu_warped_dst)
-                    
+
                     if pretrain:
                         gpu_src_inter_src_code = self.inter_src (gpu_src_code)
                         gpu_dst_inter_dst_code = self.inter_dst (gpu_dst_code)
@@ -454,7 +454,7 @@ class AMPModel(ModelBase):
                     gpu_pred_src_src_anti_masked = gpu_pred_src_src*(1.0-gpu_target_srcm_blur)
                     gpu_pred_dst_dst_masked_opt = gpu_pred_dst_dst*gpu_target_dstm_blur if masked_training else gpu_pred_dst_dst
                     gpu_pred_dst_dst_anti_masked = gpu_pred_dst_dst*(1.0-gpu_target_dstm_blur)
-                    
+
                     if resolution < 256:
                         gpu_dst_loss = tf.reduce_mean ( 10*nn.dssim(gpu_target_dst_masked_opt, gpu_pred_dst_dst_masked_opt, max_val=1.0, filter_size=int(resolution/11.6) ), axis=[1])
                     else:
@@ -481,12 +481,12 @@ class AMPModel(ModelBase):
                         gpu_src_loss += tf.reduce_mean ( 10*tf.square( gpu_target_srcm - gpu_pred_src_srcm ),axis=[1,2,3] )
                     else:
                         gpu_src_loss = gpu_dst_loss
-                    
+
                     gpu_src_losses += [gpu_src_loss]
-                    
+
                     if pretrain:
                         gpu_G_loss = gpu_dst_loss
-                    else:     
+                    else:
                         gpu_G_loss = gpu_src_loss + gpu_dst_loss
 
                     def DLossOnes(logits):
@@ -605,7 +605,7 @@ class AMPModel(ModelBase):
                 if self.is_training and gan_power != 0 and model == self.GAN:
                     if self.gan_model_changed:
                         do_init = True
-                        
+
             if not do_init:
                 do_init = not model.load_weights( self.get_strpath_storage_for_file(filename) )
             if do_init:
@@ -654,7 +654,7 @@ class AMPModel(ModelBase):
             self.last_dst_samples_loss = []
             if self.pretrain_just_disabled:
                 self.update_sample_for_preview(force_new=True)
-    
+
 
     def dump_ckpt(self):
         tf = nn.tf
@@ -681,13 +681,13 @@ class AMPModel(ModelBase):
         tf.identity(gpu_pred_dst_dstm, name='out_face_mask')
         tf.identity(gpu_pred_src_dst, name='out_celeb_face')
         tf.identity(gpu_pred_src_dstm, name='out_celeb_face_mask')
-        
+
         output_graph_def = tf.graph_util.convert_variables_to_constants(
-            nn.tf_sess, 
-            tf.get_default_graph().as_graph_def(), 
+            nn.tf_sess,
+            tf.get_default_graph().as_graph_def(),
             ['out_face_mask','out_celeb_face','out_celeb_face_mask']
-        ) 
-        
+        )
+
         pb_filepath = self.get_strpath_storage_for_file('.pb')
         with tf.gfile.GFile(pb_filepath, "wb") as f:
             f.write(output_graph_def.SerializeToString())
@@ -791,7 +791,7 @@ class AMPModel(ModelBase):
 
     def predictor_func (self, face, morph_value):
         face = nn.to_data_format(face[None,...], self.model_data_format, "NHWC")
-    
+
         bgr, mask_dst_dstm, mask_src_dstm = [ nn.to_data_format(x,"NHWC", self.model_data_format).astype(np.float32) for x in self.AE_merge (face, morph_value) ]
 
         return bgr[0], mask_src_dstm[0][...,0], mask_dst_dstm[0][...,0]
@@ -802,9 +802,9 @@ class AMPModel(ModelBase):
 
         def predictor_morph(face):
             return self.predictor_func(face, morph_factor)
-            
 
-        import merger        
+
+        import merger
         return predictor_morph, (self.options['resolution'], self.options['resolution'], 3), merger.MergerConfigMasked(face_type=self.face_type, default_mode = 'overlay')
 
 Model = AMPModel

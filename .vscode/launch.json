@@ -3,9 +3,9 @@
     // Hover to view descriptions of existing attributes.
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
-    "configurations": [        
+    "configurations": [
         {
-            
+
             "name": "DFL train TEST",
             "subProcess": true,
             "justMyCode": true,
@@ -14,8 +14,8 @@
             "program": "${env:DFL_ROOT}\\main.py",
             "pythonPath": "${env:PYTHONEXECUTABLE}",
             "cwd": "${env:WORKSPACE}",
-            "console": "integratedTerminal",    
-            "args": ["train", 
+            "console": "integratedTerminal",
+            "args": ["train",
                      "--training-data-src-dir", "${env:WORKSPACE}\\data_src\\aligned",
                      "--training-data-dst-dir",  "${env:WORKSPACE}\\data_dst\\aligned",
                      "--model-dir", "${env:WORKSPACE}\\model",

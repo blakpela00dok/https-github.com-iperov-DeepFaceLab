@@ -13,12 +13,12 @@ class RMSprop(nn.OptimizerBase):
         self.lr = lr
         self.rho = rho
         self.epsilon = epsilon
-        
+
         self.clipnorm = clipnorm
 
         with tf.device('/CPU:0') :
             with tf.variable_scope(self.name):
-                
+
                 self.iterations = tf.Variable(0, dtype=tf.int64, name='iters')
 
         self.accumulators_dict = {}
@@ -37,9 +37,9 @@ class RMSprop(nn.OptimizerBase):
 
             if self.lr_dropout != 1.0:
                 e = tf.device('/CPU:0') if lr_dropout_on_cpu else None
-                if e: e.__enter__()                    
+                if e: e.__enter__()
                 lr_rnds = [ nn.random_binomial( v.shape, p=self.lr_dropout, dtype=v.dtype) for v in trainable_weights ]
-                if e: e.__exit__(None, None, None)                
+                if e: e.__exit__(None, None, None)
                 self.lr_rnds_dict.update ( { v.name : rnd for v,rnd in zip(trainable_weights,lr_rnds) } )
         if e: e.__exit__(None, None, None)
 

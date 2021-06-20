@@ -55,23 +55,23 @@ class Sample(object):
         self.face_type = face_type
         self.shape = shape
         self.landmarks = np.array(landmarks) if landmarks is not None else None
-        
+
         if isinstance(seg_ie_polys, SegIEPolys):
             self.seg_ie_polys = seg_ie_polys
         else:
             self.seg_ie_polys = SegIEPolys.load(seg_ie_polys)
-        
+
         self.xseg_mask = xseg_mask
         self.xseg_mask_compressed = xseg_mask_compressed
-        
+
         if self.xseg_mask_compressed is None and self.xseg_mask is not None:
-            xseg_mask = np.clip( imagelib.normalize_channels(xseg_mask, 1)*255, 0, 255 ).astype(np.uint8)        
+            xseg_mask = np.clip( imagelib.normalize_channels(xseg_mask, 1)*255, 0, 255 ).astype(np.uint8)
             ret, xseg_mask_compressed = cv2.imencode('.png', xseg_mask)
             if not ret:
                 raise Exception("Sample(): unable to generate xseg_mask_compressed")
             self.xseg_mask_compressed = xseg_mask_compressed
             self.xseg_mask = None
- 
+
         self.eyebrows_expand_mod = eyebrows_expand_mod if eyebrows_expand_mod is not None else 1.0
         self.source_filename = source_filename
         self.person_name = person_name
@@ -81,7 +81,7 @@ class Sample(object):
 
     def has_xseg_mask(self):
         return self.xseg_mask is not None or self.xseg_mask_compressed is not None
-        
+
     def get_xseg_mask(self):
         if self.xseg_mask_compressed is not None:
             xseg_mask = cv2.imdecode(self.xseg_mask_compressed, cv2.IMREAD_UNCHANGED)
@@ -89,7 +89,7 @@ class Sample(object):
                 xseg_mask = xseg_mask[...,None]
             return xseg_mask.astype(np.float32) / 255.0
         return self.xseg_mask
-        
+
     def get_pitch_yaw_roll(self):
         if self.pitch_yaw_roll is None:
             self.pitch_yaw_roll = LandmarksProcessor.estimate_pitch_yaw_roll(self.landmarks, size=self.shape[1])

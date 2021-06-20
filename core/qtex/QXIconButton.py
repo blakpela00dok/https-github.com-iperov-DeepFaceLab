@@ -12,10 +12,10 @@ class QXIconButton(QPushButton):
     currently works only with one-key shortcut
     """
 
-    def __init__(self, icon, 
-                    tooltip=None, 
-                    shortcut=None,                    
-                    click_func=None,                  
+    def __init__(self, icon,
+                    tooltip=None,
+                    shortcut=None,
+                    click_func=None,
                     first_repeat_delay=300,
                     repeat_delay=20,
                     ):
@@ -23,28 +23,28 @@ class QXIconButton(QPushButton):
         super().__init__(icon, "")
 
         self.setIcon(icon)
-        
+
         if shortcut is not None:
             tooltip = f"{tooltip} ( {StringsDB['S_HOT_KEY'] }: {shortcut} )"
-        
+
         self.setToolTip(tooltip)
-            
-        
+
+
         self.seq = QKeySequence(shortcut) if shortcut is not None else None
-        
+
         QXMainWindow.inst.add_keyPressEvent_listener ( self.on_keyPressEvent )
         QXMainWindow.inst.add_keyReleaseEvent_listener ( self.on_keyReleaseEvent )
-        
+
         self.click_func = click_func
         self.first_repeat_delay = first_repeat_delay
         self.repeat_delay = repeat_delay
         self.repeat_timer = None
-        
+
         self.op_device = None
-        
+
         self.pressed.connect( lambda : self.action(is_pressed=True)  )
         self.released.connect( lambda : self.action(is_pressed=False)  )
-        
+
     def action(self, is_pressed=None, op_device=None):
         if self.click_func is None:
             return
@@ -64,12 +64,12 @@ class QXIconButton(QPushButton):
             self.click_func()
             if self.repeat_timer is not None:
                 self.repeat_timer.setInterval(self.repeat_delay)
-        
-    def on_keyPressEvent(self, ev):              
+
+    def on_keyPressEvent(self, ev):
         key = ev.nativeVirtualKey()
         if ev.isAutoRepeat():
             return
-            
+
         if self.seq is not None:
             if key == self.seq[0]:
                 self.action(is_pressed=True)

@@ -16,18 +16,18 @@ class SampleGeneratorImage(SampleGeneratorBase):
         self.output_sample_types = output_sample_types
 
         samples = SampleLoader.load (SampleType.IMAGE, samples_path)
-        
+
         if len(samples) == 0:
             if raise_on_no_data:
                 raise ValueError('No training data provided.')
             return
-        
+
         self.generators = [ThisThreadGenerator ( self.batch_func, samples )] if self.debug else \
                           [SubprocessGenerator ( self.batch_func, samples )]
 
         self.generator_counter = -1
         self.initialized = True
-        
+
     def __iter__(self):
         return self
 
@@ -38,7 +38,7 @@ class SampleGeneratorImage(SampleGeneratorBase):
 
     def batch_func(self, samples):
         samples_len = len(samples)
-        
+
 
         idxs = [ *range(samples_len) ]
         shuffle_idxs = []
@@ -54,7 +54,7 @@ class SampleGeneratorImage(SampleGeneratorBase):
 
                 idx = shuffle_idxs.pop()
                 sample = samples[idx]
-                
+
                 x, = SampleProcessor.process ([sample], self.sample_process_options, self.output_sample_types, self.debug)
 
                 if batches is None:

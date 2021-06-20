@@ -97,10 +97,10 @@ class Saveable():
             nn.batch_set_value(tuples)
         except:
             return False
-            
+
         return True
 
     def init_weights(self):
         nn.init_weights(self.get_weights())
-    
+
 nn.Saveable = Saveable

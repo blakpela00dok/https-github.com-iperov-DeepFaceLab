@@ -13,7 +13,7 @@ from .qtex import *
 
 class QSubprocessor(object):
     """
-    
+
     """
 
     class Cli(object):
@@ -149,11 +149,11 @@ class QSubprocessor(object):
 
         #ok some processes survived, initialize host logic
         self.on_clients_initialized()
-                
+
         self.q_timer = QTimer()
         self.q_timer.timeout.connect(self.tick)
         self.q_timer.start(5)
-        
+
     #overridable
     def process_info_generator(self):
         #yield per process (name, host_dict, client_dict)
@@ -259,4 +259,4 @@ class QSubprocessor(object):
             self.q_timer.stop()
             self.q_timer = None
             self.on_clients_finalized()
-            
+

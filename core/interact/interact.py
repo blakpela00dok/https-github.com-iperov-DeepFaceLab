@@ -502,7 +502,7 @@ class InteractDesktop(InteractBase):
         if has_windows or has_capture_keys:
             wait_key_time = max(1, int(sleep_time*1000) )
             ord_key = cv2.waitKeyEx(wait_key_time)
-            
+
             shift_pressed = False
             if ord_key != -1:
                 chr_key = chr(ord_key) if ord_key <= 255 else chr(0)

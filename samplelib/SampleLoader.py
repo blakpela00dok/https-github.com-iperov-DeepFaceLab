@@ -84,7 +84,7 @@ class SampleLoader:
               xseg_mask_compressed,
               eyebrows_expand_mod,
               source_filename ) = data
-              
+
             sample_list.append( Sample(filename=filename,
                                         sample_type=SampleType.FACE,
                                         face_type=FaceType.fromString (face_type),

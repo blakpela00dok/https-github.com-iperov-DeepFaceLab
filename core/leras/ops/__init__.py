@@ -382,7 +382,7 @@ def total_variation_mse(images):
     """
     pixel_dif1 = images[:, 1:, :, :] - images[:, :-1, :, :]
     pixel_dif2 = images[:, :, 1:, :] - images[:, :, :-1, :]
-    
+
     tot_var = ( tf.reduce_sum(tf.square(pixel_dif1), axis=[1,2,3]) +
                 tf.reduce_sum(tf.square(pixel_dif2), axis=[1,2,3]) )
     return tot_var
@@ -392,7 +392,7 @@ nn.total_variation_mse = total_variation_mse
 def pixel_norm(x, axes):
     return x * tf.rsqrt(tf.reduce_mean(tf.square(x), axis=axes, keepdims=True) + 1e-06)
 nn.pixel_norm = pixel_norm
-        
+
 """
 def tf_suppress_lower_mean(t, eps=0.00001):
     if t.shape.ndims != 1:

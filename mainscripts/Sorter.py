@@ -25,7 +25,7 @@ class BlurEstimatorSubprocessor(Subprocessor):
     class Cli(Subprocessor.Cli):
         def on_initialize(self, client_dict):
             self.estimate_motion_blur = client_dict['estimate_motion_blur']
-        
+
         #override
         def process_data(self, data):
             filepath = Path( data[0] )
@@ -36,16 +36,16 @@ class BlurEstimatorSubprocessor(Subprocessor):
                 return [ str(filepath), 0 ]
             else:
                 image = cv2_imread( str(filepath) )
-                
+
                 face_mask = LandmarksProcessor.get_image_hull_mask (image.shape, dflimg.get_landmarks())
                 image = (image*face_mask).astype(np.uint8)
-                
-                
+
+
                 if self.estimate_motion_blur:
-                    value = cv2.Laplacian(image, cv2.CV_64F, ksize=11).var()    
+                    value = cv2.Laplacian(image, cv2.CV_64F, ksize=11).var()
                 else:
                     value = estimate_sharpness(image)
-                
+
                 return [ str(filepath), value ]
 
 
@@ -113,7 +113,7 @@ def sort_by_blur(input_path):
     img_list = sorted(img_list, key=operator.itemgetter(1), reverse=True)
 
     return img_list, trash_img_list
-    
+
 def sort_by_motion_blur(input_path):
     io.log_info ("Sorting by motion blur...")
 
@@ -124,7 +124,7 @@ def sort_by_motion_blur(input_path):
     img_list = sorted(img_list, key=operator.itemgetter(1), reverse=True)
 
     return img_list, trash_img_list
-    
+
 def sort_by_face_yaw(input_path):
     io.log_info ("Sorting by face yaw...")
     img_list = []
@@ -472,7 +472,7 @@ class FinalLoaderSubprocessor(Subprocessor):
                     source_rect = dflimg.get_source_rect()
                     sharpness = mathlib.polygon_area(np.array(source_rect[[0,2,2,0]]).astype(np.float32), np.array(source_rect[[1,1,3,3]]).astype(np.float32))
                 else:
-                    face_mask = LandmarksProcessor.get_image_hull_mask (gray.shape, dflimg.get_landmarks())     
+                    face_mask = LandmarksProcessor.get_image_hull_mask (gray.shape, dflimg.get_landmarks())
                     sharpness = estimate_sharpness( (gray[...,None]*face_mask).astype(np.uint8) )
 
                 pitch, yaw, roll = LandmarksProcessor.estimate_pitch_yaw_roll ( dflimg.get_landmarks(), size=dflimg.get_shape()[1] )

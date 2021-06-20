@@ -72,8 +72,8 @@ def main (model_class_name=None,
 
         if not is_interactive:
             cfg.ask_settings()
-            
-        subprocess_count = io.input_int("Number of workers?", max(8, multiprocessing.cpu_count()), 
+
+        subprocess_count = io.input_int("Number of workers?", max(8, multiprocessing.cpu_count()),
                                         valid_range=[1, multiprocessing.cpu_count()], help_message="Specify the number of threads to process. A low value may affect performance. A high value may result in memory error. The value may not be greater than CPU cores." )
 
         input_path_image_paths = pathex.get_image_paths(input_path)

@@ -37,12 +37,12 @@ class AdaBelief(nn.OptimizerBase):
             vs = { v.name : tf.get_variable ( f'vs_{v.name}'.replace(':','_'), v.shape, dtype=v.dtype, initializer=tf.initializers.constant(0.0), trainable=False) for v in trainable_weights }
             self.ms_dict.update (ms)
             self.vs_dict.update (vs)
-            
+
             if self.lr_dropout != 1.0:
                 e = tf.device('/CPU:0') if lr_dropout_on_cpu else None
-                if e: e.__enter__()                    
+                if e: e.__enter__()
                 lr_rnds = [ nn.random_binomial( v.shape, p=self.lr_dropout, dtype=v.dtype) for v in trainable_weights ]
-                if e: e.__exit__(None, None, None)                
+                if e: e.__exit__(None, None, None)
                 self.lr_rnds_dict.update ( { v.name : rnd for v,rnd in zip(trainable_weights,lr_rnds) } )
         if e: e.__exit__(None, None, None)
 
@@ -58,7 +58,7 @@ class AdaBelief(nn.OptimizerBase):
 
             ms = self.ms_dict[ v.name ]
             vs = self.vs_dict[ v.name ]
-            
+
             m_t = self.beta_1*ms + (1.0-self.beta_1) * g
             v_t = self.beta_2*vs + (1.0-self.beta_2) * tf.square(g-m_t)
 

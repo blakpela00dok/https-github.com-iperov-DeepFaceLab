@@ -23,4 +23,3 @@ class QIconDB():
         QIconDB.view_baked = QIcon ( str(icon_path / 'view_baked.png') )
         QIconDB.view_xseg = QIcon ( str(icon_path / 'view_xseg.png') )
         QIconDB.view_xseg_overlay = QIcon ( str(icon_path / 'view_xseg_overlay.png') )
-        

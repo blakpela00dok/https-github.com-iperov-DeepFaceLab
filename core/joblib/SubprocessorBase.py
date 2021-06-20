@@ -229,9 +229,9 @@ class Subprocessor(object):
                         err_msg = obj.get('err_msg', None)
                         if err_msg is not None:
                             io.log_info(f'Error while processing data: {err_msg}')
-                            
+
                         if 'data' in obj.keys():
-                            self.on_data_return (cli.host_dict, obj['data'] )                        
+                            self.on_data_return (cli.host_dict, obj['data'] )
                         #and killing process
                         cli.kill()
                         self.clis.remove(cli)

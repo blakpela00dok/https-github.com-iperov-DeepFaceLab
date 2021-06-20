@@ -13,26 +13,26 @@ from core.leras import nn
 class XSegNet(object):
     VERSION = 1
 
-    def __init__ (self, name, 
-                        resolution=256, 
-                        load_weights=True, 
-                        weights_file_root=None, 
-                        training=False, 
-                        place_model_on_cpu=False, 
-                        run_on_cpu=False, 
-                        optimizer=None, 
+    def __init__ (self, name,
+                        resolution=256,
+                        load_weights=True,
+                        weights_file_root=None,
+                        training=False,
+                        place_model_on_cpu=False,
+                        run_on_cpu=False,
+                        optimizer=None,
                         data_format="NHWC",
                         raise_on_no_model_files=False):
-                
+
         self.resolution = resolution
         self.weights_file_root = Path(weights_file_root) if weights_file_root is not None else Path(__file__).parent
-        
+
         nn.initialize(data_format=data_format)
         tf = nn.tf
-        
+
         model_name = f'{name}_{resolution}'
         self.model_filename_list = []
-        
+
         with tf.device ('/CPU:0'):
             #Place holders on CPU
             self.input_t  = tf.placeholder (nn.floatx, nn.get4Dshape(resolution,resolution,3) )
@@ -44,12 +44,12 @@ class XSegNet(object):
             self.model_weights = self.model.get_weights()
             if training:
                 if optimizer is None:
-                    raise ValueError("Optimizer should be provided for training mode.")                
-                self.opt = optimizer              
-                self.opt.initialize_variables (self.model_weights, vars_on_cpu=place_model_on_cpu)                    
+                    raise ValueError("Optimizer should be provided for training mode.")
+                self.opt = optimizer
+                self.opt.initialize_variables (self.model_weights, vars_on_cpu=place_model_on_cpu)
                 self.model_filename_list += [ [self.opt, f'{model_name}_opt.npy' ] ]
-                
-        
+
+
         self.model_filename_list += [ [self.model, f'{model_name}.npy'] ]
 
         if not training:
@@ -77,10 +77,10 @@ class XSegNet(object):
 
             if do_init:
                 model.init_weights()
-        
+
     def get_resolution(self):
         return self.resolution
-        
+
     def flow(self, x):
         return self.model(x)
 
@@ -94,8 +94,8 @@ class XSegNet(object):
     def extract (self, input_image):
         if not self.initialized:
             return 0.5*np.ones ( (self.resolution, self.resolution, 1), nn.floatx.as_numpy_dtype )
-            
-        input_shape_len = len(input_image.shape)            
+
+        input_shape_len = len(input_image.shape)
         if input_shape_len == 3:
             input_image = input_image[None,...]
 

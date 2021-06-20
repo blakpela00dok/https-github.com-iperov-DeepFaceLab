@@ -201,7 +201,7 @@ landmarks_68_3D = np.array( [
 [8.444722    , 25.326198    , -21.025520  ], #33
 [24.474473   , 28.323008    , -5.712776   ], #34
 [8.449166    , 30.596216    , -20.671489  ], #35
-[0.205322    , 31.408738    , -21.903670  ], #36 
+[0.205322    , 31.408738    , -21.903670  ], #36
 [-7.198266   , 30.844876    , -20.328022  ]  #37
 ], dtype=np.float32)
 
@@ -303,18 +303,18 @@ def get_transform_mat (image_landmarks, output_size, face_type, scale=1.0):
 
     elif face_type == FaceType.HEAD:
         mat = umeyama( np.concatenate ( [ image_landmarks[17:49] , image_landmarks[54:55] ] ) , landmarks_2D_new, True)[0:2]
-        
+
         # assuming image_landmarks are 3D_Landmarks extracted for HEAD,
-        # adjust horizontal offset according to estimated yaw        
+        # adjust horizontal offset according to estimated yaw
         yaw = estimate_averaged_yaw(transform_points (image_landmarks, mat, False))
-        
+
         hvec = (g_p[0]-g_p[1]).astype(np.float32)
         hvec_len = npla.norm(hvec)
-        hvec /= hvec_len        
+        hvec /= hvec_len
 
         yaw *= np.abs(math.tanh(yaw*2)) # Damp near zero
-        
-        g_c -= hvec * (yaw * hvec_len / 2.0)                     
+
+        g_c -= hvec * (yaw * hvec_len / 2.0)
 
         # adjust vertical offset for HEAD, 50% below
         vvec = (g_p[0]-g_p[3]).astype(np.float32)
@@ -454,7 +454,7 @@ def get_image_mouth_mask (image_shape, image_landmarks):
     hull_mask = hull_mask[...,None]
 
     return hull_mask
-    
+
 def alpha_to_color (img_alpha, color):
     if len(img_alpha.shape) == 2:
         img_alpha = img_alpha[...,None]
@@ -741,10 +741,10 @@ def estimate_averaged_yaw(landmarks):
     # Works much better than solvePnP if landmarks from "3DFAN"
     if not isinstance(landmarks, np.ndarray):
         landmarks = np.array (landmarks)
-    l = ( (landmarks[27][0]-landmarks[0][0]) + (landmarks[28][0]-landmarks[1][0]) + (landmarks[29][0]-landmarks[2][0]) ) / 3.0   
+    l = ( (landmarks[27][0]-landmarks[0][0]) + (landmarks[28][0]-landmarks[1][0]) + (landmarks[29][0]-landmarks[2][0]) ) / 3.0
     r = ( (landmarks[16][0]-landmarks[27][0]) + (landmarks[15][0]-landmarks[28][0]) + (landmarks[14][0]-landmarks[29][0]) ) / 3.0
     return float(r-l)
-    
+
 def estimate_pitch_yaw_roll(aligned_landmarks, size=256):
     """
     returns pitch,yaw,roll [-pi/2...+pi/2]
@@ -764,7 +764,7 @@ def estimate_pitch_yaw_roll(aligned_landmarks, size=256):
         np.zeros((4, 1)) )
 
     pitch, yaw, roll = mathlib.rotationMatrixToEulerAngles( cv2.Rodrigues(rotation_vector)[0] )
-   
+
     half_pi = math.pi / 2.0
     pitch = np.clip ( pitch, -half_pi, half_pi )
     yaw   = np.clip ( yaw ,  -half_pi, half_pi )

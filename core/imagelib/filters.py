@@ -50,7 +50,7 @@ def apply_random_sharpen( img, chance, kernel_max_size, mask=None, rnd_state=Non
             result = blursharpen(result, 1, sharp_rnd_kernel, rnd_state.randint(10) )
         else:
             result = blursharpen(result, 2, sharp_rnd_kernel, rnd_state.randint(50) )
-                
+
         if mask is not None:
             result = img*(1-mask) + result*mask
 
@@ -127,7 +127,7 @@ def apply_random_jpeg_compress( img, chance, mask=None, rnd_state=None ):
                 result = img*(1-mask) + result*mask
 
     return result
-    
+
 def apply_random_overlay_triangle( img, max_alpha, mask=None, rnd_state=None ):
     if rnd_state is None:
         rnd_state = np.random
@@ -136,21 +136,21 @@ def apply_random_overlay_triangle( img, max_alpha, mask=None, rnd_state=None ):
     pt1 = [rnd_state.randint(w), rnd_state.randint(h) ]
     pt2 = [rnd_state.randint(w), rnd_state.randint(h) ]
     pt3 = [rnd_state.randint(w), rnd_state.randint(h) ]
-    
+
     alpha = rnd_state.uniform()*max_alpha
-    
+
     tri_mask = cv2.fillPoly( np.zeros_like(img), [ np.array([pt1,pt2,pt3], np.int32) ], (alpha,)*c )
-    
+
     if rnd_state.randint(2) == 0:
         result = np.clip(img+tri_mask, 0, 1)
     else:
         result = np.clip(img-tri_mask, 0, 1)
-    
+
     if mask is not None:
         result = img*(1-mask) + result*mask
 
     return result
-    
+
 def _min_resize(x, m):
     if x.shape[0] < x.shape[1]:
         s0 = m
@@ -161,7 +161,7 @@ def _min_resize(x, m):
     new_max = min(s1, s0)
     raw_max = min(x.shape[0], x.shape[1])
     return cv2.resize(x, (s1, s0), interpolation=cv2.INTER_LANCZOS4)
-    
+
 def _d_resize(x, d, fac=1.0):
     new_min = min(int(d[1] * fac), int(d[0] * fac))
     raw_min = min(x.shape[0], x.shape[1])
@@ -171,7 +171,7 @@ def _d_resize(x, d, fac=1.0):
         interpolation = cv2.INTER_LANCZOS4
     y = cv2.resize(x, (int(d[1] * fac), int(d[0] * fac)), interpolation=interpolation)
     return y
-    
+
 def _get_image_gradient(dist):
     cols = cv2.filter2D(dist, cv2.CV_32F, np.array([[-1, 0, +1], [-2, 0, +2], [-1, 0, +1]]))
     rows = cv2.filter2D(dist, cv2.CV_32F, np.array([[-1, -2, -1], [0, 0, 0], [+1, +2, +1]]))
@@ -211,24 +211,24 @@ def _generate_lighting_effects(content):
     coarse_effect_rows = (coarse_effect_rows + EPS) / (max_effect + EPS)
 
     return np.stack([ np.zeros_like(coarse_effect_rows), coarse_effect_rows, coarse_effect_cols], axis=-1)
-    
+
 def apply_random_relight(img, mask=None, rnd_state=None):
     if rnd_state is None:
         rnd_state = np.random
-        
+
     def_img = img
-        
+
     if rnd_state.randint(2) == 0:
         light_pos_y = 1.0 if rnd_state.randint(2) == 0 else -1.0
         light_pos_x = rnd_state.uniform()*2-1.0
     else:
         light_pos_y = rnd_state.uniform()*2-1.0
         light_pos_x = 1.0 if rnd_state.randint(2) == 0 else -1.0
-                    
+
     light_source_height = 0.3*rnd_state.uniform()*0.7
     light_intensity = 1.0+rnd_state.uniform()
     ambient_intensity = 0.5
-    
+
     light_source_location = np.array([[[light_source_height, light_pos_y, light_pos_x ]]], dtype=np.float32)
     light_source_direction = light_source_location / np.sqrt(np.sum(np.square(light_source_location)))
 
@@ -238,8 +238,8 @@ def apply_random_relight(img, mask=None, rnd_state=None):
 
     result = def_img * (ambient_intensity + lighting_effect * light_intensity) #light_source_color
     result = np.clip(result, 0, 1)
-    
+
     if mask is not None:
         result = def_img*(1-mask) + result*mask
-    
+
     return result

@@ -59,7 +59,7 @@ def get_paths(dir_path):
         return [ Path(x) for x in sorted([ x.path for x in list(scandir(str(dir_path))) ]) ]
     else:
         return []
-        
+
 def get_file_paths(dir_path):
     dir_path = Path (dir_path)
 

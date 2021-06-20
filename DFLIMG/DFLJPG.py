@@ -287,7 +287,7 @@ class DFLJPG(object):
             return None
 
         return mask_buf
-        
+
     def get_xseg_mask(self):
         mask_buf = self.dfl_dict.get('xseg_mask',None)
         if mask_buf is None:

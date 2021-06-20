@@ -84,18 +84,18 @@ class InteractiveMergerSubprocessor(Subprocessor):
             filepath = frame_info.filepath
 
             if len(frame_info.landmarks_list) == 0:
-                
-                if cfg.mode == 'raw-predict':        
+
+                if cfg.mode == 'raw-predict':
                     h,w,c = self.predictor_input_shape
                     img_bgr = np.zeros( (h,w,3), dtype=np.uint8)
-                    img_mask = np.zeros( (h,w,1), dtype=np.uint8)               
-                else:                
+                    img_mask = np.zeros( (h,w,1), dtype=np.uint8)
+                else:
                     self.log_info (f'no faces found for {filepath.name}, copying without faces')
                     img_bgr = cv2_imread(filepath)
-                    imagelib.normalize_channels(img_bgr, 3)                    
+                    imagelib.normalize_channels(img_bgr, 3)
                     h,w,c = img_bgr.shape
                     img_mask = np.zeros( (h,w,1), dtype=img_bgr.dtype)
-                    
+
                 cv2_imwrite (pf.output_filepath, img_bgr)
                 cv2_imwrite (pf.output_mask_filepath, img_mask)
 

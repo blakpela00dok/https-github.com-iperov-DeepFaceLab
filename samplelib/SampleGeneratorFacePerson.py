@@ -103,7 +103,7 @@ class Index2DHost():
                 if not self.cq.empty():
                     return self.cq.get()
                 time.sleep(0.001)
-                
+
 '''
 arg
 output_sample_types = [

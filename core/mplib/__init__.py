@@ -105,23 +105,23 @@ class Index2DHost():
                         np.random.shuffle(shuffle_idxs)
 
                     idx_1D = shuffle_idxs.pop()
-                    
+
                     #print(f'idx_1D = {idx_1D}, len(shuffle_idxs_2D[idx_1D])= {len(shuffle_idxs_2D[idx_1D])}')
-                    
+
                     if len(shuffle_idxs_2D[idx_1D]) == 0:
                         shuffle_idxs_2D[idx_1D] = idxs_2D[idx_1D].copy()
                         #print(f'new shuffle_idxs_2d for {idx_1D} = { shuffle_idxs_2D[idx_1D] }')
-                        
+
                         #print(f'len(shuffle_idxs_2D[idx_1D])= {len(shuffle_idxs_2D[idx_1D])}')
-                    
+
                         np.random.shuffle( shuffle_idxs_2D[idx_1D] )
 
                     idx_2D = shuffle_idxs_2D[idx_1D].pop()
-                    
+
                     #print(f'len(shuffle_idxs_2D[idx_1D])= {len(shuffle_idxs_2D[idx_1D])}')
-                    
+
                     #print(f'idx_2D = {idx_2D}')
-                    
+
 
                     result.append( indexes2D[idx_1D][idx_2D])
 

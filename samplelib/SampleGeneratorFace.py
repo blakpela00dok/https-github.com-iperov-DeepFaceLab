@@ -27,14 +27,14 @@ class SampleGeneratorFace(SampleGeneratorBase):
                         output_sample_types=[],
                         uniform_yaw_distribution=False,
                         generators_count=4,
-                        raise_on_no_data=True,                        
+                        raise_on_no_data=True,
                         **kwargs):
 
         super().__init__(debug, batch_size)
         self.initialized = False
         self.sample_process_options = sample_process_options
         self.output_sample_types = output_sample_types
-        
+
         if self.debug:
             self.generators_count = 1
         else:
@@ -42,16 +42,16 @@ class SampleGeneratorFace(SampleGeneratorBase):
 
         samples = SampleLoader.load (SampleType.FACE, samples_path)
         self.samples_len = len(samples)
-        
+
         if self.samples_len == 0:
             if raise_on_no_data:
                 raise ValueError('No training data provided.')
             else:
                 return
-                
+
         if uniform_yaw_distribution:
             samples_pyr = [ ( idx, sample.get_pitch_yaw_roll() ) for idx, sample in enumerate(samples) ]
-            
+
             grads = 128
             #instead of math.pi / 2, using -1.2,+1.2 because actually maximum yaw for 2DFAN landmarks are -1.2+1.2
             grads_space = np.linspace (-1.2, 1.2,grads)
@@ -70,9 +70,9 @@ class SampleGeneratorFace(SampleGeneratorBase):
                         yaw_samples += [ idx ]
                 if len(yaw_samples) > 0:
                     yaws_sample_list[g] = yaw_samples
-            
+
             yaws_sample_list = [ y for y in yaws_sample_list if y is not None ]
-            
+
             index_host = mplib.Index2DHost( yaws_sample_list )
         else:
             index_host = mplib.IndexHost(self.samples_len)
@@ -89,31 +89,31 @@ class SampleGeneratorFace(SampleGeneratorBase):
         else:
             self.generators = [SubprocessGenerator ( self.batch_func, (samples, index_host.create_cli(), ct_samples, ct_index_host.create_cli() if ct_index_host is not None else None), start_now=False ) \
                                for i in range(self.generators_count) ]
-                               
+
             SubprocessGenerator.start_in_parallel( self.generators )
 
         self.generator_counter = -1
-        
+
         self.initialized = True
-        
+
     #overridable
     def is_initialized(self):
         return self.initialized
-        
+
     def __iter__(self):
         return self
 
     def __next__(self):
         if not self.initialized:
             return []
-            
+
         self.generator_counter += 1
         generator = self.generators[self.generator_counter % len(self.generators) ]
         return next(generator)
 
     def batch_func(self, param ):
         samples, index_host, ct_samples, ct_index_host = param
- 
+
         bs = self.batch_size
         while True:
             batches = None
