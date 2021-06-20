@@ -135,7 +135,7 @@ class ModelBase(object):
         self.options_show_override = {}
         self.loss_history = []
         self.sample_for_preview = None
-        self.choosed_gpu_indexes = None
+        self.chosen_gpu_indexes = None
 
         model_data = {}
         self.model_data_path = Path( self.get_strpath_storage_for_file('data.dat') )
@@ -147,14 +147,14 @@ class ModelBase(object):
                 self.options = model_data['options']
                 self.loss_history = model_data.get('loss_history', [])
                 self.sample_for_preview = model_data.get('sample_for_preview', None)
-                self.choosed_gpu_indexes = model_data.get('choosed_gpu_indexes', None)
+                self.chosen_gpu_indexes = model_data.get('chosen_gpu_indexes', None)
 
         if self.is_first_run():
             io.log_info ("\nModel first run.")
 
         if silent_start:
             self.device_config = nn.DeviceConfig.BestGPU()
-            io.log_info (f"Silent start: choosed device {'CPU' if self.device_config.cpu_only else self.device_config.devices[0].name}")
+            io.log_info (f"Silent start: chosen device {'CPU' if self.device_config.cpu_only else self.device_config.devices[0].name}")
         else:
             self.device_config = nn.DeviceConfig.GPUIndexes( force_gpu_idxs or nn.ask_choose_device_idxs(suggest_best_multi_gpu=True)) \
                                 if not cpu_only else nn.DeviceConfig.CPU()
@@ -228,9 +228,9 @@ class ModelBase(object):
                 io.log_info (f"Choose image for the preview history. {wnd_name}")
                 io.named_window(wnd_name)
                 io.capture_keys(wnd_name)
-                choosed = False
+                chosen = False
                 preview_id_counter = 0
-                while not choosed:
+                while not chosen:
                     self.sample_for_preview = self.generate_next_samples()
                     previews = self.get_static_previews()
 
@@ -240,7 +240,7 @@ class ModelBase(object):
                         key_events = io.get_key_events(wnd_name)
                         key, chr_key, ctrl_pressed, alt_pressed, shift_pressed = key_events[-1] if len(key_events) > 0 else (0,0,False,False,False)
                         if key == ord('\n') or key == ord('\r'):
-                            choosed = True
+                            chosen = True
                             break
                         elif key == ord(' '):
                             preview_id_counter += 1
@@ -251,7 +251,7 @@ class ModelBase(object):
                         try:
                             io.process_messages(0.1)
                         except KeyboardInterrupt:
-                            choosed = True
+                            chosen = True
 
                 io.destroy_window(wnd_name)
             else:
@@ -395,7 +395,7 @@ class ModelBase(object):
             'options': self.options,
             'loss_history': self.loss_history,
             'sample_for_preview' : self.sample_for_preview,
-            'choosed_gpu_indexes' : self.choosed_gpu_indexes,
+            'chosen_gpu_indexes' : self.chosen_gpu_indexes,
         }
         pathex.write_bytes_safe (self.model_data_path, pickle.dumps(model_data) )
 

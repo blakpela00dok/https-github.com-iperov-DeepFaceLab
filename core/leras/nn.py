@@ -234,27 +234,27 @@ class nn():
         while True:
             try:
                 if choose_only_one:
-                    choosed_idxs = io.input_str("Which GPU index to choose?", best_device_indexes)
+                    chosen_idxs = io.input_str("Which GPU index to choose?", best_device_indexes)
                 else:
-                    choosed_idxs = io.input_str("Which GPU indexes to choose?", best_device_indexes)
+                    chosen_idxs = io.input_str("Which GPU indexes to choose?", best_device_indexes)
 
-                if allow_cpu and choosed_idxs.lower() == "cpu":
-                    choosed_idxs = []
+                if allow_cpu and chosen_idxs.lower() == "cpu":
+                    chosen_idxs = []
                     break
 
-                choosed_idxs = [ int(x) for x in choosed_idxs.split(',') ]
+                chosen_idxs = [ int(x) for x in chosen_idxs.split(',') ]
 
                 if choose_only_one:
-                    if len(choosed_idxs) == 1:
+                    if len(chosen_idxs) == 1:
                         break
                 else:
-                    if all( [idx in all_devices_indexes for idx in choosed_idxs] ):
+                    if all( [idx in all_devices_indexes for idx in chosen_idxs] ):
                         break
             except:
                 pass
         io.log_info ("")
 
-        return choosed_idxs
+        return chosen_idxs
 
     class DeviceConfig():
         @staticmethod
