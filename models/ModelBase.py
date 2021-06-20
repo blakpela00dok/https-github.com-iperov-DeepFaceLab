@@ -66,7 +66,7 @@ class ModelBase(object):
                     if len(saved_models_names) != 0:
                         if silent_start:
                             self.model_name = saved_models_names[0]
-                            io.log_info(f'Silent start: choosed model "{self.model_name}"')
+                            io.log_info(f'Silent start: chosen model "{self.model_name}"')
                         else:
                             io.log_info ("Choose one of saved models, or enter a name to create a new model.")
                             io.log_info ("[r] : rename")
