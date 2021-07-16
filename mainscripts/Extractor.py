@@ -44,6 +44,7 @@ class ExtractSubprocessor(Subprocessor):
         def on_initialize(self, client_dict):
             self.type                 = client_dict['type']
             self.image_size           = client_dict['image_size']
+            self.image_type           = client_dict['image_type']
             self.jpeg_quality         = client_dict['jpeg_quality']
             self.face_type            = client_dict['face_type']
             self.max_faces_from_image = client_dict['max_faces_from_image']
@@ -116,6 +117,7 @@ class ExtractSubprocessor(Subprocessor):
                                                            image=image,
                                                            face_type=self.face_type,
                                                            image_size=self.image_size,
+                                                           image_type=self.image_type,
                                                            jpeg_quality=self.jpeg_quality,
                                                            output_debug_path=self.output_debug_path,
                                                            final_output_path=self.final_output_path,
@@ -200,6 +202,7 @@ class ExtractSubprocessor(Subprocessor):
                         image,
                         face_type,
                         image_size,
+                        image_type,
                         jpeg_quality,
                         output_debug_path=None,
                         final_output_path=None,
@@ -244,10 +247,10 @@ class ExtractSubprocessor(Subprocessor):
                 if data.force_output_path is not None:
                     output_path = data.force_output_path
 
-                output_filepath = output_path / f"{filepath.stem}_{face_idx}.jpg"
+                output_filepath = output_path / f"{filepath.stem}_{face_idx}.{image_type}"
                 cv2_imwrite(output_filepath, face_image, [int(cv2.IMWRITE_JPEG_QUALITY), jpeg_quality ] )
 
-                dflimg = DFLJPG.load(output_filepath)
+                dflimg = DFLIMG.load(output_filepath)
                 dflimg.set_face_type(FaceType.toString(face_type))
                 dflimg.set_landmarks(face_image_landmarks.tolist())
                 dflimg.set_source_filename(filepath.name)
@@ -304,7 +307,7 @@ class ExtractSubprocessor(Subprocessor):
         elif type == 'final':
             return [ (i, 'CPU', 'CPU%d' % (i), 0 ) for i in (range(min(8, multiprocessing.cpu_count())) if not DEBUG else [0]) ]
 
-    def __init__(self, input_data, type, image_size=None, jpeg_quality=None, face_type=None, output_debug_path=None, manual_window_size=0, max_faces_from_image=0, final_output_path=None, device_config=None):
+    def __init__(self, input_data, type, image_size=None, image_type=None, jpeg_quality=None, face_type=None, output_debug_path=None, manual_window_size=0, max_faces_from_image=0, final_output_path=None, device_config=None):
         if type == 'landmarks-manual':
             for x in input_data:
                 x.manual = True
@@ -313,6 +316,7 @@ class ExtractSubprocessor(Subprocessor):
 
         self.type = type
         self.image_size = image_size
+        self.image_type = image_type
         self.jpeg_quality = jpeg_quality
         self.face_type = face_type
         self.output_debug_path = output_debug_path
@@ -364,6 +368,7 @@ class ExtractSubprocessor(Subprocessor):
     def process_info_generator(self):
         base_dict = {'type' : self.type,
                      'image_size': self.image_size,
+                     'image_type': self.image_type,
                      'jpeg_quality' : self.jpeg_quality,
                      'face_type': self.face_type,
                      'max_faces_from_image':self.max_faces_from_image,
@@ -714,6 +719,7 @@ def main(detector=None,
          face_type='full_face',
          max_faces_from_image=None,
          image_size=None,
+         image_type=None,
          jpeg_quality=None,
          cpu_only = False,
          force_gpu_idxs = None,
@@ -772,9 +778,15 @@ def main(detector=None,
     if image_size is None:
         image_size = io.input_int(f"Image size", 512 if face_type < FaceType.HEAD else 768, valid_range=[256,2048], help_message="Output image size. The higher image size, the worse face-enhancer works. Use higher than 512 value only if the source image is sharp enough and the face does not need to be enhanced.")
 
+    if image_type is None:
+        image_type = io.input_str(f"image type", "jpg", ['jpg','png'], help_message="image type, jpg faster extraction (factor 10x), but lossy compression")
+    
     if jpeg_quality is None:
-        jpeg_quality = io.input_int(f"Jpeg quality", 90, valid_range=[1,100], help_message="Jpeg quality. The higher jpeg quality the larger the output file size.")
-
+        if image_type == 'jpg':
+            jpeg_quality = io.input_int(f"Jpeg quality", 90, valid_range=[1,100], help_message="Jpeg quality. The higher jpeg quality the larger the output file size.")
+        else:
+            jpeg_quality = 100
+            
     if detector is None:
         io.log_info ("Choose detector type.")
         io.log_info ("[0] S3FD")
@@ -819,6 +831,7 @@ def main(detector=None,
             data = ExtractSubprocessor ([ ExtractSubprocessor.Data(Path(filename)) for filename in input_image_paths ],
                                          'all',
                                          image_size,
+                                         image_type,
                                          jpeg_quality,
                                          face_type,
                                          output_debug_path if output_debug else None,

@@ -13,11 +13,13 @@ from facelib import FaceType, LandmarksProcessor
 class FacesetResizerSubprocessor(Subprocessor):
 
     #override
-    def __init__(self, image_paths, output_dirpath, image_size, face_type=None):
+    def __init__(self, image_paths, output_dirpath, image_size, face_type=None, dfl_file_type=None, jpg_quality=None):
         self.image_paths = image_paths
         self.output_dirpath = output_dirpath
         self.image_size = image_size
         self.face_type = face_type
+        self.dfl_file_type = dfl_file_type
+        self.jpg_quality = jpg_quality
         self.result = []
 
         super().__init__('FacesetResizer', FacesetResizerSubprocessor.Cli, 600)
@@ -32,7 +34,7 @@ class FacesetResizerSubprocessor(Subprocessor):
 
     #override
     def process_info_generator(self):
-        base_dict = {'output_dirpath':self.output_dirpath, 'image_size':self.image_size, 'face_type':self.face_type}
+        base_dict = {'output_dirpath':self.output_dirpath, 'image_size':self.image_size, 'face_type':self.face_type, 'dfl_file_type':self.dfl_file_type, 'jpg_quality':self.jpg_quality }
 
         for device_idx in range( min(8, multiprocessing.cpu_count()) ):
             client_dict = base_dict.copy()
@@ -66,6 +68,8 @@ class FacesetResizerSubprocessor(Subprocessor):
             self.output_dirpath = client_dict['output_dirpath']
             self.image_size = client_dict['image_size']
             self.face_type = client_dict['face_type']
+            self.dfl_file_type = client_dict['dfl_file_type']
+            self.jpg_quality = client_dict['jpg_quality']
             self.log_info (f"Running on { client_dict['device_name'] }")
 
         #override
@@ -82,7 +86,9 @@ class FacesetResizerSubprocessor(Subprocessor):
                     
                     image_size = self.image_size
                     face_type = self.face_type
+                    dfl_file_type = self.dfl_file_type
                     output_filepath = self.output_dirpath / filepath.name
+                    file_suffix = filepath.suffix[1:]
                     
                     if face_type is not None:
                         lmrks = dflimg.get_landmarks()
@@ -91,7 +97,18 @@ class FacesetResizerSubprocessor(Subprocessor):
                         img = cv2.warpAffine(img, mat, (image_size, image_size), flags=cv2.INTER_LANCZOS4 )
                         img = np.clip(img, 0, 255).astype(np.uint8)
                         
-                        cv2_imwrite ( str(output_filepath), img, [int(cv2.IMWRITE_JPEG_QUALITY), 100] )
+                        if dfl_file_type is None:
+                            dfl_file_type = file_suffix
+                        
+                        if dfl_file_type == 'jpg':
+                            #get basename
+                            output_filepath = self.output_dirpath / (filepath.stem + '.jpg')
+                            cv2_imwrite ( str(output_filepath), img, [int(cv2.IMWRITE_JPEG_QUALITY), self.jpg_quality] )
+                        elif dfl_file_type == 'png':
+                            output_filepath = self.output_dirpath / (filepath.stem + '.png')
+                            cv2_imwrite ( str(output_filepath), img )
+                        
+                        #cv2_imwrite ( str(output_filepath), img, [int(cv2.IMWRITE_JPEG_QUALITY), 100] )
 
                         dfl_dict = dflimg.get_dict()
                         dflimg = DFLIMG.load (output_filepath)
@@ -137,7 +154,18 @@ class FacesetResizerSubprocessor(Subprocessor):
                         
                         img = cv2.resize(img, (image_size, image_size), interpolation=cv2.INTER_LANCZOS4)                    
                         
-                        cv2_imwrite ( str(output_filepath), img, [int(cv2.IMWRITE_JPEG_QUALITY), 100] )
+                        if dfl_file_type is None:
+                            dfl_file_type = file_suffix
+                        
+                        if dfl_file_type == 'jpg':
+                            output_filepath = self.output_dirpath / (filepath.stem + '.jpg')
+                            cv2_imwrite ( str(output_filepath), img, [int(cv2.IMWRITE_JPEG_QUALITY), self.jpg_quality] )
+                        elif dfl_file_type == 'png':
+                            output_filepath = self.output_dirpath / (filepath.stem + '.png')
+                            cv2_imwrite ( str(output_filepath), img )
+                        
+                        
+                        #cv2_imwrite ( str(output_filepath), img, [int(cv2.IMWRITE_JPEG_QUALITY), 100] )
 
                         dflimg = DFLIMG.load (output_filepath)
                         dflimg.set_dict(dfl_dict)
@@ -177,8 +205,14 @@ def process_folder ( dirpath):
                      'f'  : FaceType.FULL,
                      'wf' : FaceType.WHOLE_FACE,
                      'head' : FaceType.HEAD}[face_type]
-                     
-
+    
+    dfl_file_type = io.input_str ("Change dfl filetype", 'same', ['same', 'jpg', 'png']).lower() 
+    if dfl_file_type == 'same':
+        dfl_file_type = None
+        jpg_quality = None
+    elif dfl_file_type == 'jpg':
+        jpg_quality = io.input_int(f"jpeg quality", 90, valid_range=[10,100])
+    
     output_dirpath = dirpath.parent / (dirpath.name + '_resized')
     output_dirpath.mkdir (exist_ok=True, parents=True)
 
@@ -193,7 +227,7 @@ def process_folder ( dirpath):
             Path(filename).unlink()
 
     image_paths = [Path(x) for x in pathex.get_image_paths( dirpath )]
-    result = FacesetResizerSubprocessor ( image_paths, output_dirpath, image_size, face_type).run()
+    result = FacesetResizerSubprocessor ( image_paths, output_dirpath, image_size, face_type, dfl_file_type, jpg_quality).run()
 
     is_merge = io.input_bool (f"\r\nMerge {output_dirpath_parts} to {dirpath_parts} ?", True)
     if is_merge:
