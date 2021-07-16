@@ -207,10 +207,8 @@ def process_folder ( dirpath):
                      'head' : FaceType.HEAD}[face_type]
     
     dfl_file_type = io.input_str ("Change dfl filetype", 'same', ['same', 'jpg', 'png']).lower() 
-    if dfl_file_type == 'same':
-        dfl_file_type = None
-        jpg_quality = None
-    elif dfl_file_type == 'jpg':
+    jpg_quality = None
+    if dfl_file_type == 'jpg':
         jpg_quality = io.input_int(f"jpeg quality", 90, valid_range=[10,100])
     
     output_dirpath = dirpath.parent / (dirpath.name + '_resized')
