@@ -19,4 +19,4 @@ def main(model_class_name, saved_models_path):
                         is_exporting=True,
                         saved_models_path=saved_models_path,
                         cpu_only=True)
-    model.export_dfm () 
+    model.export_dfm ()

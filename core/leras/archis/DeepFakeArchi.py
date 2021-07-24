@@ -16,7 +16,7 @@ class DeepFakeArchi(nn.ArchiBase):
 
 
         conv_dtype = tf.float16 if use_fp16 else tf.float32
-        
+
         if mod is None:
             class Downscale(nn.ModelBase):
                 def __init__(self, in_ch, out_ch, kernel_size=5, *kwargs ):
@@ -79,8 +79,8 @@ class DeepFakeArchi(nn.ArchiBase):
                     self.in_ch = in_ch
                     self.e_ch = e_ch
                     super().__init__(**kwargs)
-                    
-                def on_build(self):                    
+
+                def on_build(self):
                     self.down1 = DownscaleBlock(self.in_ch, self.e_ch, n_downscales=4, kernel_size=5)
 
                 def forward(self, x):
@@ -90,10 +90,10 @@ class DeepFakeArchi(nn.ArchiBase):
                     if use_fp16:
                         x = tf.cast(x, tf.float32)
                     return x
-                    
+
                 def get_out_res(self, res):
                     return res // (2**4)
-                    
+
                 def get_out_ch(self):
                     return self.e_ch * 8
 
@@ -106,10 +106,10 @@ class DeepFakeArchi(nn.ArchiBase):
 
                 def on_build(self):
                     in_ch, ae_ch, ae_out_ch = self.in_ch, self.ae_ch, self.ae_out_ch
-    
+
                     if 'u' in opts:
                         self.dense_norm = nn.DenseNorm()
- 
+
                     self.dense1 = nn.Dense( in_ch, ae_ch )
                     self.dense2 = nn.Dense( ae_ch, lowest_dense_res * lowest_dense_res * ae_out_ch )
                     self.upscale1 = Upscale(ae_out_ch, ae_out_ch)
@@ -121,7 +121,7 @@ class DeepFakeArchi(nn.ArchiBase):
                     x = self.dense1(x)
                     x = self.dense2(x)
                     x = nn.reshape_4D (x, lowest_dense_res, lowest_dense_res, self.ae_out_ch)
-                    
+
                     if use_fp16:
                         x = tf.cast(x, tf.float16)
                     x = self.upscale1(x)
@@ -134,7 +134,7 @@ class DeepFakeArchi(nn.ArchiBase):
                     return self.ae_out_ch
 
             class Decoder(nn.ModelBase):
-                def on_build(self, in_ch, d_ch, d_mask_ch):                    
+                def on_build(self, in_ch, d_ch, d_mask_ch):
                     self.upscale0 = Upscale(in_ch, d_ch*8, kernel_size=3)
                     self.upscale1 = Upscale(d_ch*8, d_ch*4, kernel_size=3)
                     self.upscale2 = Upscale(d_ch*4, d_ch*2, kernel_size=3)
@@ -182,13 +182,13 @@ class DeepFakeArchi(nn.ArchiBase):
                     if 'd' in opts:
                         m = self.upscalem3(m)
                     m = tf.nn.sigmoid(self.out_convm(m))
-                    
+
                     if use_fp16:
-                        x = tf.cast(x, tf.float32)  
+                        x = tf.cast(x, tf.float32)
                         m = tf.cast(m, tf.float32)
-                        
+
                     return x, m
-        
+
         self.Encoder = Encoder
         self.Inter = Inter
         self.Decoder = Decoder
