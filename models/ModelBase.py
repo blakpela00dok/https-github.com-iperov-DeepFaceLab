@@ -578,7 +578,7 @@ class ModelBase(object):
             for device in self.device_config.devices:
                 summary_text += [f'=={"Device index": >{width_name}}: {device.index: <{width_value}}=='] # GPU hardware device index
                 summary_text += [f'=={"Name": >{width_name}}: {device.name: <{width_value}}=='] # GPU name
-                vram_str = f'{device.total_mem_gb:.2f}GB' # GPU VRAM - Formated as #.## (or ##.##)
+                vram_str = f'{device.total_mem_gb:.2f}GB' # GPU VRAM - Formatred as #.## (or ##.##)
                 summary_text += [f'=={"VRAM": >{width_name}}: {vram_str: <{width_value}}==']
         summary_text += [f'=={" "*width_total}==']
         summary_text += [f'=={"="*width_total}==']

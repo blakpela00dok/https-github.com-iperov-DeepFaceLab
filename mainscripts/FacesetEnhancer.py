@@ -118,7 +118,7 @@ class FacesetEnhancerSubprocessor(Subprocessor):
 
                     return (1, filepath, output_filepath)
             except:
-                self.log_err (f"Exception occured while processing file {filepath}. Error: {traceback.format_exc()}")
+                self.log_err (f"Exception occurred while processing file {filepath}. Error: {traceback.format_exc()}")
 
             return (0, filepath, None)
 

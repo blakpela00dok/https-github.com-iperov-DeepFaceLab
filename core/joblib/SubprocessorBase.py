@@ -225,7 +225,7 @@ class Subprocessor(object):
                         self.sent_data = None
                         cli.state = 0
                     elif op == 'error':
-                        #some error occured while process data, returning chunk to on_data_return
+                        #some error occurred while process data, returning chunk to on_data_return
                         err_msg = obj.get('err_msg', None)
                         if err_msg is not None:
                             io.log_info(f'Error while processing data: {err_msg}')

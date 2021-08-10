@@ -220,7 +220,7 @@ def main(**kwargs):
     thread = threading.Thread(target=trainerThread, args=(s2c, c2s, e), kwargs=kwargs )
     thread.start()
 
-    e.wait() #Wait for inital load to occur.
+    e.wait() #Wait for initial load to occur.
 
     if no_preview:
         while True:

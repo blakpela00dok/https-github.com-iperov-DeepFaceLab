@@ -88,7 +88,7 @@ def main (model_class_name=None,
             try:
                 packed_samples = samplelib.PackedFaceset.load(aligned_path)
             except:
-                io.log_err(f"Error occured while loading samplelib.PackedFaceset.load {str(aligned_path)}, {traceback.format_exc()}")
+                io.log_err(f"Error occurred while loading samplelib.PackedFaceset.load {str(aligned_path)}, {traceback.format_exc()}")
 
 
             if packed_samples is not None:

@@ -360,7 +360,7 @@ Examples: df, liae, df-d, df-ud, liae-ud, ...
             for gpu_id in range(gpu_count):
                 with tf.device( f'/{devices[gpu_id].tf_dev_type}:{gpu_id}' if len(devices) != 0 else f'/CPU:0' ):
                     with tf.device(f'/CPU:0'):
-                        # slice on CPU, otherwise all batch data will be transfered to GPU first
+                        # slice on CPU, otherwise all batch data will be transferred to GPU first
                         batch_slice = slice( gpu_id*bs_per_gpu, (gpu_id+1)*bs_per_gpu )
                         gpu_warped_src      = self.warped_src [batch_slice,:,:,:]
                         gpu_warped_dst      = self.warped_dst [batch_slice,:,:,:]
