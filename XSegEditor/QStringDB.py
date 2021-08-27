@@ -90,9 +90,9 @@ class QStringDB():
                                     'zh' : '台阶大小'
                                     }[lang]
 
-        QStringDB.spinner_label_tip = { 'en' : 'Minimum 10\nMaximum 500',
-                                        'ru' : 'Минимум 10\nМаксимум 500',
-                                        'zh' : '最少10个\n最多500'
+        QStringDB.spinner_label_tip = { 'en' : 'Minimum 5\nMaximum 500',
+                                        'ru' : 'Минимум 5\nМаксимум 500',
+                                        'zh' : '最少5个\n最多500'
                                         }[lang]
 
         QStringDB.btn_delete_image_tip = {  'en' : 'Move to _trash and Next image\n',

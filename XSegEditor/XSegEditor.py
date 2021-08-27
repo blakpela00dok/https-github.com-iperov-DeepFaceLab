@@ -1377,7 +1377,7 @@ class MainWindow(QXMainWindow):
         pad_image.setFixedSize(QUIConfig.preview_bar_icon_q_size)
 
         self.spin_box.setFocusPolicy(Qt.ClickFocus)
-        self.spin_box.setRange(10, 500)
+        self.spin_box.setRange(5, 500)
         self.spin_box.setSingleStep(1)
         self.spin_box.installEventFilter(self)
         self.spin_box.valueChanged.connect(self.on_spinbox_value_changed)
