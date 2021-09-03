@@ -1381,7 +1381,7 @@ class MainWindow(QXMainWindow):
         self.spin_box.setSingleStep(1)
         self.spin_box.installEventFilter(self)
         self.spin_box.valueChanged.connect(self.on_spinbox_value_changed)
-        self.setToolTip(QStringDB.spinner_label_tip)
+        self.spin_box.setToolTip(QStringDB.spinner_label_tip)
         
         preview_image_bar_frame_l = QHBoxLayout()
         preview_image_bar_frame_l.setContentsMargins(0,0,0,0)
