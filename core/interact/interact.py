@@ -12,14 +12,24 @@ from tqdm import tqdm
 
 from core import stdex
 
+is_colab = False
 try:
-    import IPython #if success we are in colab
+    import google.colab  # if success we are in colab
+    is_colab = True
+except ModuleNotFoundError:
+    pass
+try:
+    from IPython import get_ipython
+    shell = get_ipython().__class__.__name__
+    if shell == 'ZMQInteractiveShell':  # if true we are in a jupyter notebook
+        is_colab = True
+except ModuleNotFoundError:
+    pass
+
+if is_colab:
     from IPython.display import display, clear_output
     import PIL
     import matplotlib.pyplot as plt
-    is_colab = True
-except:
-    is_colab = False
 
 yn_str = {True:'y',False:'n'}
 
