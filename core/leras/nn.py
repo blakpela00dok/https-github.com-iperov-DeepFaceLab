@@ -115,7 +115,7 @@ class nn():
             nn.tf_sess_config = config
             
         if nn.tf_sess is None:
-            nn.tf_sess = tf.Session(config=nn.tf_sess_config)
+            nn.tf_sess = nn.tf.Session(config=nn.tf_sess_config)
 
         if floatx == "float32":
             floatx = nn.tf.float32
