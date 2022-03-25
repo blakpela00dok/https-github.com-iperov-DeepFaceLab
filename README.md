@@ -1,4 +1,4 @@
-﻿<table align="center" border="0">
+<table align="center" border="0">
 
 <tr><td colspan=2 align="center">
 
@@ -53,133 +53,13 @@ DeepFaceLab is used by such popular youtube channels as
 </td></tr>
 
 <tr><td colspan=2 align="center">
+  <tr><td colspan=2 align="center">
 
-# What can I do using DeepFaceLab?
-
-</td></tr>
-<tr><td colspan=2 align="center">
-
-## Replace the face
-
-<img src="doc/replace_the_face.jpg" align="center">
-
-</td></tr>
+# CHANGELOG 
+### [View most recent changes](CHANGELOG.md)
 
 <tr><td colspan=2 align="center">
-
-## De-age the face
-
-</td></tr>
-
-<tr><td align="center" width="50%">
-
-<img src="doc/deage_0_1.jpg" align="center">
-
-</td>
-<td align="center" width="50%">
-
-<img src="doc/deage_0_2.jpg" align="center">
-
-</td></tr>
-
-<tr><td colspan=2 align="center">
-
-![](doc/youtube_icon.png) https://www.youtube.com/watch?v=Ddx5B-84ebo
-
-</td></tr>
-
-<tr><td colspan=2 align="center">
-
-## Replace the head
-
-</td></tr>
-
-
-<tr><td align="center" width="50%">
-
-<img src="doc/head_replace_0_1.jpg" align="center">
-
-</td>
-<td align="center" width="50%">
-
-<img src="doc/head_replace_0_2.jpg" align="center">
-
-</td></tr>
-
-<tr><td colspan=2 align="center">
-
-![](doc/youtube_icon.png) https://www.youtube.com/watch?v=xr5FHd0AdlQ
-
-</td></tr>
-
-<tr><td align="center" width="50%">
-
-<img src="doc/head_replace_1_1.jpg" align="center">
-
-</td>
-<td align="center" width="50%">
-
-<img src="doc/head_replace_1_2.jpg" align="center">
-
-</td></tr>
-
-<tr><td colspan=2 align="center">
-
-![](doc/youtube_icon.png) https://www.youtube.com/watch?v=RTjgkhMugVw
-
-</td></tr>
-
-<tr><td align="center" width="50%">
-
-<img src="doc/head_replace_2_1.jpg" align="center">
-
-</td>
-<td align="center" width="50%">
-
-<img src="doc/head_replace_2_2.jpg" align="center">
-
-</td></tr>
-
-<tr><td colspan=2  align="center">
-
-![](doc/youtube_icon.png) https://www.youtube.com/watch?v=R9f7WD0gKPo
-
-</td></tr>
-
-
-<tr><td colspan=2 align="center">
-
-## Manipulate politicians lips
-(voice replacement is not included!)
-(also requires a skill in video editors such as *Adobe After Effects* or *Davinci Resolve*)
-
-<img src="doc/political_speech2.jpg" align="center">
-
-![](doc/youtube_icon.png) https://www.youtube.com/watch?v=IvY-Abd2FfM
-
-<img src="doc/political_speech3.jpg" align="center">
-
-![](doc/youtube_icon.png) https://www.youtube.com/watch?v=ERQlaJ_czHU
-
-</td></tr>
-<tr><td colspan=2 align="center">
-
-# Deepfake native resolution progress
-
-</td></tr>
-<tr><td colspan=2 align="center">
-
-<img src="doc/deepfake_progress.png" align="center">
-
-</td></tr>
-<tr><td colspan=2 align="center">
-
-<img src="doc/make_everything_ok.png" align="center">
-
-Unfortunately, there is no "make everything ok" button in DeepFaceLab. You should spend time studying the workflow and growing your skills. A skill in programs such as *AfterEffects* or *Davinci Resolve* is also desirable.
-
-</td></tr>
-<tr><td colspan=2 align="center">
+  <tr><td colspan=2 align="center">
 
 ## Mini tutorial
 
@@ -197,7 +77,7 @@ Unfortunately, there is no "make everything ok" button in DeepFaceLab. You shoul
 </td></tr>
 
 <tr><td align="right">
-<a href="https://tinyurl.com/2p9cvt25">Windows (magnet link)</a>
+<a href="https://tinyurl.com/8eatmpzv">Windows (magnet link)</a>
 </td><td align="center">Last release. Use torrent client to download.</td></tr>
 
 <tr><td align="right">
@@ -205,12 +85,8 @@ Unfortunately, there is no "make everything ok" button in DeepFaceLab. You shoul
 </td><td align="center">Contains new and prev releases.</td></tr>
 
 <tr><td align="right">
-<a href="https://disk.yandex.ru/d/7i5XTKIKVg5UUg">Windows (yandex.ru)</a>
-</td><td align="center">Contains new and prev releases.</td></tr>
-
-<tr><td align="right">
-<a href="https://github.com/chervonij/DFL-Colab">Google Colab (github)</a>
-</td><td align="center">by @chervonij . You can train fakes for free using Google Colab.</td></tr>
+<a href="https://github.com/Cioscos/DeepFaceLab-Colab">Google Colab (github)</a>
+</td><td align="center">Personal fork from @chervonij repository. You can train fakes for free using Google Colab.</td></tr>
 
 <tr><td align="right">
 <a href="https://github.com/nagadit/DeepFaceLab_Linux">Linux (github)</a>
@@ -284,34 +160,6 @@ Unfortunately, there is no "make everything ok" button in DeepFaceLab. You shoul
 <a href="https://t.me/joinchat/ElkhqlgJ0I5HhdJyFar80w">Telegram group</a>
 </td><td align="center">Official telegram group. English / Russian. For anonymous communication. Don't forget to hide your phone number</td></tr>
 
-<tr><td align="right">
-<a href="https://mrdeepfakes.com/forums/forum-russian-community">Русский форум</a>
-</td><td align="center"></td></tr>
-
-<tr><td align="right">
-<a href="https://mrdeepfakes.com/forums/">mrdeepfakes</a>
-</td><td align="center">the biggest NSFW English community</td></tr>
-
-<tr><td align="right">
-<a href="https://www.reddit.com/r/DeepFakesSFW/new/">reddit r/DeepFakesSFW/</a>
-</td><td align="center">Post your deepfakes there !</td></tr>
-
-<tr><td align="right">
-<a href="https://www.reddit.com/r/RUdeepfakes/new/">reddit r/RUdeepfakes/</a>
-</td><td align="center">Постим русские дипфейки сюда !</td></tr>
-
-<tr><td align="right">
-QQ群1095077489
-</td><td align="center">中文交流QQ群，商务合作找群主</td></tr>
-
-<tr><td align="right">
-<a href="https://www.dfldata.xyz">dfldata.xyz</a>
-</td><td align="center">中文交流论坛，免费软件教程、模型、人脸数据</td></tr>
-
-<tr><td align="right">
-<a href="https://www.deepfaker.xyz/">deepfaker.xyz</a>
-</td><td align="center">中文学习站（非官方)</td></tr>
-
 <tr><td colspan=2 align="center">
 
 ## Related works
@@ -323,47 +171,18 @@ QQ群1095077489
 </td><td align="center">Real-time face swap for PC streaming or video calls</td></tr>
 
 <tr><td align="right">
-<a href="https://github.com/neuralchen/SimSwap">neuralchen/SimSwap</a>
-</td><td align="center">Swapping face using ONE single photo 一张图免训练换脸</td></tr>
+
+</td><td align="center"></td></tr>
 
 <tr><td align="right">
-<a href="https://github.com/deepfakes/faceswap">deepfakes/faceswap</a>
-</td><td align="center">Something that was before DeepFaceLab and still remains in the past</td></tr>
+
+</td><td align="center"></td></tr>
 
 </td></tr>
 </table>
 
 <table align="center" border="0">
 
-<tr><td colspan=2 align="center">
-
-## How I can help the project?
-
-</td></tr>
-
-<tr><td colspan=2 align="center">
-
-### Sponsor deepfake research and DeepFaceLab development.
-
-</td></tr>
-
-<tr><td colspan=2 align="center">
-<a href="https://www.paypal.com/paypalme/DeepFaceLab">Donate via Paypal</a>
-</td></tr>
-
-<tr><td colspan=2 align="center">
-<a href="https://money.yandex.ru/to/41001142318065">Donate via Yandex.Money</a>
-</td></tr>
-
-<tr><td colspan=2 align="center">
-bitcoin:bc1qkhh7h0gwwhxgg6h6gpllfgstkd645fefrd5s6z
-</td></tr>
-
-<tr><td colspan=2 align="center">
-
-### Collect facesets
-
-</td></tr>
 
 <tr><td colspan=2 align="center">
 
@@ -406,7 +225,7 @@ Register github account and push "Star" button.
 </td></tr>
 
 <tr><td colspan=2>
-<img src="doc/meme3.jpg" align="center">
+
 </td></tr>
 
 <tr><td align="center" width="50%">
