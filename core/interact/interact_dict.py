@@ -1,8 +1,8 @@
 import pickle
 
 dictionary = {
-'[png] Output image format ( png/jpg ?:help ) : ' : 'png',
 ' : ' : '0',
+'[png] Output image format ( png/jpg ?:help ) : ' : 'png',
 'Override' : '0',
 ' Press enter in 2 seconds to override model settings.  ' : '\n',
 '[0] Which GPU indexes to choose? : ' : '0',
@@ -14,7 +14,7 @@ dictionary = {
 '[y] Continue extraction? ( y/n ?:help ) : ' : 'True',
 '[2] Autobackup every N hour ( 0..24 ?:help ) : ' : '2',
 '[n] Write preview history ( y/n ?:help ) : ' : 'False',
-'[83000] Target iteration : ' : '83000',
+'[83000] Target iteration : ' : '100000',
 '[n] Flip SRC faces randomly ( y/n ?:help ) : ' : 'False',
 '[n] Flip DST faces randomly ( y/n ?:help ) : ' : 'False',
 '[4] Batch_size ( ?:help ) : ' : '4',
@@ -49,4 +49,11 @@ dictionary = {
 '[16] Bitrate of output file in MB/s : ' : '16',
 }
 with open('/home/deepfake/interact_dict.pkl', 'wb') as handle:
-	pickle.dump(dictionary, handle, protocol=pickle.HIGHEST_PROTOCOL)
+	pickle.dump(dictionary, handle, protocol=4)
+
+#with open('/home/deepfake/interact_dict.pkl', 'rb') as handle:
+#	d = pickle.load(handle)
+#s = "Target iteration"
+#res = dict(filter(lambda item: s in item[0], d.items()))
+#
+#print(list(res.values())[0])

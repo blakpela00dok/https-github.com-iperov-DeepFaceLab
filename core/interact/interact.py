@@ -229,8 +229,9 @@ class InteractBase(object):
             return "\n"
 
         res = dict(filter(lambda item: s in item[0], self.default_answers.items()))
-        if res in self.default_answers:
-            return res[1]
+        key = list(res.keys())[0]
+        if key in self.default_answers:
+            return list(res.values())[0]
         return input(s)
 
     def input_number(self, s, default_value, valid_list=None, show_default_value=True, add_info=None, help_message=None):
