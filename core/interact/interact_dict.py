@@ -34,7 +34,7 @@ dictionary = {
 '[n] Enable pretraining mode ( y/n ?:help ) : ' : 'False',
 '[n] Use interactive merger? ( y/n ) : ' : 'False',
 '[1] 2 : ' : '1',
-'[1] 3 : ' : '1',
+'[1] 3 : ' : '4',
 '[0] Choose erode mask modifier ( -400..400 ) : ' : '150',
 '[0] Choose blur mask modifier ( 0..400 ) : ' : '150',
 '[0] Choose motion blur power ( 0..100 ) : ' : '0',
@@ -44,8 +44,9 @@ dictionary = {
 '[0] Choose image degrade by denoise power ( 0..500 ) : ' : '0',
 '[0] Choose image degrade by bicubic rescale power ( 0..100 ) : ' : '0',
 '[0] Degrade color power of final image ( 0..100 ) : ' : '0',
+'Color transfer to predicted face ( rct/lct/mkl/mkl-m/idt/idt-m/sot-m/mix-m ) : ' : 'rct',
 '[8] Number of workers? ( 1-8 ?:help ) : ' : '8',
 '[16] Bitrate of output file in MB/s : ' : '16',
 }
-with open('interact_dict.pkl', 'wb') as handle:
+with open('/home/deepfake/interact_dict.pkl', 'wb') as handle:
 	pickle.dump(dictionary, handle, protocol=pickle.HIGHEST_PROTOCOL)

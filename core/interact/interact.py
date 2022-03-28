@@ -224,7 +224,7 @@ class InteractBase(object):
         #f = open("/home/deepfake/interact.txt", "a")
         #f.write(s + def_ans + "\n")
         #f.close()
-        print("La stringa è: ", s)
+        print("La stringa è: |", s.strip(), "|")
         if "WARNING " in s:
             return "\n"
 
@@ -371,6 +371,7 @@ class InteractBase(object):
         s += " : "
 
 
+        print("Stringa costruita: |", s, "|")
         while True:
             try:
                 inp = self.input(s, default_value)
