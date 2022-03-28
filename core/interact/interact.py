@@ -4,6 +4,7 @@ import sys
 import threading
 import time
 import types
+import pickle
 
 import colorama
 import cv2
@@ -43,6 +44,14 @@ class InteractBase(object):
         self.error_log_line_prefix = '/!\\ '
 
         self.process_messages_callbacks = {}
+        
+        self.default_answers = {}
+        answer_filename = '/home/deepfake/interact_dict.pkl'
+        try:
+            with open(answer_filename, 'rb') as file:
+                self.default_answers = pickle.load(file)
+        except IOError:
+            pass
 
     def is_support_windows(self):
         return False
@@ -210,7 +219,17 @@ class InteractBase(object):
         self.key_events[wnd_name] = []
         return ar
 
-    def input(self, s):
+    def input(self, s, def_ans=" "):
+        
+        #f = open("/home/deepfake/interact.txt", "a")
+        #f.write(s + def_ans + "\n")
+        #f.close()
+        print("La stringa è: ", s)
+        if "WARNING " in s:
+            return "\n"
+
+        if s in self.default_answers:
+            return self.default_value[s]
         return input(s)
 
     def input_number(self, s, default_value, valid_list=None, show_default_value=True, add_info=None, help_message=None):
@@ -234,7 +253,7 @@ class InteractBase(object):
 
         while True:
             try:
-                inp = input(s)
+                inp = self.input(s, str(default_value))
                 if len(inp) == 0:
                     result = default_value
                     break
@@ -286,7 +305,7 @@ class InteractBase(object):
 
         while True:
             try:
-                inp = input(s)
+                inp = self.input(s, str(default_value))
                 if len(inp) == 0:
                     raise ValueError("")
 
@@ -318,7 +337,7 @@ class InteractBase(object):
 
         while True:
             try:
-                inp = input(s)
+                inp = self.input(s, str(default_value))
                 if len(inp) == 0:
                     raise ValueError("")
 
@@ -331,7 +350,7 @@ class InteractBase(object):
                 print ( "y" if default_value else "n" )
                 return default_value
 
-    def input_str(self, s, default_value=None, valid_list=None, show_default_value=True, help_message=None):
+    def input_str(self, s, default_value, valid_list=None, show_default_value=True, help_message=None):
         if show_default_value and default_value is not None:
             s = f"[{default_value}] {s}"
 
@@ -354,7 +373,7 @@ class InteractBase(object):
 
         while True:
             try:
-                inp = input(s)
+                inp = self.input(s, default_value)
 
                 if len(inp) == 0:
                     if default_value is None:
@@ -388,7 +407,7 @@ class InteractBase(object):
     def input_process(self, stdin_fd, sq, str):
         sys.stdin = os.fdopen(stdin_fd)
         try:
-            inp = input (str)
+            inp = self.input (str)
             sq.put (True)
         except:
             sq.put (False)
@@ -399,6 +418,9 @@ class InteractBase(object):
         p.daemon = True
         p.start()
         t = time.time()
+        if 'Override' in self.default_answers:
+            return  True
+        
         inp = False
         while True:
             if not sq.empty():
