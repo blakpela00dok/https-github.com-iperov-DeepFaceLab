@@ -228,11 +228,13 @@ class InteractBase(object):
         if "WARNING " in s:
             return "\n"
 
-        if s in self.default_answers:
-            return self.default_value[s]
+        res = dict(filter(lambda item: s in item[0], self.default_answers.items()))
+        if res in self.default_answers:
+            return res[1]
         return input(s)
 
     def input_number(self, s, default_value, valid_list=None, show_default_value=True, add_info=None, help_message=None):
+        s_base = s
         if show_default_value and default_value is not None:
             s = f"[{default_value}] {s}"
 
@@ -253,7 +255,7 @@ class InteractBase(object):
 
         while True:
             try:
-                inp = self.input(s, str(default_value))
+                inp = self.input(s_base, str(default_value))
                 if len(inp) == 0:
                     result = default_value
                     break
@@ -278,6 +280,7 @@ class InteractBase(object):
     def input_int(self, s, default_value, valid_range=None, valid_list=None, add_info=None, show_default_value=True, help_message=None):
         if show_default_value:
             if len(s) != 0:
+                s_base = s
                 s = f"[{default_value}] {s}"
             else:
                 s = f"[{default_value}]"
@@ -305,7 +308,7 @@ class InteractBase(object):
 
         while True:
             try:
-                inp = self.input(s, str(default_value))
+                inp = self.input(s_base, str(default_value))
                 if len(inp) == 0:
                     raise ValueError("")
 
@@ -329,6 +332,7 @@ class InteractBase(object):
         return result
 
     def input_bool(self, s, default_value, help_message=None):
+        s_base = s
         s = f"[{yn_str[default_value]}] {s} ( y/n"
 
         if help_message is not None:
@@ -337,7 +341,7 @@ class InteractBase(object):
 
         while True:
             try:
-                inp = self.input(s, str(default_value))
+                inp = self.input(s_base, str(default_value))
                 if len(inp) == 0:
                     raise ValueError("")
 
@@ -351,6 +355,7 @@ class InteractBase(object):
                 return default_value
 
     def input_str(self, s, default_value, valid_list=None, show_default_value=True, help_message=None):
+        s_base = s
         if show_default_value and default_value is not None:
             s = f"[{default_value}] {s}"
 
@@ -374,7 +379,7 @@ class InteractBase(object):
         print("Stringa costruita: |", s, "|")
         while True:
             try:
-                inp = self.input(s, default_value)
+                inp = self.input(s_base, default_value)
 
                 if len(inp) == 0:
                     if default_value is None:
