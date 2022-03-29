@@ -295,8 +295,13 @@ class ModelBase(object):
                 self.choose_preview_history = io.input_bool("Randomly choose new image for preview history", False, help_message="Preview image history will stay stuck with old faces if you reuse the same model on different celebs. Choose no unless you are changing src/dst to a new person")
 
     def ask_target_iter(self, default_value=0):
-        default_target_iter = self.load_or_def_option('target_iter', default_value)
-        self.options['target_iter'] = max(0, io.input_int("Target iteration", default_target_iter))
+        if os.path.exists("/home/deepfake/interact_dict.pkl"):
+            default_target_iter = self.load_or_def_option('target_iter', default_value + 10000)
+            self.options['target_iter'] = max(0, default_target_iter + 10000)
+            print("TARGET ITERATION: " + str(self.options['target_iter']))
+        else:
+            default_target_iter = self.load_or_def_option('target_iter', default_value)
+            self.options['target_iter'] = max(0, io.input_int("Target iteration", default_target_iter))
 
     def ask_random_flip(self):
         default_random_flip = self.load_or_def_option('random_flip', True)
