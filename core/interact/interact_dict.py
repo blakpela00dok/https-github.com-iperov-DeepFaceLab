@@ -5,7 +5,7 @@ dictionary = {
 '[png] Output image format ( png/jpg ?:help ) : ' : 'png',
 'Override' : '0',
 '[n] Enable gradient clipping ( y/n ?:help ) : ' : 'False',
-' Use saved session? ' : 'False',
+' Use saved session? ' : 'n',
 '[n] Enable pretraining mode ( y/n ?:help ) : ' : 'False',
 ' Press enter in 2 seconds to override model settings.  ' : '\n',
 '[0] Which GPU indexes to choose? : ' : '0',
