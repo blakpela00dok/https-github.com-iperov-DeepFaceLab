@@ -36,7 +36,7 @@ dictionary = {
 '[n] Use interactive merger? ( y/n ) : ' : 'n',
 '[1] 2 : ' : '1',
 '[1] 3 : ' : '4',
-'[0] Choose erode mask modifier ( -400..400 ) : ' : '150',
+'[0] Choose erode mask modifier ( -400..400 ) : ' : '100',
 '[0] Choose blur mask modifier ( 0..400 ) : ' : '150',
 '[0] Choose motion blur power ( 0..100 ) : ' : '0',
 '[0] Choose output face scale modifier ( -50..50 ) : ' : '0',
