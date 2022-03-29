@@ -84,7 +84,7 @@ def trainerThread (s2c, c2s, e,
             if model.get_target_iter() != 0:
                 if is_reached_goal:
                     io.log_info('Model already trained to target iteration. You can use preview.')
-                            if os.path.exists("/home/deepfake/interact_dict.pkl"):
+                    if os.path.exists("/home/deepfake/interact_dict.pkl"):
                                 model_save()
                                 os._exit(1)
                 else:
