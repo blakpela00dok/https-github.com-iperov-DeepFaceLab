@@ -33,7 +33,7 @@ dictionary = {
 '[0.0] Face style power ( 0.0..100.0 ?:help ) : ' : '0.0',
 '[0.0] Background style power ( 0.0..100.0 ?:help ) : ' : '0.0',
 '[lct] Color transfer for src faceset ( none/rct/lct/mkl/idt/sot ?:help ) : ' : 'lct',
-'[n] Use interactive merger? ( y/n ) : ' : 'False',
+'[n] Use interactive merger? ( y/n ) : ' : 'n',
 '[1] 2 : ' : '1',
 '[1] 3 : ' : '4',
 '[0] Choose erode mask modifier ( -400..400 ) : ' : '150',
@@ -52,9 +52,9 @@ dictionary = {
 with open('/home/deepfake/interact_dict.pkl', 'wb') as handle:
 	pickle.dump(dictionary, handle, protocol=4)
 
-#with open('/home/deepfake/interact_dict.pkl', 'rb') as handle:
-#	d = pickle.load(handle)
-#s = "Use interactive merger"
-#res = dict(filter(lambda item: s in item[0], d.items()))
-#
-#print(list(res.values())[0])
+with open('/home/deepfake/interact_dict.pkl', 'rb') as handle:
+	d = pickle.load(handle)
+s = "Use saved"
+res = dict(filter(lambda item: s in item[0], d.items()))
+
+print(list(res.values())[0])
