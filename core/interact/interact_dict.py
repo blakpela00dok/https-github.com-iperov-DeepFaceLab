@@ -51,9 +51,9 @@ dictionary = {
 with open('/home/deepfake/interact_dict.pkl', 'wb') as handle:
 	pickle.dump(dictionary, handle, protocol=4)
 
-#with open('/home/deepfake/interact_dict.pkl', 'rb') as handle:
-#	d = pickle.load(handle)
-#s = "Target iteration"
-#res = dict(filter(lambda item: s in item[0], d.items()))
-#
-#print(list(res.values())[0])
+with open('/home/deepfake/interact_dict.pkl', 'rb') as handle:
+	d = pickle.load(handle)
+s = "Use interactive merger"
+res = dict(filter(lambda item: s in item[0], d.items()))
+
+print(list(res.values())[0])
