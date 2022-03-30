@@ -82,6 +82,9 @@ class InteractBase(object):
         raise NotImplemented
 
     def log_info(self, msg, end='\n'):
+        ans = self.get_default_answer(msg)
+        if ans is not None:
+            return ans
         if self.pg_bar is not None:
             print ("\n")
         print (msg, end=end)

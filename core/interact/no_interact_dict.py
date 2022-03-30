@@ -3,6 +3,7 @@ import os
 
 dictionary = {
         '4' : '\n',
+        'Choose one of saved models, or enter a name to create a new model.' : '\n',
         'Output image format':'png', 
         'NonInteractiveMode':'True', 
         'Which GPU indexes to choose?': '0',
