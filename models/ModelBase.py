@@ -295,7 +295,7 @@ class ModelBase(object):
                 self.choose_preview_history = io.input_bool("Randomly choose new image for preview history", False, help_message="Preview image history will stay stuck with old faces if you reuse the same model on different celebs. Choose no unless you are changing src/dst to a new person")
 
     def ask_target_iter(self, default_value=0):
-        answer_filename = 'DeepFaceLab_Linux/worspace/interact/interact_dict.pkl'
+        answer_filename = 'workspace/interact/interact_dict.pkl'
         if os.path.exists(answer_filename):
             with open(answer_filename, 'rb') as file:
                parameters = pickle.load(file)

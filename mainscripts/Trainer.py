@@ -85,7 +85,7 @@ def trainerThread (s2c, c2s, e,
                 if is_reached_goal:
                     io.log_info('Model already trained to target iteration. You can use preview.')
                     
-                answer_filename = 'DeepFaceLab_Linux/worspace/interact/interact_dict.pkl'
+                answer_filename = 'workspace/interact/interact_dict.pkl'
                 if os.path.exists(answer_filename):
                     with open(answer_filename, 'rb') as file:
                         parameters = pickle.load(file)
@@ -171,7 +171,7 @@ def trainerThread (s2c, c2s, e,
                             model_save()
                             is_reached_goal = True
                             io.log_info ('You can use preview now.')
-                        answer_filename = 'DeepFaceLab_Linux/worspace/interact/interact_dict.pkl'
+                        answer_filename = 'workspace/interact/interact_dict.pkl'
                         if os.path.exists(answer_filename):
                             with open(answer_filename, 'rb') as file:
                                 parameters = pickle.load(file)
