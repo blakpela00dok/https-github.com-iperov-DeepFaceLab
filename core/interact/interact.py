@@ -339,7 +339,6 @@ class InteractBase(object):
 
     def input_bool(self, s, default_value, help_message=None, answer_key=None):
         answer_key = answer_key if answer_key is not None else s
-        s_base = s
         s = f"[{yn_str[default_value]}] {s} ( y/n"
 
         if help_message is not None:
@@ -348,7 +347,7 @@ class InteractBase(object):
 
         while True:
             try:
-                inp = self.input(s_base, answer_key)
+                inp = self.input(s, answer_key)
                 if len(inp) == 0:
                     raise ValueError("")
 
@@ -363,7 +362,6 @@ class InteractBase(object):
 
     def input_str(self, s, default_value, valid_list=None, show_default_value=True, help_message=None, answer_key=None):
         answer_key = answer_key if answer_key is not None else s
-        s_base = s
         if show_default_value and default_value is not None:
             s = f"[{default_value}] {s}"
 
@@ -386,7 +384,7 @@ class InteractBase(object):
 
         while True:
             try:
-                inp = self.input(s_base, answer_key)
+                inp = self.input(s, answer_key)
 
                 if len(inp) == 0:
                     if default_value is None:
