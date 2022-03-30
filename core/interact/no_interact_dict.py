@@ -3,7 +3,7 @@ import os
 
 dictionary = {
         '4' : '\n',
-        '5' : '0',
+        '5' : 'ciao',
         'Output image format':'png', 
         'NoInteractiveMode':'True', 
         'Which GPU indexes to choose?': '0',
