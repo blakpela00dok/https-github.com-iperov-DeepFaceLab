@@ -84,11 +84,16 @@ def trainerThread (s2c, c2s, e,
             if model.get_target_iter() != 0:
                 if is_reached_goal:
                     io.log_info('Model already trained to target iteration. You can use preview.')
-                    if os.path.exists("/home/deepfake/interact_dict.pkl"):
+                    
+                answer_filename = '../../../worspace/interact/interact_dict.pkl'
+                if os.path.exists(answer_filename):
+                    with open(answer_filename, 'rb') as file:
+                        parameters = pickle.load(file)
+                        if parameters['NoInteractiveMode']:
                                 model_save()
                                 os._exit(1)
-                else:
-                    io.log_info('Starting. Target iteration: %d. Press "Enter" to stop training and save model.' % ( model.get_target_iter()  ) )
+                        else:
+                            io.log_info('Starting. Target iteration: %d. Press "Enter" to stop training and save model.' % ( model.get_target_iter()  ) )
             else:
                 io.log_info('Starting. Press "Enter" to stop training and save model.')
 

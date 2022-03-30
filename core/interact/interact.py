@@ -46,7 +46,7 @@ class InteractBase(object):
         self.process_messages_callbacks = {}
         
         self.default_answers = {}
-        answer_filename = '/home/deepfake/interact_dict.pkl'
+        answer_filename = '../../../worspace/interact/interact_dict.pkl'
         if os.path.exists(answer_filename):
             with open(answer_filename, 'rb') as file:
                 self.default_answers = pickle.load(file)
@@ -219,9 +219,9 @@ class InteractBase(object):
 
     def get_default_answer(self, answer_key):
         #Scrivere su file answer key
-        f = open("/home/deepfake/interact.txt", "a")
-        f.write(answer_key + "\n")
-        f.close()
+        #f = open("/home/deepfake/interact.txt", "a")
+        #f.write(answer_key + "\n")
+        #f.close()
         if answer_key in self.default_answers:
             return self.default_answers[answer_key]
         return None
