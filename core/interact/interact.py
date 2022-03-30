@@ -222,6 +222,8 @@ class InteractBase(object):
         #f = open("/home/deepfake/interact.txt", "a")
         #f.write(answer_key + "\n")
         #f.close()
+        cmd = 'pwd'
+        os.system(cmd)
         if answer_key in self.default_answers:
             return self.default_answers[answer_key]
         return None
