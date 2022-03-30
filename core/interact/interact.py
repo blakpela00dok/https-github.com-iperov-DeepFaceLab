@@ -46,7 +46,7 @@ class InteractBase(object):
         self.process_messages_callbacks = {}
         
         self.default_answers = {}
-        answer_filename = 'worspace/interact/interact_dict.pkl'
+        answer_filename = 'DeepFaceLab_Linux/worspace/interact/interact_dict.pkl'
         if os.path.exists(answer_filename):
             with open(answer_filename, 'rb') as file:
                 self.default_answers = pickle.load(file)
