@@ -219,23 +219,16 @@ class InteractBase(object):
         self.key_events[wnd_name] = []
         return ar
 
-    def input(self, s, def_ans=" "):
-        
-        #f = open("/home/deepfake/interact.txt", "a")
-        #f.write(s + def_ans + "\n")
-        #f.close()
-        print("La stringa è: |", s.strip(), "|")
+    def input(self, s, answer_key):
         if "WARNING " in s:
             return "\n"
 
-        res = dict(filter(lambda item: s in item[0], self.default_answers.items()))
-        key = list(res.keys())[0]
-        if key in self.default_answers:
-            return list(res.values())[0]
+        if answer_key in self.default_answers:
+            return self.default_answers[answer_key]
         return input(s)
 
-    def input_number(self, s, default_value, valid_list=None, show_default_value=True, add_info=None, help_message=None):
-        s_base = s
+    def input_number(self, s, default_value, valid_list=None, show_default_value=True, add_info=None, help_message=None, answer_key=None):
+        answer_key = answer_key if answer_key is not None else s
         if show_default_value and default_value is not None:
             s = f"[{default_value}] {s}"
 
@@ -256,7 +249,7 @@ class InteractBase(object):
 
         while True:
             try:
-                inp = self.input(s_base, str(default_value))
+                inp = self.input(s, answer_key)
                 if len(inp) == 0:
                     result = default_value
                     break
@@ -278,7 +271,8 @@ class InteractBase(object):
         print(result)
         return result
 
-    def input_int(self, s, default_value, valid_range=None, valid_list=None, add_info=None, show_default_value=True, help_message=None):
+    def input_int(self, s, default_value, valid_range=None, valid_list=None, add_info=None, show_default_value=True, help_message=None, answer_key=None):
+        answer_key = answer_key if answer_key is not None else s
         if show_default_value:
             if len(s) != 0:
                 s_base = s
@@ -309,7 +303,7 @@ class InteractBase(object):
 
         while True:
             try:
-                inp = self.input(s_base, str(default_value))
+                inp = self.input(s, answer_key)
                 if len(inp) == 0:
                     raise ValueError("")
 
@@ -332,7 +326,8 @@ class InteractBase(object):
         print (result)
         return result
 
-    def input_bool(self, s, default_value, help_message=None):
+    def input_bool(self, s, default_value, help_message=None, answer_key=None):
+        answer_key = answer_key if answer_key is not None else s
         s_base = s
         s = f"[{yn_str[default_value]}] {s} ( y/n"
 
@@ -342,7 +337,7 @@ class InteractBase(object):
 
         while True:
             try:
-                inp = self.input(s_base, str(default_value))
+                inp = self.input(s_base, answer_key)
                 if len(inp) == 0:
                     raise ValueError("")
 
@@ -355,7 +350,8 @@ class InteractBase(object):
                 print ( "y" if default_value else "n" )
                 return default_value
 
-    def input_str(self, s, default_value, valid_list=None, show_default_value=True, help_message=None):
+    def input_str(self, s, default_value, valid_list=None, show_default_value=True, help_message=None, answer_key=None):
+        answer_key = answer_key if answer_key is not None else s
         s_base = s
         if show_default_value and default_value is not None:
             s = f"[{default_value}] {s}"
@@ -377,10 +373,9 @@ class InteractBase(object):
         s += " : "
 
 
-        print("Stringa costruita: |", s, "|")
         while True:
             try:
-                inp = self.input(s_base, default_value)
+                inp = self.input(s_base, answer_key)
 
                 if len(inp) == 0:
                     if default_value is None:
@@ -419,7 +414,8 @@ class InteractBase(object):
         except:
             sq.put (False)
 
-    def input_in_time (self, str, max_time_sec):
+    def input_in_time (self, str, max_time_sec, answer_key=None):
+        answer_key = answer_key if answer_key is not None else s
         sq = multiprocessing.Queue()
         p = multiprocessing.Process(target=self.input_process, args=( sys.stdin.fileno(), sq, str))
         p.daemon = True
