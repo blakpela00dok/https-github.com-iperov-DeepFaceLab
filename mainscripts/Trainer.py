@@ -171,9 +171,12 @@ def trainerThread (s2c, c2s, e,
                             model_save()
                             is_reached_goal = True
                             io.log_info ('You can use preview now.')
-                            if os.path.exists("/home/deepfake/interact_dict.pkl"):
-                                model_save()
-                                os._exit(1)
+                        if os.path.exists(answer_filename):
+                            with open(answer_filename, 'rb') as file:
+                                parameters = pickle.load(file)
+                                if parameters['NoInteractiveMode']:
+                                        model_save()
+                                        os._exit(1)
                 
                 need_save = False
                 while time.time() - last_save_time >= save_interval_min*60:
