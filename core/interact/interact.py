@@ -219,7 +219,6 @@ class InteractBase(object):
 
     def get_default_answer(self, answer_key):
         #Scrivere su file answer key
-        print("\n\n\nEntro con ak: ", answer_key, "\n\n")
         f = open("/home/deepfake/interact.txt", "a")
         f.write(answer_key + "\n")
         f.close()
