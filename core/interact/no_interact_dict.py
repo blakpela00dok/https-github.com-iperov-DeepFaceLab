@@ -5,7 +5,7 @@ dictionary = {
         '4' : '\n',
         '5' : '0',
         'Output image format':'png', 
-        'NonInteractiveMode':'True', 
+        'NoInteractiveMode':'True', 
         'Which GPU indexes to choose?': '0',
         'Face type': 'wf',
         'Max number of faces from image' : '1',
@@ -53,4 +53,4 @@ with open('DeepFaceLab_Linux/workspace/interact/interact_dict.pkl', 'wb') as han
 with open('DeepFaceLab_Linux/workspace/interact/interact_dict.pkl', 'rb') as handle:
 	d = pickle.load(handle)
 
-print(d['Choose one of saved models, or enter a name to create a new model.'])
+print(d['5'])
