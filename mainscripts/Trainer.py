@@ -82,9 +82,6 @@ def trainerThread (s2c, c2s, e,
                 e.set() #Set the GUI Thread as Ready
 
             if model.get_target_iter() != 0:
-                if is_reached_goal:
-                    io.log_info('Model already trained to target iteration. You can use preview.')
-                    
                 answer_filename = 'workspace/interact/interact_dict.pkl'
                 if os.path.exists(answer_filename):
                     with open(answer_filename, 'rb') as file:
@@ -92,6 +89,9 @@ def trainerThread (s2c, c2s, e,
                         if parameters['NoInteractiveMode']:
                                 model_save()
                                 os._exit(1)
+                elif is_reached_goal:
+                    io.log_info('Model already trained to target iteration. You can use preview.')
+                    
                 else:
                     io.log_info('Starting. Target iteration: %d. Press "Enter" to stop training and save model.' % ( model.get_target_iter()  ) )
             else:
