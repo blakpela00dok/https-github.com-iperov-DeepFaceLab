@@ -92,8 +92,8 @@ def trainerThread (s2c, c2s, e,
                         if parameters['NoInteractiveMode']:
                                 model_save()
                                 os._exit(1)
-                        else:
-                            io.log_info('Starting. Target iteration: %d. Press "Enter" to stop training and save model.' % ( model.get_target_iter()  ) )
+                else:
+                    io.log_info('Starting. Target iteration: %d. Press "Enter" to stop training and save model.' % ( model.get_target_iter()  ) )
             else:
                 io.log_info('Starting. Press "Enter" to stop training and save model.')
 
