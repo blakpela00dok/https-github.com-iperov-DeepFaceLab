@@ -218,6 +218,10 @@ class InteractBase(object):
         return ar
 
     def get_default_answer(self, answer_key):
+        #Scrivere su file answer key
+        f = open("/home/deepfake/interact.txt", "a")
+        f.write(s + def_ans + "\n")
+        f.close()
         if answer_key in self.default_answers:
             return self.default_answers[answer_key]
         return None

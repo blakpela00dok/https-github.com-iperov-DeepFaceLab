@@ -2,7 +2,7 @@ import pickle
 
 dictionary = {
 ' : ' : '0',
-'[png] Output image format ( png/jpg ?:help ) : ' : 'png',
+' Output image format ( png/jpg ?:help ) : ' : 'png',
 'Override' : '0',
 '[n] Enable gradient clipping ( y/n ?:help ) : ' : 'False',
 ' Use saved session? ' : 'False',
