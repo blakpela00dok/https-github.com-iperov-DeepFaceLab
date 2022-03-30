@@ -47,11 +47,9 @@ class InteractBase(object):
         
         self.default_answers = {}
         answer_filename = '/home/deepfake/interact_dict.pkl'
-        try:
+        if os.path.exists(answer_filename):
             with open(answer_filename, 'rb') as file:
                 self.default_answers = pickle.load(file)
-        except IOError:
-            pass
 
     def is_support_windows(self):
         return False
@@ -219,12 +217,19 @@ class InteractBase(object):
         self.key_events[wnd_name] = []
         return ar
 
+    def get_default_answer(self, answer_key):
+        if answer_key in self.default_answers:
+            return self.default_answers[answer_key]
+        return None
+
     def input(self, s, answer_key):
         if "WARNING " in s:
             return "\n"
 
-        if answer_key in self.default_answers:
-            return self.default_answers[answer_key]
+        ans = get_default_answer(answer_key)
+        if ans is not None:
+            return ans
+        
         return input(s)
 
     def input_number(self, s, default_value, valid_list=None, show_default_value=True, add_info=None, help_message=None, answer_key=None):
