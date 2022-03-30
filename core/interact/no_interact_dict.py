@@ -1,12 +1,11 @@
 import pickle
 
 dictionary = {
-' : ' : '0',
-' Output image format ( png/jpg ?:help ) : ' : 'png',
+'Output image format' : 'png',
 'Override' : '0',
-'[n] Enable gradient clipping ( y/n ?:help ) : ' : 'False',
+'Enable gradient clipping' : 'False',
 ' Use saved session? ' : 'False',
-'[n] Enable pretraining mode ( y/n ?:help ) : ' : 'False',
+'Enable pretraining mode' : 'False',
 ' Press enter in 2 seconds to override model settings.  ' : '\n',
 '[0] Which GPU indexes to choose? : ' : '0',
 '[wf] Face type ( f/wf/head ?:help ) : ' : 'wf',
