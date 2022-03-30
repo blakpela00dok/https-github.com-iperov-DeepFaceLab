@@ -421,7 +421,6 @@ class InteractBase(object):
             sq.put (False)
 
     def input_in_time (self, str, max_time_sec, answer_key=None):
-        answer_key = answer_key if answer_key is not None else s
         sq = multiprocessing.Queue()
         p = multiprocessing.Process(target=self.input_process, args=( sys.stdin.fileno(), sq, str))
         p.daemon = True
