@@ -43,10 +43,10 @@ dictionary = {
         'Degrade color power of final image' : '0',
         'Color transfer to predicted face' : 'rct',
 }
-with open('/home/deepfake/interact_dict.pkl', 'wb') as handle:
+with open('../../../workspace/interact/interact_dict.pkl', 'wb') as handle:
 	pickle.dump(dictionary, handle, protocol=4)
 
-with open('/home/deepfake/interact_dict.pkl', 'rb') as handle:
-	d = pickle.load(handle)
-
-print(d['Color transfer to predicted face'])
+##with open('/home/deepfake/interact_dict.pkl', 'rb') as handle:
+#	d = pickle.load(handle)
+#
+#print(d['Color transfer to predicted face'])
