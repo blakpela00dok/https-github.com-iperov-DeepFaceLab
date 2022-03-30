@@ -49,7 +49,7 @@ os.system(cmd)
 with open('DeepFaceLab_Linux/workspace/interact/interact_dict.pkl', 'wb') as handle:
 	pickle.dump(dictionary, handle, protocol=4)
 
-##with open('/home/deepfake/interact_dict.pkl', 'rb') as handle:
-#	d = pickle.load(handle)
-#
-#print(d['Color transfer to predicted face'])
+with open('DeepFaceLab_Linux/workspace/interact/interact_dict.pkl', 'rb') as handle:
+	d = pickle.load(handle)
+
+print(d['Output image format'])
