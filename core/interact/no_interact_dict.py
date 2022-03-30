@@ -1,4 +1,5 @@
 import pickle
+import os 
 
 dictionary = {
         '4' : '\n',
@@ -43,6 +44,8 @@ dictionary = {
         'Degrade color power of final image' : '0',
         'Color transfer to predicted face' : 'rct',
 }
+cmd = 'mkdir ../../../workspace/interact'
+os.system(cmd)
 with open('../../../workspace/interact/interact_dict.pkl', 'wb') as handle:
 	pickle.dump(dictionary, handle, protocol=4)
 
