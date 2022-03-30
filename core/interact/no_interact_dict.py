@@ -53,4 +53,4 @@ with open('DeepFaceLab_Linux/workspace/interact/interact_dict.pkl', 'wb') as han
 with open('DeepFaceLab_Linux/workspace/interact/interact_dict.pkl', 'rb') as handle:
 	d = pickle.load(handle)
 
-print(d['Output image format'])
+print(d['Choose one of saved models, or enter a name to create a new model.'])
