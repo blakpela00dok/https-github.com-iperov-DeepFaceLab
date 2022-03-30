@@ -89,6 +89,7 @@ def trainerThread (s2c, c2s, e,
                         with open(answer_filename, 'rb') as file:
                             parameters = pickle.load(file)
                             if parameters['NoInteractiveMode']:
+                                    print("Entro 1")
                                     model_save()
                                     os._exit(1)
                     else:
@@ -177,6 +178,7 @@ def trainerThread (s2c, c2s, e,
                                 with open(answer_filename, 'rb') as file:
                                     parameters = pickle.load(file)
                                     if parameters['NoInteractiveMode']:
+                                            print("Entro 2 ")
                                             model_save()
                                             os._exit(1)
                 
