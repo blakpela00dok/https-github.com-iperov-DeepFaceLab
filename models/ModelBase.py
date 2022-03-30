@@ -301,6 +301,7 @@ class ModelBase(object):
                parameters = pickle.load(file)
                if parameters['NoInteractiveMode']:
                  default_target_iter = self.load_or_def_option('target_iter', default_value + 10000)
+                 print("Default target iteration: ", default_target_iter)
                  self.options['target_iter'] = max(0, default_target_iter + 10000)
                  print("TARGET ITERATION: " + str(self.options['target_iter']))
         else:
