@@ -80,7 +80,7 @@ class ModelBase(object):
                                     s += "- latest"
                                 io.log_info (s)
 
-                            inp = io.input_str(f"", "0", show_default_value=False )
+                            inp = io.input_str(f"", "0", show_default_value=False, "5" )
                             model_idx = -1
                             try:
                                 model_idx = np.clip ( int(inp), 0, len(saved_models_names)-1 )
