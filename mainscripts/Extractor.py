@@ -753,7 +753,7 @@ def main(detector=None,
                 io.log_err("Error in fetching the last index. Extraction cannot be continued.")
                 return
         elif input_path != output_path:
-                io.input(f"\n WARNING !!! \n {output_path} contains files! \n They will be deleted. \n Press enter to continue.\n")
+                io.input(f"\n WARNING !!! \n {output_path} contains files! \n They will be deleted. \n Press enter to continue.\n", "4")
                 for filename in output_images_paths:
                     Path(filename).unlink()
 
