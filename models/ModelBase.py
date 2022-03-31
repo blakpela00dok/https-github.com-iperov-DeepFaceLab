@@ -310,6 +310,7 @@ class ModelBase(object):
         else:
             default_target_iter = self.load_or_def_option('target_iter', default_value)
             self.options['target_iter'] = max(0, io.input_int("Target iteration", default_target_iter))
+        print("Esco")
 
     def ask_random_flip(self):
         default_random_flip = self.load_or_def_option('random_flip', True)
