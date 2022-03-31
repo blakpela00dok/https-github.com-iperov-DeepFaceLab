@@ -91,7 +91,7 @@ def trainerThread (s2c, c2s, e,
                             if parameters['NoInteractiveMode']:
                                     print("Entro 1")
                                     model_save()
-                                    #os._exit(1)
+                                    os._exit(1)
                     else:
                        io.log_info('Model already trained to target iteration. You can use preview.')
                 else:
@@ -180,7 +180,7 @@ def trainerThread (s2c, c2s, e,
                                     if parameters['NoInteractiveMode']:
                                             print("Entro 2 ")
                                             model_save()
-                                            os._exit(1)
+                                            #os._exit(1)
                 
                 need_save = False
                 while time.time() - last_save_time >= save_interval_min*60:
