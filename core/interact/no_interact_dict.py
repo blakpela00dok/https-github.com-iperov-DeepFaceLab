@@ -17,7 +17,7 @@ dictionary = {
         'Flip SRC faces randomly':'False', 
         'Flip DST faces randomly':'False', 
         'Batch_size': '4', 
-        'Eyes and mouth priority':'False', 
+        'Eyes and mouth priority':'n', 
         'Uniform yaw distribution of samples':'True', 
         'Blur out mask':'False', 
         'Place models and optimizer on GPU' : 'True', 
