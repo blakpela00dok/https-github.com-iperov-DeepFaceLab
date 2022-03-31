@@ -194,7 +194,6 @@ class MergerConfigMasked(MergerConfig):
             s += f"""({key}) {mode_dict[key]}\n"""
         io.log_info(s)
         mode = io.input_int ("", mode_str_dict.get(self.default_mode, 1) , answer_key="2")
-
         self.mode = mode_dict.get (mode, self.default_mode )
 
         if 'raw' not in self.mode:
