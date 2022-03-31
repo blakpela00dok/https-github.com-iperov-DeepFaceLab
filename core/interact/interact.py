@@ -414,6 +414,7 @@ class InteractBase(object):
 
     def input_process(self, stdin_fd, sq, str):
         sys.stdin = os.fdopen(stdin_fd)
+        print("Mi fermo qui")
         try:
             inp = input (str)
             sq.put (True)
