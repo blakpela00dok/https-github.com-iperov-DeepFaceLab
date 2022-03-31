@@ -88,7 +88,7 @@ def trainerThread (s2c, c2s, e,
                     if os.path.exists(answer_filename):
                           with open(answer_filename, 'rb') as file:
                               parameters = pickle.load(file)
-                                if parameters['NoInteractiveMode']:
+                              if parameters['NoInteractiveMode']:
                                     model_save()
                                     os._exit(0)
                 else:
