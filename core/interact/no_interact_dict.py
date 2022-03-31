@@ -6,6 +6,7 @@ dictionary = {
         '5' : '0',
         '2' : '1',
         '3' : '4',
+        '1' : '0',
         'Output image format':'png', 
         'NoInteractiveMode':'y', 
         'Which GPU indexes to choose?': '0',
