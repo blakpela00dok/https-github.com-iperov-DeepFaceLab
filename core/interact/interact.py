@@ -415,7 +415,7 @@ class InteractBase(object):
     def input_process(self, stdin_fd, sq, str):
         sys.stdin = os.fdopen(stdin_fd)
         try:
-            inp = self.input (str)
+            inp = input (str)
             sq.put (True)
         except:
             sq.put (False)
