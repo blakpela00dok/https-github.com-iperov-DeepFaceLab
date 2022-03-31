@@ -426,17 +426,12 @@ class InteractBase(object):
         p.daemon = True
         p.start()
         t = time.time()
-        if 'Override' in self.default_answers:
-            p.terminate()
-            p.join()
-
-            old_stdin = sys.stdin
-            sys.stdin = os.fdopen( os.dup(sys.stdin.fileno()) )
-            old_stdin.close()
-            return  True
         
         inp = False
         while True:
+            if 'Override' in self.default_answers:
+                inp = True
+                break
             if not sq.empty():
                 inp = sq.get()
                 break
