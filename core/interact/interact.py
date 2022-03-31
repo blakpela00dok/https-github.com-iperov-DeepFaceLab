@@ -427,6 +427,12 @@ class InteractBase(object):
         p.start()
         t = time.time()
         if 'Override' in self.default_answers:
+            p.terminate()
+            p.join()
+
+            old_stdin = sys.stdin
+            sys.stdin = os.fdopen( os.dup(sys.stdin.fileno()) )
+            old_stdin.close()
             return  True
         
         inp = False
