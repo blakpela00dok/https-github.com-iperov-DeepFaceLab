@@ -229,6 +229,7 @@ class InteractBase(object):
         return None
 
     def input(self, s, answer_key=None):
+        print(s)
         ans = self.get_default_answer(answer_key)
         if ans is not None:
             return ans
