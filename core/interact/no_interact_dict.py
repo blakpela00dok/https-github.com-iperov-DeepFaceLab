@@ -51,7 +51,7 @@ os.system(cmd)
 with open('DeepFaceLab_Linux/workspace/interact/interact_dict.pkl', 'wb') as handle:
 	pickle.dump(dictionary, handle, protocol=4)
 
-with open('DeepFaceLab_Linux/workspace/interact/interact_dict.pkl', 'rb') as handle:
-	d = pickle.load(handle)
-
-print(d['5'])
+#with open('DeepFaceLab_Linux/workspace/interact/interact_dict.pkl', 'rb') as handle:
+#	d = pickle.load(handle)
+#
+#print(d['5'])
