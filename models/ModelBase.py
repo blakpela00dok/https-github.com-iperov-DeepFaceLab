@@ -296,21 +296,20 @@ class ModelBase(object):
 
     def ask_target_iter(self, default_value=0):
         answer_filename = 'workspace/interact/interact_dict.pkl'
-        #if os.path.exists(answer_filename):
-        #    with open(answer_filename, 'rb') as file:
-        #        parameters = pickle.load(file)
-        #        if parameters['NoInteractiveMode']:
-        #          print("Entro in ask_target_iter")
-        #          default_target_iter = self.load_or_def_option('target_iter', default_value + 10000)
-        #          self.options['target_iter'] = max(0, default_target_iter + 10000)
-        #          print("TARGET ITERATION: " + str(self.options['target_iter']))
-        #        else:
-        #            default_target_iter = self.load_or_def_option('target_iter', default_value)
-        #            self.options['target_iter'] = max(0, io.input_int("Target iteration", default_target_iter))
-        #else:
-        default_target_iter = self.load_or_def_option('target_iter', default_value)
-        self.options['target_iter'] = max(0, io.input_int("Target iteration", default_target_iter))
-        print("Esco")
+        if os.path.exists(answer_filename):
+            with open(answer_filename, 'rb') as file:
+                parameters = pickle.load(file)
+                if parameters['NoInteractiveMode']:
+                  print("Entro in ask_target_iter")
+                  default_target_iter = self.load_or_def_option('target_iter', default_value + 10000)
+                  self.options['target_iter'] = max(0, default_target_iter + 10000)
+                  print("TARGET ITERATION: " + str(self.options['target_iter']))
+                else:
+                    default_target_iter = self.load_or_def_option('target_iter', default_value)
+                    self.options['target_iter'] = max(0, io.input_int("Target iteration", default_target_iter))
+        else:
+            default_target_iter = self.load_or_def_option('target_iter', default_value)
+            self.options['target_iter'] = max(0, io.input_int("Target iteration", default_target_iter))
 
     def ask_random_flip(self):
         default_random_flip = self.load_or_def_option('random_flip', True)
