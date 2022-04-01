@@ -80,7 +80,7 @@ class ModelBase(object):
                                     s += "- latest"
                                 io.log_info (s)
 
-                            inp = io.input_str(f"", "0", show_default_value=False, answer_key = "5")
+                            inp = io.input_str(f"", "0", show_default_value=False, answer_key = "choose_model_name")
                             model_idx = -1
                             try:
                                 model_idx = np.clip ( int(inp), 0, len(saved_models_names)-1 )
@@ -295,7 +295,7 @@ class ModelBase(object):
                 self.choose_preview_history = io.input_bool("Randomly choose new image for preview history", False, help_message="Preview image history will stay stuck with old faces if you reuse the same model on different celebs. Choose no unless you are changing src/dst to a new person")
 
     def ask_target_iter(self, default_value=0):
-        if io.get_default_answer('NoInteractiveMode') is not None:
+        if io.get_default_answer('NonInteractiveMode') is not None:
                   default_target_iter = self.load_or_def_option('target_iter', default_value + 10000)
                   self.options['target_iter'] = max(0, default_target_iter + 10000)
                   print("TARGET ITERATION: " + str(self.options['target_iter']))
