@@ -1,7 +1,7 @@
-import pickle
 import json 
 import os 
 
+#Sample dictionary of default answers
 dictionary = {
         '4' : '\n',
         '5' : '0',
@@ -54,8 +54,3 @@ cmd = 'mkdir DeepFaceLab_Linux/workspace/interact'
 os.system(cmd)
 with open('DeepFaceLab_Linux/workspace/interact/interact_dict.json', 'w') as handle:
 	json.dump(dictionary, handle)
-
-#with open('DeepFaceLab_Linux/workspace/interact/interact_dict.pkl', 'rb') as handle:
-#	d = pickle.load(handle)
-#
-#print(d['5'])
