@@ -410,7 +410,6 @@ class InteractBase(object):
 
     def input_process(self, stdin_fd, sq, str):
         sys.stdin = os.fdopen(stdin_fd)
-        print("Mi fermo qui")
         try:
             inp = input (str)
             sq.put (True)
@@ -418,7 +417,7 @@ class InteractBase(object):
             sq.put (False)
 
     def input_in_time (self, str, max_time_sec, answer_key=None):
-        answer_key = answer_key if answer_key is not None else s
+        answer_key = answer_key if answer_key is not None else str
         if self.get_default_answer(answer_key) is not None:
             return self.get_default_answer(answer_key)
         sq = multiprocessing.Queue()
