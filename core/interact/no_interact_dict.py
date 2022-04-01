@@ -53,7 +53,7 @@ dictionary = {
 cmd = 'mkdir DeepFaceLab_Linux/workspace/interact'
 os.system(cmd)
 with open('DeepFaceLab_Linux/workspace/interact/interact_dict.json', 'w') as handle:
-	pickle.dump(dictionary, handle)
+	json.dump(dictionary, handle)
 
 #with open('DeepFaceLab_Linux/workspace/interact/interact_dict.pkl', 'rb') as handle:
 #	d = pickle.load(handle)
