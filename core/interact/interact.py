@@ -1,5 +1,6 @@
 import multiprocessing
 import os
+import json 
 import sys
 import threading
 import time
@@ -46,10 +47,10 @@ class InteractBase(object):
         self.process_messages_callbacks = {}
         
         self.default_answers = {}
-        answer_filename = 'workspace/interact/interact_dict.pkl'
+        answer_filename = 'workspace/interact/interact_dict.json'
         if os.path.exists(answer_filename):
-            with open(answer_filename, 'rb') as file:
-                self.default_answers = pickle.load(file)
+            with open(answer_filename, 'r') as file:
+                self.default_answers = json.load(file)
 
     def is_support_windows(self):
         return False

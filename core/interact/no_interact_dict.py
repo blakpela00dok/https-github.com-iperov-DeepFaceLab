@@ -1,4 +1,5 @@
 import pickle
+import json 
 import os 
 
 dictionary = {
@@ -51,8 +52,8 @@ dictionary = {
 }
 cmd = 'mkdir DeepFaceLab_Linux/workspace/interact'
 os.system(cmd)
-with open('DeepFaceLab_Linux/workspace/interact/interact_dict.pkl', 'wb') as handle:
-	pickle.dump(dictionary, handle, protocol=4)
+with open('DeepFaceLab_Linux/workspace/interact/interact_dict.json', 'w') as handle:
+	pickle.dump(dictionary, handle)
 
 #with open('DeepFaceLab_Linux/workspace/interact/interact_dict.pkl', 'rb') as handle:
 #	d = pickle.load(handle)
