@@ -296,7 +296,6 @@ class ModelBase(object):
 
     def ask_target_iter(self, default_value=0):
         if io.get_default_answer('NoInteractiveMode') is not None:
-                  print("Entro in ask_target_iter")
                   default_target_iter = self.load_or_def_option('target_iter', default_value + 10000)
                   self.options['target_iter'] = max(0, default_target_iter + 10000)
                   print("TARGET ITERATION: " + str(self.options['target_iter']))
