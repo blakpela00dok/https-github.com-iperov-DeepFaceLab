@@ -1,15 +1,14 @@
 import json 
 import os 
-
-#Sample dictionary of default answers
+# Sample dictionary with default answers
 dictionary = {
-        '4' : '\n',
-        '5' : '0',
-        '2' : '1',
-        '3' : '4',
-        '1' : '0',
+        'Extractor_continue_deleting_files' : '\n',
+        'choose_model_name' : '0',
+        'choose_mode' : '1',
+        'choose_mask_mode' : '4',
+        'enhance_details_sharpen_filters' : '0',
         'Output image format':'png', 
-        'NoInteractiveMode':'y', 
+        'NonInteractiveMode':'y', 
         'Which GPU indexes to choose?': '0',
         'Face type': 'wf',
         'Max number of faces from image' : '1',
@@ -50,7 +49,6 @@ dictionary = {
         'Color transfer to predicted face' : 'rct',
         'Press enter in 2 seconds to override model settings.' : 'y',
 }
-cmd = 'mkdir DeepFaceLab_Linux/workspace/interact'
-os.system(cmd)
+os.mkdirs('DeepFaceLab_Linux/workspace/interact', exist_ok = True)
 with open('DeepFaceLab_Linux/workspace/interact/interact_dict.json', 'w') as handle:
 	json.dump(dictionary, handle)
