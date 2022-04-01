@@ -295,7 +295,6 @@ class ModelBase(object):
                 self.choose_preview_history = io.input_bool("Randomly choose new image for preview history", False, help_message="Preview image history will stay stuck with old faces if you reuse the same model on different celebs. Choose no unless you are changing src/dst to a new person")
 
     def ask_target_iter(self, default_value=0):
-        answer_filename = 'workspace/interact/interact_dict.pkl'
         if io.get_default_answer('NoInteractiveMode') is not None:
                   print("Entro in ask_target_iter")
                   default_target_iter = self.load_or_def_option('target_iter', default_value + 10000)
@@ -304,10 +303,6 @@ class ModelBase(object):
         else:
                     default_target_iter = self.load_or_def_option('target_iter', default_value)
                     self.options['target_iter'] = max(0, io.input_int("Target iteration", default_target_iter))
-        else:
-            default_target_iter = self.load_or_def_option('target_iter', default_value)
-            self.options['target_iter'] = max(0, io.input_int("Target iteration", default_target_iter))
-
     def ask_random_flip(self):
         default_random_flip = self.load_or_def_option('random_flip', True)
         self.options['random_flip'] = io.input_bool("Flip faces randomly", default_random_flip, help_message="Predicted face will look more naturally without this option, but src faceset should cover all face directions as dst faceset.")
