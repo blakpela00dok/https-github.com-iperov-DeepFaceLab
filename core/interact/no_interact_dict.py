@@ -47,7 +47,7 @@ dictionary = {
         'Choose image degrade by bicubic rescale power' : '0',
         'Degrade color power of final image' : '0',
         'Color transfer to predicted face' : 'rct',
-        'Override' : 'y',
+        'Press enter in 2 seconds to override model settings.' : 'y',
 }
 cmd = 'mkdir DeepFaceLab_Linux/workspace/interact'
 os.system(cmd)

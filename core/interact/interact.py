@@ -221,15 +221,11 @@ class InteractBase(object):
         return ar
 
     def get_default_answer(self, answer_key):
-        #f = open("/home/deepfake/interact.txt", "a")
-        #f.write(answer_key + "\n")
-        #f.close()
         if answer_key in self.default_answers:
             return self.default_answers[answer_key]
         return None
 
     def input(self, s, answer_key):
-        print(s)
         ans = self.get_default_answer(answer_key)
         if ans is not None:
             return ans
@@ -284,7 +280,6 @@ class InteractBase(object):
         answer_key = answer_key if answer_key is not None else s
         if show_default_value:
             if len(s) != 0:
-                s_base = s
                 s = f"[{default_value}] {s}"
             else:
                 s = f"[{default_value}]"
@@ -423,6 +418,9 @@ class InteractBase(object):
             sq.put (False)
 
     def input_in_time (self, str, max_time_sec, answer_key=None):
+        answer_key = answer_key if answer_key is not None else s
+        if self.get_default_answer(answer_key) is not None:
+            return self.get_default_answer(answer_key)
         sq = multiprocessing.Queue()
         p = multiprocessing.Process(target=self.input_process, args=( sys.stdin.fileno(), sq, str))
         p.daemon = True
@@ -431,9 +429,6 @@ class InteractBase(object):
         
         inp = False
         while True:
-            if 'Override' in self.default_answers:
-                inp = True
-                break
             if not sq.empty():
                 inp = sq.get()
                 break
