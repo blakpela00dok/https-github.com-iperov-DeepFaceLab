@@ -5,7 +5,6 @@ import sys
 import threading
 import time
 import types
-import pickle
 
 import colorama
 import cv2
