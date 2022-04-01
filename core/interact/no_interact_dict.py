@@ -49,6 +49,6 @@ dictionary = {
         'Color transfer to predicted face' : 'rct',
         'Press enter in 2 seconds to override model settings.' : 'y',
 }
-os.mkdirs('DeepFaceLab_Linux/workspace/interact', exist_ok = True)
+os.makedirs('DeepFaceLab_Linux/workspace/interact', exist_ok = True)
 with open('DeepFaceLab_Linux/workspace/interact/interact_dict.json', 'w') as handle:
 	json.dump(dictionary, handle)
