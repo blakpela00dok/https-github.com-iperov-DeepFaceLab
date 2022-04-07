@@ -3,6 +3,7 @@ import os
 # Sample dictionary with default answers
 dictionary = {
         'Extractor_continue_deleting_files' : '\n',
+        'Enter FPS' : '\n',
         'target_iter_increment' : '10000',
         'choose_model_name' : '0',
         'choose_mode' : '1',
