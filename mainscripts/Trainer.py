@@ -86,7 +86,7 @@ def trainerThread (s2c, c2s, e,
                     io.log_info('Model already trained to target iteration. You can use preview.')
                     if io.get_default_answer('NonInteractiveMode') is not None:
                                     model_save()
-                                    os._exit(0)
+                                    s2c.put ( {'op': 'close'} )
                 else:
                     io.log_info('Starting. Target iteration: %d. Press "Enter" to stop training and save model.' % ( model.get_target_iter()  ) )
             else:
@@ -160,6 +160,7 @@ def trainerThread (s2c, c2s, e,
 
                         if model.get_iter() == 1:
                             model_save()
+                            s2c.put ( {'op': 'close'} )
 
                         if model.get_target_iter() != 0 and model.is_reached_iter_goal():
                             io.log_info ('Reached target iteration.')
@@ -168,7 +169,6 @@ def trainerThread (s2c, c2s, e,
                             io.log_info ('You can use preview now.')
                             if io.get_default_answer('NonInteractiveMode') is not None:
                                       model_save()
-                                      os._exit(0)
                 need_save = False
                 while time.time() - last_save_time >= save_interval_min*60:
                     last_save_time += save_interval_min*60
