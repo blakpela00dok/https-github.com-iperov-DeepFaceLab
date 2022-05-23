@@ -112,6 +112,7 @@ class nn():
                 
             config.gpu_options.force_gpu_compatible = True
             config.gpu_options.allow_growth = True
+            config.allow_soft_placement = True
             nn.tf_sess_config = config
             
         if nn.tf_sess is None:
