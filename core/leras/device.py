@@ -46,7 +46,7 @@ class Devices(object):
         idx_mem = 0
         for device in self.devices:
             mem = device.total_mem
-            if mem > idx_mem:
+            if mem >= idx_mem:
                 result = device
                 idx_mem = mem
         return result
@@ -56,7 +56,7 @@ class Devices(object):
         idx_mem = sys.maxsize
         for device in self.devices:
             mem = device.total_mem
-            if mem < idx_mem:
+            if mem <= idx_mem:
                 result = device
                 idx_mem = mem
         return result
