@@ -175,13 +175,13 @@ def export_faceset_mask(input_dir):
         
         seg_ie_polys = dflimg.get_seg_ie_polys()
         
-        if seg_ie_polys.has_polys():
-            mask = np.zeros ((H,W,1), dtype=np.float32)
-            seg_ie_polys.overlay_mask(mask)
-        elif dflimg.has_xseg_mask():
+        if dflimg.has_xseg_mask():
             mask = dflimg.get_xseg_mask()
             mask[mask < 0.5] = 0.0
             mask[mask >= 0.5] = 1.0
+        elif seg_ie_polys.has_polys():
+            mask = np.zeros ((H,W,1), dtype=np.float32)
+            seg_ie_polys.overlay_mask(mask)
         else:
             raise Exception(f'no mask in file {filepath}')
         
