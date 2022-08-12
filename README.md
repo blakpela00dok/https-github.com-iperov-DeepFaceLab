@@ -277,7 +277,7 @@ Unfortunately, there is no "make everything ok" button in DeepFaceLab. You shoul
 </td></tr>
 
 <tr><td align="right">
-<a href="https://discord.gg/S2h7kPySQp">Discord</a>
+<a href="https://discord.gg/rxa7h9M6rH">Discord</a>
 </td><td align="center">Official discord channel. English / Russian.</td></tr>
 
 <tr><td align="right">
