@@ -13,7 +13,7 @@ from DFLIMG import *
 from facelib import XSegNet, LandmarksProcessor, FaceType
 import pickle
 
-def apply_xseg(input_path, model_path):
+def apply_xseg(input_path, model_path, force_gpu_idxs=None):
     if not input_path.exists():
         raise ValueError(f'{input_path} not found. Please ensure it exists.')
 
@@ -45,11 +45,11 @@ def apply_xseg(input_path, model_path):
                      
     io.log_info(f'Applying trained XSeg model to {input_path.name}/ folder.')
 
-    device_config = nn.DeviceConfig.ask_choose_device(choose_only_one=True)
+    device_config = nn.DeviceConfig.GPUIndexes( force_gpu_idxs or nn.ask_choose_device_idxs(choose_only_one=True) )
     nn.initialize(device_config)
-        
-    
-    
+
+
+
     xseg = XSegNet(name='XSeg', 
                     load_weights=True,
                     weights_file_root=model_path,

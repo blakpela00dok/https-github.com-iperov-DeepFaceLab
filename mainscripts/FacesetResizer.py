@@ -164,11 +164,14 @@ class FacesetResizerSubprocessor(Subprocessor):
 
             return (0, filepath, None)
 
-def process_folder ( dirpath):
-    
-    image_size = io.input_int(f"New image size", 512, valid_range=[128,2048])
-    
-    face_type = io.input_str ("Change face type", 'same', ['h','mf','f','wf','head','same']).lower()
+def process_folder ( dirpath, image_size=None, face_type=None, is_merge=None):
+
+    if not image_size:
+        image_size = io.input_int(f"New image size", 512, valid_range=[128,2048])
+
+    if not face_type:
+        face_type = io.input_str ("Change face type", 'same', ['h','mf','f','wf','head','same']).lower()
+
     if face_type == 'same':
         face_type = None
     else:
@@ -195,7 +198,9 @@ def process_folder ( dirpath):
     image_paths = [Path(x) for x in pathex.get_image_paths( dirpath )]
     result = FacesetResizerSubprocessor ( image_paths, output_dirpath, image_size, face_type).run()
 
-    is_merge = io.input_bool (f"\r\nMerge {output_dirpath_parts} to {dirpath_parts} ?", True)
+    if not is_merge:
+        is_merge = io.input_bool (f"\r\nMerge {output_dirpath_parts} to {dirpath_parts} ?", True)
+
     if is_merge:
         io.log_info (f"Copying processed files to {dirpath_parts}")
 
