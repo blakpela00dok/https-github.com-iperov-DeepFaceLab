@@ -38,7 +38,8 @@
                      "--training-data-src-dir", "D:\\DeepFaceLab\\workspace\\data_src\\aligned",
                      "--training-data-dst-dir",  "D:\\DeepFaceLab\\workspace\\data_dst\\aligned",
                      "--model-dir", "D:\\DeepFaceLab\\workspace\\model",
-                     "--model", "SAEHD"
+                     "--model", "SAEHD",
+                     "--silent-start"
                     ]
         },
         {
@@ -61,6 +62,26 @@
                      "--model", "SAEHD",
                      "--force-model-name", "df-ud",
                      "--force-gpu-idxs", "0"
+                    ]
+        },
+        {
+            "name": "DFL mp4",
+            "subProcess": true,
+            "justMyCode": true,
+            "type": "python",
+            "request": "launch",
+            "program": "D:\\DeepFaceLab\\_internal\\DeepFaceLab\\main.py",
+            "python": "D:\\DeepFaceLab\\_internal\\python-3.6.8\\python.exe",
+            "cwd": "D:\\DeepFaceLab\\workspace",
+            "console": "integratedTerminal",
+            "gevent": true,
+            "args": ["videoed", 
+                     "video-from-sequence",
+                     "--input-dir",  "data_dst\\merged",
+                     "--output-file", "result.mp4",
+                     "--reference-file", "data_dst.*",
+                     "--bitrate", "16",
+                     "--include-audio"
                     ]
         },
         {

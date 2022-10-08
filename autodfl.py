@@ -2,8 +2,9 @@ import ymauto.MergeDefault as MD
 
 md = MD.MergeArgs("config.json")
 
-print(md.g("sandy", "name"))
-print(md.g("beauty", "deep", "gender"))
+print(md.gOrder("mask_mode", "mask_mode_opts"))
+# print(md.g("sandy", "name"))
+# print(md.g("beauty", "deep", "gender"))
 # print(md.g("version1"))
 # print(md.g("deep", "method"))
 # print(md.g("deep", "methoda", "PP"))
