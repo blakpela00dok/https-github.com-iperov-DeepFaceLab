@@ -75,7 +75,7 @@ def main (model_class_name=None,
             is_interactive = io.input_bool ("Use interactive merger?", True) if not io.is_colab() else False
         else:
             is_interactive = md.g(None, "interactive")
-
+# test
         if not is_interactive:
             cfg.ask_settings()
 
