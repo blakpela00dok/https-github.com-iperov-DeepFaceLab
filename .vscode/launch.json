@@ -3,7 +3,8 @@
     // Hover to view descriptions of existing attributes.
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
-    "configurations": [        
+    "configurations": [       
+        
         {
             
             "name": "DFL train TEST",
@@ -21,6 +22,59 @@
                      "--model-dir", "${env:WORKSPACE}\\model",
                      "--model", "TEST"
                     ]
+        },
+        {
+            "name": "DFL train",
+            "subProcess": true,
+            "justMyCode": true,
+            "type": "python",
+            "request": "launch",
+            "program": "D:\\DeepFaceLab\\_internal\\DeepFaceLab\\main.py",
+            "python": "D:\\DeepFaceLab\\_internal\\python-3.6.8\\python.exe",
+            "cwd": "D:\\DeepFaceLab\\workspace",
+            "console": "integratedTerminal",    
+            "gevent": true,
+            "args": ["train", 
+                     "--training-data-src-dir", "D:\\DeepFaceLab\\workspace\\data_src\\aligned",
+                     "--training-data-dst-dir",  "D:\\DeepFaceLab\\workspace\\data_dst\\aligned",
+                     "--model-dir", "D:\\DeepFaceLab\\workspace\\model",
+                     "--model", "SAEHD"
+                    ]
+        },
+        {
+            "name": "DFL merge",
+            "subProcess": true,
+            "justMyCode": true,
+            "type": "python",
+            "request": "launch",
+            "program": "D:\\DeepFaceLab\\_internal\\DeepFaceLab\\main.py",
+            "python": "D:\\DeepFaceLab\\_internal\\python-3.6.8\\python.exe",
+            "cwd": "D:\\DeepFaceLab\\workspace",
+            "console": "integratedTerminal",
+            "gevent": true,
+            "args": ["merge", 
+                     "--input-dir", "data_dst",
+                     "--output-dir",  "data_dst\\merged",
+                     "--output-mask-dir", "..\\_internal\\__delete",
+                     "--aligned-dir", "data_dst\\aligned",
+                     "--model-dir", "model",
+                     "--model", "SAEHD",
+                     "--force-model-name", "df-ud",
+                     "--force-gpu-idxs", "0"
+                    ]
+        },
+        {
+            "name": "Auto DFL",
+            "subProcess": true,
+            "justMyCode": true,
+            "type": "python",
+            "request": "launch",
+            "program": "D:\\DeepFaceLab\\_internal\\DeepFaceLab\\autodfl.py",
+            "python": "D:\\DeepFaceLab\\_internal\\python-3.6.8\\python.exe",
+            "cwd": "D:\\DeepFaceLab\\_internal\\DeepFaceLab",
+            "console": "integratedTerminal",
+            "gevent": true,
+            "args": []
         }
     ]
 }

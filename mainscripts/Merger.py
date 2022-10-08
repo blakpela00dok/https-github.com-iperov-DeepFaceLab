@@ -16,6 +16,8 @@ from DFLIMG import DFLIMG
 from facelib import FaceEnhancer, FaceType, LandmarksProcessor, XSegNet
 from merger import FrameInfo, InteractiveMergerSubprocessor, MergerConfig
 
+import ymauto.MergeDefault as MD
+md = MD.MergeArgs('config.json')
 
 def main (model_class_name=None,
           saved_models_path=None,
@@ -69,13 +71,19 @@ def main (model_class_name=None,
                                                     place_model_on_cpu=True,
                                                     run_on_cpu=run_on_cpu)
 
-        is_interactive = io.input_bool ("Use interactive merger?", True) if not io.is_colab() else False
+        if md.g(None, "interactive") is None:
+            is_interactive = io.input_bool ("Use interactive merger?", True) if not io.is_colab() else False
+        else:
+            is_interactive = md.g(None, "interactive")
 
         if not is_interactive:
             cfg.ask_settings()
-            
-        subprocess_count = io.input_int("Number of workers?", max(8, multiprocessing.cpu_count()), 
+
+        if md.g(None, "subprocess_count") is None:
+            subprocess_count = io.input_int("Number of workers?", max(8, multiprocessing.cpu_count()), 
                                         valid_range=[1, multiprocessing.cpu_count()], help_message="Specify the number of threads to process. A low value may affect performance. A high value may result in memory error. The value may not be greater than CPU cores." )
+        else:
+            subprocess_count = md.g(4, "subprocess_count")
 
         input_path_image_paths = pathex.get_image_paths(input_path)
 

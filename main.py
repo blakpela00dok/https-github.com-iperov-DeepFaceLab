@@ -173,7 +173,7 @@ if __name__ == "__main__":
                       output_path            = Path(arguments.output_dir),
                       output_mask_path       = Path(arguments.output_mask_dir),
                       aligned_path           = Path(arguments.aligned_dir) if arguments.aligned_dir is not None else None,
-                      force_gpu_idxs         = arguments.force_gpu_idxs,
+                      force_gpu_idxs         = [ int(x) for x in arguments.force_gpu_idxs.split(',') ] if arguments.force_gpu_idxs is not None else None,
                       cpu_only               = arguments.cpu_only)
 
     p = subparsers.add_parser( "merge", help="Merger")
