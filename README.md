@@ -405,11 +405,6 @@ Register github account and push "Star" button.
 
 </td></tr>
 
-<img src="https://i.imgur.com/z0e0xFB.jpg" align="center">
-
-V.I. Lenin
-</td></tr>
-
 <tr><td colspan=2 align="center">
 
 <sub>#deepfacelab #deepfakes #faceswap #face-swap #deep-learning #deeplearning #deep-neural-networks #deepface #deep-face-swap #fakeapp #fake-app #neural-networks #neural-nets #tensorflow #cuda #nvidia</sub>
