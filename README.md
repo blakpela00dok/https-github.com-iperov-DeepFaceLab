@@ -405,18 +405,6 @@ Register github account and push "Star" button.
 
 </td></tr>
 
-<tr><td colspan=2>
-<img src="doc/meme3.jpg" align="center">
-</td></tr>
-
-<tr><td align="center" width="50%">
-
-## You don't need deepfake detector. You need to stop lying. 
-
-
-
-</td><td align="center" width="10%">
-
 <img src="https://i.imgur.com/z0e0xFB.jpg" align="center">
 
 V.I. Lenin
