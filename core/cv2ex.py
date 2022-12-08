@@ -19,7 +19,7 @@ def cv2_imread(filename, flags=cv2.IMREAD_UNCHANGED, loader_func=None, verbose=T
         return cv2.imdecode(numpyarray, flags)
     except:
         if verbose:
-            io.log_err(f"Exception occured in cv2_imread : {traceback.format_exc()}")
+            io.log_err(f"Exception occurred in cv2_imread : {traceback.format_exc()}")
         return None
 
 def cv2_imwrite(filename, img, *args):
