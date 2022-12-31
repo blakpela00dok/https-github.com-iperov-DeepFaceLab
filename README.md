@@ -352,7 +352,7 @@ QQ群124500433
 </td></tr>
 -->
 <tr><td colspan=2 align="center">
-<a href="https://money.yandex.ru/to/41001142318065">Donate via Yandex.Money</a>
+<a href="https://yoomoney.ru/to/41001142318065">Donate via Yoomoney</a>
 </td></tr>
 
 <tr><td colspan=2 align="center">
