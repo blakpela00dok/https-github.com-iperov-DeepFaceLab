@@ -64,20 +64,24 @@ class SampleProcessor(object):
                     if xseg_mask.shape[0] != h or xseg_mask.shape[1] != w:
                         xseg_mask = cv2.resize(xseg_mask, (w,h), interpolation=cv2.INTER_CUBIC)                    
                         xseg_mask = imagelib.normalize_channels(xseg_mask, 1)
-                    return np.clip(xseg_mask, 0, 1)
+                    np.minimum(1, np.maximum(xseg_mask, 0, out=xseg_mask), out=xseg_mask)
+                    return xseg_mask
                 else:
                     full_face_mask = LandmarksProcessor.get_image_hull_mask (sample_bgr.shape, sample_landmarks, eyebrows_expand_mod=sample.eyebrows_expand_mod )
-                    return np.clip(full_face_mask, 0, 1)
+                    np.minimum(1, np.maximum(full_face_mask, 0, out=full_face_mask), out=full_face_mask)
+                    return full_face_mask
                 
             def get_eyes_mask():
                 eyes_mask = LandmarksProcessor.get_image_eye_mask (sample_bgr.shape, sample_landmarks)
-                return np.clip(eyes_mask, 0, 1)
+                np.minimum(1, np.maximum(eyes_mask, 0, out=eyes_mask), out=eyes_mask)
+                return eyes_mask
             
             def get_eyes_mouth_mask():                
                 eyes_mask = LandmarksProcessor.get_image_eye_mask (sample_bgr.shape, sample_landmarks)
                 mouth_mask = LandmarksProcessor.get_image_mouth_mask (sample_bgr.shape, sample_landmarks)
-                mask = eyes_mask + mouth_mask
-                return np.clip(mask, 0, 1)
+                eyes_mouth_mask = eyes_mask + mouth_mask
+                np.minimum(1, np.maximum(eyes_mouth_mask, 0, out=eyes_mouth_mask), out=eyes_mouth_mask)
+                return eyes_mouth_mask
                 
             is_face_sample = sample_landmarks is not None
 
