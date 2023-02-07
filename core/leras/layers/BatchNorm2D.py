@@ -43,6 +43,10 @@ class BatchNorm2D(nn.LayerBase):
         x = (x - running_mean) / tf.sqrt( running_var + self.eps )
         x *= weight
         x += bias
+
+        tf.assign(self.running_mean, tf.reshape(running_mean, (self.dim,)))
+        tf.assign(self.running_var, tf.reshape(running_var, (self.dim,)))
+        
         return x
 
 nn.BatchNorm2D = BatchNorm2D
