@@ -43,23 +43,8 @@ def trainerThread (s2c, c2s, e,
 
             if not saved_models_path.exists():
                 saved_models_path.mkdir(exist_ok=True, parents=True)
-                            
-            if model_class_name != 'SAEHD':
-                model = models.import_model(model_class_name)(
-                            is_training=True,
-                            saved_models_path=saved_models_path,
-                            training_data_src_path=training_data_src_path,
-                            training_data_dst_path=training_data_dst_path,
-                            pretraining_data_path=pretraining_data_path,
-                            pretrained_model_path=pretrained_model_path,
-                            no_preview=no_preview,
-                            force_model_name=force_model_name,
-                            force_gpu_idxs=force_gpu_idxs,
-                            cpu_only=cpu_only,
-                            silent_start=silent_start,
-                            debug=debug)
-            else:
-                model = models.import_model(model_class_name, use_bn=use_bn)(
+      
+            model = models.import_model(model_class_name)(
                         is_training=True,
                         saved_models_path=saved_models_path,
                         training_data_src_path=training_data_src_path,
