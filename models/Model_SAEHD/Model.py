@@ -36,6 +36,7 @@ class SAEHDModel(ModelBase):
         default_models_opt_on_gpu  = self.options['models_opt_on_gpu']  = self.load_or_def_option('models_opt_on_gpu', True)
 
         default_archi              = self.options['archi']              = self.load_or_def_option('archi', 'liae-ud')
+        default_use_bn             = self.options['use_bn'] = self.load_or_def_option('use_bn', False)
 
         default_ae_dims            = self.options['ae_dims']            = self.load_or_def_option('ae_dims', 256)
         default_e_dims             = self.options['e_dims']             = self.load_or_def_option('e_dims', 64)
@@ -113,7 +114,8 @@ Examples: df, liae, df-d, df-ud, liae-ud, ...
 
                 break
             self.options['archi'] = archi
-            self.options['use_bn'] = io.input_bool('Use BN', False, help_message='Whether to use architecture with BatchNormaliztion or no.')
+        if self.is_first_run() or ask_override:
+            self.options['use_bn'] = io.input_bool('Use BN', default_use_bn, help_message='Whether to use architecture with BatchNormaliztion or no.')
 
         default_d_dims             = self.options['d_dims']             = self.load_or_def_option('d_dims', 64)
 
