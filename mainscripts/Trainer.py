@@ -27,7 +27,6 @@ def trainerThread (s2c, c2s, e,
                     silent_start=False,
                     execute_programs = None,
                     debug=False,
-                    use_bn=False,
                     **kwargs):
     while True:
         try:
