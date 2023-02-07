@@ -42,7 +42,7 @@ def trainerThread (s2c, c2s, e,
 
             if not saved_models_path.exists():
                 saved_models_path.mkdir(exist_ok=True, parents=True)
-      
+                            
             model = models.import_model(model_class_name)(
                         is_training=True,
                         saved_models_path=saved_models_path,
