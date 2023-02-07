@@ -15,6 +15,24 @@ from facelib import FaceType, LandmarksProcessor
 from .Sample import Sample, SampleType
 
 
+def load_face_sample(image_path):
+    dflimg = DFLIMG.load(Path(image_path))
+
+    if dflimg is None or not dflimg.has_data():
+        print(f"FaceSamplesLoader: {image_path} is not a dfl image file.")
+        data = None
+    else:
+        data = (dflimg.get_face_type(),
+                dflimg.get_shape(),
+                dflimg.get_landmarks(),
+                dflimg.get_seg_ie_polys(),
+                dflimg.get_xseg_mask_compressed(),
+                dflimg.get_eyebrows_expand_mod(),
+                dflimg.get_source_filename())
+
+    return image_path, data
+
+
 class SampleLoader:
     samples_cache = dict()
     @staticmethod
@@ -71,7 +89,10 @@ class SampleLoader:
 
     @staticmethod
     def load_face_samples ( image_paths):
-        result = FaceSamplesLoaderSubprocessor(image_paths).run()
+        #result = FaceSamplesLoaderSubprocessor(image_paths).run()
+        print("Loading samples...")
+        with multiprocessing.Pool() as pool:
+            result = pool.map(load_face_sample, image_paths)
         sample_list = []
 
         for filename, data in result:
