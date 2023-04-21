@@ -1,4 +1,5 @@
 if __name__ == "__main__":
+
     # Fix for linux
     import multiprocessing
     multiprocessing.set_start_method("spawn")
@@ -71,7 +72,7 @@ if __name__ == "__main__":
     p = subparsers.add_parser( "sort", help="Sort faces in a directory.")
     p.add_argument('--input-dir', required=True, action=fixPathAction, dest="input_dir", help="Input directory. A directory containing the files you wish to process.")
     p.add_argument('--by', dest="sort_by_method", default=None, choices=("blur", "motion-blur", "face-yaw", "face-pitch", "face-source-rect-size", "hist", "hist-dissim", "brightness", "hue", "black", "origname", "oneface", "final-by-blur", "final-by-size", "absdiff"), help="Method of sorting. 'origname' sort by original filename to recover original sequence." )
-    p.set_defaults (func=process_sort)
+    p.set_defaults(func=process_sort)
 
     def process_util(arguments):
         osex.set_process_lowest_prio()
@@ -136,22 +137,21 @@ if __name__ == "__main__":
         from mainscripts import Trainer
         Trainer.main(**kwargs)
 
-    p = subparsers.add_parser( "train", help="Trainer")
+    p = subparsers.add_parser("train", help="Trainer")
     p.add_argument('--training-data-src-dir', required=True, action=fixPathAction, dest="training_data_src_dir", help="Dir of extracted SRC faceset.")
     p.add_argument('--training-data-dst-dir', required=True, action=fixPathAction, dest="training_data_dst_dir", help="Dir of extracted DST faceset.")
     p.add_argument('--pretraining-data-dir', action=fixPathAction, dest="pretraining_data_dir", default=None, help="Optional dir of extracted faceset that will be used in pretraining mode.")
     p.add_argument('--pretrained-model-dir', action=fixPathAction, dest="pretrained_model_dir", default=None, help="Optional dir of pretrain model files. (Currently only for Quick96).")
     p.add_argument('--model-dir', required=True, action=fixPathAction, dest="model_dir", help="Saved models dir.")
-    p.add_argument('--model', required=True, dest="model_name", choices=pathex.get_all_dir_names_startswith ( Path(__file__).parent / 'models' , 'Model_'), help="Model class name.")
+    p.add_argument('--model', required=True, dest="model_name", choices=pathex.get_all_dir_names_startswith(Path(__file__).parent / 'models', 'Model_'), help="Model class name.")
     p.add_argument('--debug', action="store_true", dest="debug", default=False, help="Debug samples.")
     p.add_argument('--no-preview', action="store_true", dest="no_preview", default=False, help="Disable preview window.")
     p.add_argument('--force-model-name', dest="force_model_name", default=None, help="Forcing to choose model name from model/ folder.")
     p.add_argument('--cpu-only', action="store_true", dest="cpu_only", default=False, help="Train on CPU.")
     p.add_argument('--force-gpu-idxs', dest="force_gpu_idxs", default=None, help="Force to choose GPU indexes separated by comma.")
     p.add_argument('--silent-start', action="store_true", dest="silent_start", default=False, help="Silent start. Automatically chooses Best GPU and last used model.")
-    
     p.add_argument('--execute-program', dest="execute_program", default=[], action='append', nargs='+')
-    p.set_defaults (func=process_train)
+    p.set_defaults(func=process_train)
     
     def process_exportdfm(arguments):
         osex.set_process_lowest_prio()
@@ -188,13 +188,13 @@ if __name__ == "__main__":
     p.add_argument('--force-gpu-idxs', dest="force_gpu_idxs", default=None, help="Force to choose GPU indexes separated by comma.")
     p.set_defaults(func=process_merge)
 
-    videoed_parser = subparsers.add_parser( "videoed", help="Video processing.").add_subparsers()
+    videoed_parser = subparsers.add_parser("videoed", help="Video processing.").add_subparsers()
 
     def process_videoed_extract_video(arguments):
         osex.set_process_lowest_prio()
         from mainscripts import VideoEd
-        VideoEd.extract_video (arguments.input_file, arguments.output_dir, arguments.output_ext, arguments.fps)
-    p = videoed_parser.add_parser( "extract-video", help="Extract images from video file.")
+        VideoEd.extract_video(arguments.input_file, arguments.output_dir, arguments.output_ext, arguments.fps)
+    p = videoed_parser.add_parser("extract-video", help="Extract images from video file.")
     p.add_argument('--input-file', required=True, action=fixPathAction, dest="input_file", help="Input file to be processed. Specify .*-extension to find first file.")
     p.add_argument('--output-dir', required=True, action=fixPathAction, dest="output_dir", help="Output directory. This is where the extracted images will be stored.")
     p.add_argument('--output-ext', dest="output_ext", default=None, help="Image format (extension) of output files.")

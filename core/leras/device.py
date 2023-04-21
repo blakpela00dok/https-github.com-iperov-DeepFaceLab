@@ -68,6 +68,7 @@ class Devices(object):
         return None
 
     def get_devices_from_index_list(self, idx_list):
+        idx_list = [int(idx.strip()) for idx in idx_list.split(',')]
         result = []
         for device in self.devices:
             if device.index in idx_list:
