@@ -69,7 +69,7 @@ if __name__ == "__main__":
         from mainscripts import Sorter
         Sorter.main (input_path=Path(arguments.input_dir), sort_by_method=arguments.sort_by_method)
 
-    p = subparsers.add_parser( "sort", help="Sort faces in a directory.")
+    p = subparsers.add_parser("sort", help="Sort faces in a directory.")
     p.add_argument('--input-dir', required=True, action=fixPathAction, dest="input_dir", help="Input directory. A directory containing the files you wish to process.")
     p.add_argument('--by', dest="sort_by_method", default=None, choices=("blur", "motion-blur", "face-yaw", "face-pitch", "face-source-rect-size", "hist", "hist-dissim", "brightness", "hue", "black", "origname", "oneface", "final-by-blur", "final-by-size", "absdiff"), help="Method of sorting. 'origname' sort by original filename to recover original sequence." )
     p.set_defaults(func=process_sort)
@@ -79,16 +79,16 @@ if __name__ == "__main__":
         from mainscripts import Util
 
         if arguments.add_landmarks_debug_images:
-            Util.add_landmarks_debug_images (input_path=arguments.input_dir)
+            Util.add_landmarks_debug_images(input_path=arguments.input_dir)
 
         if arguments.recover_original_aligned_filename:
-            Util.recover_original_aligned_filename (input_path=arguments.input_dir)
+            Util.recover_original_aligned_filename(input_path=arguments.input_dir)
 
         if arguments.save_faceset_metadata:
-            Util.save_faceset_metadata_folder (input_path=arguments.input_dir)
+            Util.save_faceset_metadata_folder(input_path=arguments.input_dir)
 
         if arguments.restore_faceset_metadata:
-            Util.restore_faceset_metadata_folder (input_path=arguments.input_dir)
+            Util.restore_faceset_metadata_folder(input_path=arguments.input_dir)
 
         if arguments.pack_faceset:
             io.log_info ("Performing faceset packing...\r\n")
@@ -98,11 +98,11 @@ if __name__ == "__main__":
         if arguments.unpack_faceset:
             io.log_info ("Performing faceset unpacking...\r\n")
             from samplelib import PackedFaceset
-            PackedFaceset.unpack( Path(arguments.input_dir) )
+            PackedFaceset.unpack(Path(arguments.input_dir))
             
         if arguments.export_faceset_mask:
-            io.log_info ("Exporting faceset mask..\r\n")
-            Util.export_faceset_mask( Path(arguments.input_dir) )
+            io.log_info("Exporting faceset mask..\r\n")
+            Util.export_faceset_mask(Path(arguments.input_dir))
 
     p = subparsers.add_parser( "util", help="Utilities.")
     p.add_argument('--input-dir', required=True, action=fixPathAction, dest="input_dir", help="Input directory. A directory containing the files you wish to process.")
@@ -114,7 +114,7 @@ if __name__ == "__main__":
     p.add_argument('--unpack-faceset', action="store_true", dest="unpack_faceset", default=False, help="")
     p.add_argument('--export-faceset-mask', action="store_true", dest="export_faceset_mask", default=False, help="")
 
-    p.set_defaults (func=process_util)
+    p.set_defaults(func=process_util)
 
     def process_train(arguments):
         osex.set_process_lowest_prio()
@@ -128,10 +128,10 @@ if __name__ == "__main__":
                   'pretrained_model_path'    : Path(arguments.pretrained_model_dir) if arguments.pretrained_model_dir is not None else None,
                   'no_preview'               : arguments.no_preview,
                   'force_model_name'         : arguments.force_model_name,
-                  'force_gpu_idxs'           : [ int(x) for x in arguments.force_gpu_idxs.split(',') ] if arguments.force_gpu_idxs is not None else None,
+                  'force_gpu_idxs'           : [int(x) for x in arguments.force_gpu_idxs.split(',')] if arguments.force_gpu_idxs is not None else None,
                   'cpu_only'                 : arguments.cpu_only,
                   'silent_start'             : arguments.silent_start,
-                  'execute_programs'         : [ [int(x[0]), x[1] ] for x in arguments.execute_program ],
+                  'execute_programs'         : [[int(x[0]), x[1] ] for x in arguments.execute_program],
                   'debug'                    : arguments.debug,
                   }
         from mainscripts import Trainer
@@ -156,12 +156,12 @@ if __name__ == "__main__":
     def process_exportdfm(arguments):
         osex.set_process_lowest_prio()
         from mainscripts import ExportDFM
-        ExportDFM.main(model_class_name = arguments.model_name, saved_models_path = Path(arguments.model_dir))
+        ExportDFM.main(model_class_name=arguments.model_name, saved_models_path=Path(arguments.model_dir))
 
     p = subparsers.add_parser( "exportdfm", help="Export model to use in DeepFaceLive.")
     p.add_argument('--model-dir', required=True, action=fixPathAction, dest="model_dir", help="Saved models dir.")
-    p.add_argument('--model', required=True, dest="model_name", choices=pathex.get_all_dir_names_startswith ( Path(__file__).parent / 'models' , 'Model_'), help="Model class name.")
-    p.set_defaults (func=process_exportdfm)
+    p.add_argument('--model', required=True, dest="model_name", choices=pathex.get_all_dir_names_startswith(Path(__file__).parent / 'models' , 'Model_'), help="Model class name.")
+    p.set_defaults(func=process_exportdfm)
 
     def process_merge(arguments):
         osex.set_process_lowest_prio()
