@@ -305,7 +305,7 @@ QQ群124500433
 </td><td align="center">中文交流QQ群，商务合作找群主</td></tr>
 
 <tr><td align="right">
-<a href="https://www.dfldata.xyz">dfldata.xyz</a>
+<a href="https://www.dfldata.cc">dfldata.cc</a>
 </td><td align="center">中文交流论坛，免费软件教程、模型、人脸数据</td></tr>
 
 <tr><td align="right">
