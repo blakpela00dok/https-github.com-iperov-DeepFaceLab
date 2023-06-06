@@ -1475,6 +1475,12 @@ def start(input_dirpath):
 
     app.setFont( QFont('NotoSans'))
 
+    app.setStyleSheet("""QToolTip { 
+                           background-color: white; 
+                           color: black; 
+                           border: black solid 1px
+                           }""")
+    
     QUIConfig.initialize()
     QStringDB.initialize()
 
