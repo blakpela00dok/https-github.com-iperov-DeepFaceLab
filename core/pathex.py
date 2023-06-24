@@ -32,10 +32,10 @@ def get_image_paths(dir_path, image_extensions=image_extensions, subdirs=False, 
         else:
             gen = scandir(str(dir_path))
 
-        for x in list(gen):
-            if any([x.name.lower().endswith(ext) for ext in image_extensions]):
-                result.append( x.path if not return_Path_class else Path(x.path) )
-    return sorted(result)
+        for x in gen:
+            if any(x.name.lower().endswith(ext) for ext in image_extensions):   # listcomp is not needed, any() can handle gencomp
+                result.append( Path(x) if return_Path_class else x.path )       # avoid unnecessary negative condition
+    return result   # scandir should already be sorted
 
 def get_image_unique_filestem_paths(dir_path, verbose_print_func=None):
     result = get_image_paths(dir_path)
