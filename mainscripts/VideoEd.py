@@ -27,7 +27,7 @@ def extract_video(input_file, output_dir, output_ext=None, fps=None):
         fps = io.input_int ("Enter FPS", 0, help_message="How many frames of every second of the video will be extracted. 0 - full fps")
 
     if output_ext is None:
-        output_ext = io.input_str ("Output image format", "png", ["png","jpg"], help_message="png is lossless, but extraction is x10 slower for HDD, requires x10 more disk space than jpg.")
+        output_ext = io.input_str ("Output image format", "jpg", ["png","jpg"], help_message="png is lossless, but extraction is x10 slower for HDD, requires x10 more disk space than jpg.")
 
     for filename in pathex.get_image_paths (output_path, ['.'+output_ext]):
         Path(filename).unlink()
