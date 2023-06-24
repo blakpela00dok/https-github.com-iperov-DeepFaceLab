@@ -201,6 +201,17 @@ if __name__ == "__main__":
     p.add_argument('--fps', type=int, dest="fps", default=None, help="How many frames of every second of the video will be extracted. 0 - full fps.")
     p.set_defaults(func=process_videoed_extract_video)
 
+    def process_videoed_batch_extract_video(arguments):
+        osex.set_process_lowest_prio()
+        from mainscripts import VideoEd
+        VideoEd.batch_extract_video (arguments.input_dir, arguments.output_dir, arguments.output_ext, arguments.fps)
+    p = videoed_parser.add_parser( "batch-extract-video", help="Extract images from folder of video files.")
+    p.add_argument('--input-dir', required=True, action=fixPathAction, dest="input_dir", help="Input directory of files to be processed.")
+    p.add_argument('--output-dir', required=True, action=fixPathAction, dest="output_dir", help="Output directory. This is where the extracted images will be stored.")
+    p.add_argument('--output-ext', dest="output_ext", default=None, help="Image format (extension) of output files.")
+    p.add_argument('--fps', type=int, dest="fps", default=None, help="How many frames of every second of the video will be extracted. 0 - full fps.")
+    p.set_defaults(func=process_videoed_batch_extract_video)
+
     def process_videoed_cut_video(arguments):
         osex.set_process_lowest_prio()
         from mainscripts import VideoEd
