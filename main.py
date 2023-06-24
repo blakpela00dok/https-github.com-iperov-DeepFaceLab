@@ -23,7 +23,7 @@ if __name__ == "__main__":
             setattr(namespace, self.dest, os.path.abspath(os.path.expanduser(values)))
 
     exit_code = 0
-    
+
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers()
 
@@ -52,9 +52,9 @@ if __name__ == "__main__":
     p.add_argument('--output-debug', action="store_true", dest="output_debug", default=None, help="Writes debug images to <output-dir>_debug\ directory.")
     p.add_argument('--no-output-debug', action="store_false", dest="output_debug", default=None, help="Don't writes debug images to <output-dir>_debug\ directory.")
     p.add_argument('--face-type', dest="face_type", choices=['half_face', 'full_face', 'whole_face', 'head', 'mark_only'], default=None)
-    p.add_argument('--max-faces-from-image', type=int, dest="max_faces_from_image", default=None, help="Max faces from image.")    
+    p.add_argument('--max-faces-from-image', type=int, dest="max_faces_from_image", default=None, help="Max faces from image.")
     p.add_argument('--image-size', type=int, dest="image_size", default=None, help="Output image size.")
-    p.add_argument('--jpeg-quality', type=int, dest="jpeg_quality", default=None, help="Jpeg quality.")    
+    p.add_argument('--jpeg-quality', type=int, dest="jpeg_quality", default=None, help="Jpeg quality.")
     p.add_argument('--manual-fix', action="store_true", dest="manual_fix", default=False, help="Enables manual extract only frames where faces were not recognized.")
     p.add_argument('--manual-output-debug-fix', action="store_true", dest="manual_output_debug_fix", default=False, help="Performs manual reextract input-dir frames which were deleted from [output_dir]_debug\ dir.")
     p.add_argument('--manual-window-size', type=int, dest="manual_window_size", default=1368, help="Manual fix window size. Default: 1368.")
@@ -98,7 +98,7 @@ if __name__ == "__main__":
             io.log_info ("Performing faceset unpacking...\r\n")
             from samplelib import PackedFaceset
             PackedFaceset.unpack( Path(arguments.input_dir) )
-            
+
         if arguments.export_faceset_mask:
             io.log_info ("Exporting faceset mask..\r\n")
             Util.export_faceset_mask( Path(arguments.input_dir) )
@@ -149,10 +149,10 @@ if __name__ == "__main__":
     p.add_argument('--cpu-only', action="store_true", dest="cpu_only", default=False, help="Train on CPU.")
     p.add_argument('--force-gpu-idxs', dest="force_gpu_idxs", default=None, help="Force to choose GPU indexes separated by comma.")
     p.add_argument('--silent-start', action="store_true", dest="silent_start", default=False, help="Silent start. Automatically chooses Best GPU and last used model.")
-    
+
     p.add_argument('--execute-program', dest="execute_program", default=[], action='append', nargs='+')
     p.set_defaults (func=process_train)
-    
+
     def process_exportdfm(arguments):
         osex.set_process_lowest_prio()
         from mainscripts import ExportDFM
@@ -200,6 +200,17 @@ if __name__ == "__main__":
     p.add_argument('--output-ext', dest="output_ext", default=None, help="Image format (extension) of output files.")
     p.add_argument('--fps', type=int, dest="fps", default=None, help="How many frames of every second of the video will be extracted. 0 - full fps.")
     p.set_defaults(func=process_videoed_extract_video)
+
+    def process_videoed_batch_extract_video(arguments):
+        osex.set_process_lowest_prio()
+        from mainscripts import VideoEd
+        VideoEd.batch_extract_video (arguments.input_dir, arguments.output_dir, arguments.output_ext, arguments.fps)
+    p = videoed_parser.add_parser( "batch-extract-video", help="Extract images from folder of video files.")
+    p.add_argument('--input-dir', required=True, action=fixPathAction, dest="input_dir", help="Input directory of files to be processed.")
+    p.add_argument('--output-dir', required=True, action=fixPathAction, dest="output_dir", help="Output directory. This is where the extracted images will be stored.")
+    p.add_argument('--output-ext', dest="output_ext", default=None, help="Image format (extension) of output files.")
+    p.add_argument('--fps', type=int, dest="fps", default=None, help="How many frames of every second of the video will be extracted. 0 - full fps.")
+    p.set_defaults(func=process_videoed_batch_extract_video)
 
     def process_videoed_cut_video(arguments):
         osex.set_process_lowest_prio()
@@ -266,8 +277,8 @@ if __name__ == "__main__":
     p.add_argument('--force-gpu-idxs', dest="force_gpu_idxs", default=None, help="Force to choose GPU indexes separated by comma.")
 
     p.set_defaults(func=process_faceset_enhancer)
-    
-    
+
+
     p = facesettool_parser.add_parser ("resize", help="Resize DFL faceset.")
     p.add_argument('--input-dir', required=True, action=fixPathAction, dest="input_dir", help="Input directory of aligned faces.")
 
@@ -285,10 +296,10 @@ if __name__ == "__main__":
     p = subparsers.add_parser( "dev_test", help="")
     p.add_argument('--input-dir', required=True, action=fixPathAction, dest="input_dir")
     p.set_defaults (func=process_dev_test)
-    
+
     # ========== XSeg
     xseg_parser = subparsers.add_parser( "xseg", help="XSeg tools.").add_subparsers()
-    
+
     p = xseg_parser.add_parser( "editor", help="XSeg editor.")
 
     def process_xsegeditor(arguments):
@@ -296,11 +307,11 @@ if __name__ == "__main__":
         from XSegEditor import XSegEditor
         global exit_code
         exit_code = XSegEditor.start (Path(arguments.input_dir))
-        
+
     p.add_argument('--input-dir', required=True, action=fixPathAction, dest="input_dir")
 
     p.set_defaults (func=process_xsegeditor)
-  
+
     p = xseg_parser.add_parser( "apply", help="Apply trained XSeg model to the extracted faces.")
 
     def process_xsegapply(arguments):
@@ -310,8 +321,8 @@ if __name__ == "__main__":
     p.add_argument('--input-dir', required=True, action=fixPathAction, dest="input_dir")
     p.add_argument('--model-dir', required=True, action=fixPathAction, dest="model_dir")
     p.set_defaults (func=process_xsegapply)
-    
-    
+
+
     p = xseg_parser.add_parser( "remove", help="Remove applied XSeg masks from the extracted faces.")
     def process_xsegremove(arguments):
         osex.set_process_lowest_prio()
@@ -319,8 +330,8 @@ if __name__ == "__main__":
         XSegUtil.remove_xseg (Path(arguments.input_dir) )
     p.add_argument('--input-dir', required=True, action=fixPathAction, dest="input_dir")
     p.set_defaults (func=process_xsegremove)
-    
-    
+
+
     p = xseg_parser.add_parser( "remove_labels", help="Remove XSeg labels from the extracted faces.")
     def process_xsegremovelabels(arguments):
         osex.set_process_lowest_prio()
@@ -328,8 +339,8 @@ if __name__ == "__main__":
         XSegUtil.remove_xseg_labels (Path(arguments.input_dir) )
     p.add_argument('--input-dir', required=True, action=fixPathAction, dest="input_dir")
     p.set_defaults (func=process_xsegremovelabels)
-    
-    
+
+
     p = xseg_parser.add_parser( "fetch", help="Copies faces containing XSeg polygons in <input_dir>_xseg dir.")
 
     def process_xsegfetch(arguments):
@@ -338,7 +349,7 @@ if __name__ == "__main__":
         XSegUtil.fetch_xseg (Path(arguments.input_dir) )
     p.add_argument('--input-dir', required=True, action=fixPathAction, dest="input_dir")
     p.set_defaults (func=process_xsegfetch)
-    
+
     def bad_args(arguments):
         parser.print_help()
         exit(0)
@@ -349,9 +360,9 @@ if __name__ == "__main__":
 
     if exit_code == 0:
         print ("Done.")
-        
+
     exit(exit_code)
-    
+
 '''
 import code
 code.interact(local=dict(globals(), **locals()))

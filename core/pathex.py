@@ -2,6 +2,7 @@ from pathlib import Path
 from os import scandir
 
 image_extensions = [".jpg", ".jpeg", ".png", ".tif", ".tiff"]
+video_extensions = [".mp4", ".mov", ".mpg", ".wmv", ".mkv", ".avi", ".avchd", ".flv", ".f4v", ".swf", "webm"]
 
 def write_bytes_safe(p, bytes_data):
     """
@@ -21,7 +22,7 @@ def scantree(path):
         else:
             yield entry
 
-def get_image_paths(dir_path, image_extensions=image_extensions, subdirs=False, return_Path_class=False):
+def get_extension_paths(dir_path, extensions, subdirs=False, return_Path_class=False):
     dir_path = Path (dir_path)
 
     result = []
@@ -32,10 +33,16 @@ def get_image_paths(dir_path, image_extensions=image_extensions, subdirs=False, 
         else:
             gen = scandir(str(dir_path))
 
-        for x in list(gen):
-            if any([x.name.lower().endswith(ext) for ext in image_extensions]):
-                result.append( x.path if not return_Path_class else Path(x.path) )
-    return sorted(result)
+        for x in gen:
+            if any(x.name.lower().endswith(ext) for ext in extensions):     # listcomp is not needed, any() can handle gencomp
+                result.append( Path(x) if return_Path_class else x.path )   # avoid unnecessary negative condition
+    return result   # scandir should already be sorted
+
+def get_image_paths(dir_path, image_extensions=image_extensions, subdirs=False, return_Path_class=False):
+    return get_extension_paths(dir_path, image_extensions, subdirs, return_Path_class)
+
+def get_video_paths(dir_path, video_extensions=video_extensions, subdirs=False, return_Path_class=False):
+    return get_extension_paths(dir_path, video_extensions, subdirs, return_Path_class)
 
 def get_image_unique_filestem_paths(dir_path, verbose_print_func=None):
     result = get_image_paths(dir_path)
@@ -59,7 +66,7 @@ def get_paths(dir_path):
         return [ Path(x) for x in sorted([ x.path for x in list(scandir(str(dir_path))) ]) ]
     else:
         return []
-        
+
 def get_file_paths(dir_path):
     dir_path = Path (dir_path)
 

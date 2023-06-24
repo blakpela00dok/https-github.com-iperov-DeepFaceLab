@@ -27,7 +27,7 @@ def extract_video(input_file, output_dir, output_ext=None, fps=None):
         fps = io.input_int ("Enter FPS", 0, help_message="How many frames of every second of the video will be extracted. 0 - full fps")
 
     if output_ext is None:
-        output_ext = io.input_str ("Output image format", "png", ["png","jpg"], help_message="png is lossless, but extraction is x10 slower for HDD, requires x10 more disk space than jpg.")
+        output_ext = io.input_str ("Output image format", "jpg", ["png","jpg"], help_message="png is lossless, but extraction is x10 slower for HDD, requires x10 more disk space than jpg.")
 
     for filename in pathex.get_image_paths (output_path, ['.'+output_ext]):
         Path(filename).unlink()
@@ -47,6 +47,54 @@ def extract_video(input_file, output_dir, output_ext=None, fps=None):
         job = job.run()
     except:
         io.log_err ("ffmpeg fail, job commandline:" + str(job.compile()) )
+
+def batch_extract_video(input_dir, output_dir, output_ext=None, fps=None):
+    import os
+    input_path = Path(input_dir)
+    output_path = Path(output_dir)
+
+    if not output_path.exists():
+        output_path.mkdir(exist_ok=True)
+
+    if not input_path.exists():
+        io.log_err("input_dir not found.")
+        return
+
+    if not input_path.is_dir():
+        io.log_info("input_dir is not a directory.")
+        return
+
+    file_paths = pathex.get_video_paths(input_path, return_Path_class=True)
+    io.log_info('\n'.join(f'file found ...... {file.name}' for file in file_paths))
+    io.log_info(f'{len(file_paths)} files')
+
+    file_check = io.input_str ("Are these the intended files?", "y", ["y", "n"])
+    if not file_check == 'y': return
+
+    if fps is None:
+        fps = io.input_int ("Enter FPS", 0, help_message="How many frames of every second of the video will be extracted. 0 - full fps")
+
+    if output_ext is None:
+        output_ext = io.input_str ("Output image format", "jpg", ["png","jpg"], help_message="png is lossless, but extraction is x10 slower for HDD, requires x10 more disk space than jpg.")
+
+    for filename in pathex.get_image_paths (output_path, [f'.{output_ext}']):
+        Path(filename).unlink()
+
+    kwargs = {
+        'pix_fmt': 'rgb24',
+        **({'r':f'{fps}'} if fps else {}),
+        **({'q:v':'2'} if output_ext == 'jpg' else {}),
+    }
+
+    for idx, file_path in enumerate(file_paths):
+        job = ( ffmpeg
+            .input(str(file_path))
+            .output(str(output_path / (f'{idx:03}_%5d.{output_ext}')), **kwargs)
+        )
+        try:
+            job = job.run()
+        except:
+            io.log_err ("ffmpeg fail, job commandline:" + str(job.compile()))
 
 def cut_video ( input_file, from_time=None, to_time=None, audio_track_id=None, bitrate=None):
     input_file_path = Path(input_file)
