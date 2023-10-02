@@ -330,6 +330,10 @@ QQ群124500433
 <a href="https://github.com/deepfakes/faceswap">deepfakes/faceswap</a>
 </td><td align="center">Something that was before DeepFaceLab and still remains in the past</td></tr>
 
+<tr><td align="right">
+<a href="https://github.com/Lenny4/DeepFaceLabClient">DeepFaceLabClient</a>
+</td><td align="center">Use DeepFaceLab with a user interface</td></tr>
+
 </td></tr>
 </table>
 
